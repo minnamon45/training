@@ -1,0 +1,1200 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحليل الأداء - الأقسام والموظفين والشهور</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="cache-manager.js"></script>
+    <script type="module" src="auth-guard.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+        body { background: #f0f4f8; }
+
+        .navbar {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .logo h2 { color: #1e3a5f; }
+        .logo span { color: #2b7a4b; }
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .nav-links a, .nav-links button {
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            font-size: 0.85rem;
+        }
+        .nav-links a:hover, .nav-links button:hover { transform: translateY(-2px); opacity: 0.9; }
+        .nav-links .home { background: #2b7a4b; color: white; }
+        .nav-links .logout { background: #e53e3e; color: white; }
+
+        .refresh-btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 0.3rem 0.8rem;
+            border-radius: 1rem;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .cache-info {
+            font-size: 0.7rem;
+            color: #718096;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .container { max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem; }
+        .page-header { margin-bottom: 2rem; }
+        .page-header h1 { color: #1e3a5f; font-size: 2rem; }
+        .page-header p { color: #718096; }
+
+        .filter-bar {
+            background: white;
+            border-radius: 1rem;
+            padding: 1rem 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+        }
+        .filter-group label {
+            font-weight: bold;
+            color: #1e3a5f;
+        }
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 2rem;
+            font-size: 0.9rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #1e3a5f;
+            margin: 2rem 0 1rem 0;
+            border-right: 4px solid #2b7a4b;
+            padding-right: 1rem;
+        }
+
+        .charts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .chart-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            width: 100%;
+        }
+        .chart-card h3 {
+            color: #1e3a5f;
+            margin-bottom: 1rem;
+            border-right: 4px solid #2b7a4b;
+            padding-right: 1rem;
+            font-size: 1.2rem;
+        }
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            min-height: 400px;
+        }
+        canvas {
+            max-height: 400px !important;
+            width: 100% !important;
+        }
+
+        .top-employees {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        .top-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .top-card h3 {
+            color: #1e3a5f;
+            margin-bottom: 1rem;
+            border-right: 4px solid #2b7a4b;
+            padding-right: 1rem;
+            font-size: 1.1rem;
+        }
+        .top-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        .top-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem;
+            background: #f7fafc;
+            border-radius: 1rem;
+            transition: 0.2s;
+        }
+        .top-item:hover { background: #e2e8f0; transform: translateX(-5px); }
+        .top-rank {
+            width: 40px;
+            height: 40px;
+            background: #2b7a4b;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        .top-rank.gold { background: #d69e2e; }
+        .top-rank.silver { background: #718096; }
+        .top-rank.bronze { background: #ed8936; }
+        .top-info { flex: 1; padding: 0 1rem; }
+        .top-name { font-weight: bold; color: #1e3a5f; }
+        .top-dept { font-size: 0.75rem; color: #718096; }
+        .top-value { font-weight: bold; color: #2b7a4b; font-size: 1.2rem; }
+
+        .excluded-note {
+            background: #fef5e7;
+            padding: 1rem;
+            border-radius: 1rem;
+            text-align: center;
+            margin-top: 1rem;
+        }
+        .excluded-note p { color: #718096; font-size: 0.85rem; }
+
+        .footer { text-align: center; padding: 2rem; color: #718096; margin-top: 2rem; }
+        .toast-msg {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #2b7a4b;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 2rem;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        .toast-msg.error {
+            background: #e53e3e;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @media (max-width: 768px) {
+            .top-employees { grid-template-columns: 1fr; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .chart-wrapper { min-height: 300px; }
+            canvas { max-height: 300px !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">جاري التحميل...</div>
+
+    <script>
+        // ========== Firebase Configuration ==========
+        const firebaseConfig = {
+            apiKey: "AIzaSyA_P5crHXs4XvZVl73n6ikNodLTpsw25mk",
+            authDomain: "training-2a75b.firebaseapp.com",
+            projectId: "training-2a75b",
+            storageBucket: "training-2a75b.firebasestorage.app",
+            messagingSenderId: "849904887764",
+            appId: "1:849904887764:web:b012d60c77b1851c169841"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        
+        // ========== متغيرات التخزين ==========
+        let offJobCourses = [];
+        let offJobSessions = [];
+        let offJobEnrollments = [];
+        let onJobCourses = [];
+        let onJobSessions = [];
+        let onJobEnrollments = [];
+        let employees = [];
+        let employeeDeptMap = new Map();
+        
+        let currentMonth = -1;
+        let currentType = "all";
+        
+        const monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+
+        const EXCLUDED_COURSES = ['تعريف الموظفين الجدد', 'الهاسب'];
+
+        // مفاتيح الكاش
+        const CACHE_KEYS = {
+            EMPLOYEES: 'top_employees_v1',
+            OFFJOB_COURSES: 'top_offjob_courses_v1',
+            OFFJOB_SESSIONS: 'top_offjob_sessions_v1',
+            OFFJOB_ENROLLMENTS: 'top_offjob_enrollments_v1',
+            ONJOB_COURSES: 'top_onjob_courses_v1',
+            ONJOB_SESSIONS: 'top_onjob_sessions_v1',
+            ONJOB_ENROLLMENTS: 'top_onjob_enrollments_v1'
+        };
+
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-msg';
+            if (isError) toast.classList.add('error');
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ========== عرض حالة الكاش ==========
+        function updateCacheInfo() {
+            const cacheInfo = document.getElementById('cacheInfo');
+            if (!cacheInfo) return;
+            
+            if (window.CacheManager) {
+                const cached = CacheManager.get(CACHE_KEYS.EMPLOYEES);
+                if (cached) {
+                    const cacheTime = localStorage.getItem(CACHE_KEYS.EMPLOYEES + '_time');
+                    if (cacheTime) {
+                        const date = new Date(parseInt(cacheTime));
+                        cacheInfo.innerHTML = '📦 البيانات من الكاش - آخر تحديث: ' + date.toLocaleString('ar-EG') + ' &nbsp;|&nbsp; <a href="#" onclick="refreshAllData(); return false;" style="color:#4299e1;">🔄 تحديث يدوي</a>';
+                    } else {
+                        //cacheInfo.innerHTML = '📦 البيانات من الكاش &nbsp;|&nbsp; <a href="#" onclick="refreshAllData(); return false;" style="color:#4299e1;">🔄 تحديث يدوي</a>';
+                    }
+                } else {
+                    cacheInfo.innerHTML = '☁️ البيانات من Firebase (تم التحديث الآن)';
+                }
+            }
+        }
+
+        // ========== تحديث جميع البيانات يدوياً ==========
+        async function refreshAllData() {
+            showToast("🔄 جاري تحديث البيانات...");
+            if (window.CacheManager) {
+                for (const key in CACHE_KEYS) {
+                    CacheManager.remove(CACHE_KEYS[key]);
+                    localStorage.removeItem(CACHE_KEYS[key] + '_time');
+                }
+            }
+            await loadPage(true);
+            showToast("✅ تم تحديث البيانات بنجاح");
+        }
+
+        function isExcludedCourse(courseName) {
+            if (!courseName) return false;
+            const courseNameLower = courseName.toLowerCase();
+            return EXCLUDED_COURSES.some(excluded => courseNameLower.includes(excluded.toLowerCase()));
+        }
+
+        // ========== دوال تحويل التاريخ ==========
+        function formatDate(dateValue) {
+            if (!dateValue) return null;
+            if (typeof dateValue === 'number') {
+                var utcDays = dateValue - 25569;
+                var date = new Date(utcDays * 86400000);
+                var year = date.getFullYear();
+                var month = String(date.getMonth() + 1).padStart(2, '0');
+                var day = String(date.getDate()).padStart(2, '0');
+                return year + '-' + month + '-' + day;
+            }
+            return dateValue;
+        }
+
+        function getDateObject(dateValue) {
+            if (!dateValue) return null;
+            if (typeof dateValue === 'number') {
+                var utcDays = dateValue - 25569;
+                return new Date(utcDays * 86400000);
+            }
+            return new Date(dateValue);
+        }
+
+        // ========== دالة حساب ساعات الجلسة ==========
+        function getSessionHours(session, course) {
+            if (course && course.duration_hours && course.duration_hours > 0) {
+                return parseFloat(course.duration_hours);
+            }
+            
+            if (session.start_time && session.end_time) {
+                let startTime = session.start_time.toString();
+                let endTime = session.end_time.toString();
+                
+                if (typeof session.start_time === 'number') {
+                    let totalSeconds = Math.round(session.start_time * 86400);
+                    let hours = Math.floor(totalSeconds / 3600);
+                    let minutes = Math.floor((totalSeconds % 3600) / 60);
+                    startTime = hours.toString().padStart(2, '0') + ':' + minutes.toString().padStart(2, '0');
+                }
+                if (typeof session.end_time === 'number') {
+                    let totalSeconds = Math.round(session.end_time * 86400);
+                    let hours = Math.floor(totalSeconds / 3600);
+                    let minutes = Math.floor((totalSeconds % 3600) / 60);
+                    endTime = hours.toString().padStart(2, '0') + ':' + minutes.toString().padStart(2, '0');
+                }
+                
+                const startParts = startTime.split(':');
+                const endParts = endTime.split(':');
+                let startHour = parseInt(startParts[0]) || 0;
+                let startMinute = parseInt(startParts[1]) || 0;
+                let endHour = parseInt(endParts[0]) || 0;
+                let endMinute = parseInt(endParts[1]) || 0;
+                
+                let diffHours = endHour - startHour;
+                let diffMinutes = endMinute - startMinute;
+                
+                if (diffHours < 0) diffHours = 24 + diffHours;
+                let hours = diffHours + (diffMinutes / 60);
+                return parseFloat(hours.toFixed(2));
+            }
+            
+            return 0;
+        }
+
+        // ========== تحميل البيانات من Firebase مع الكاش ==========
+        async function loadEmployeesData(forceRefresh = false) {
+            try {
+                if (!forceRefresh && window.CacheManager) {
+                    const cached = CacheManager.get(CACHE_KEYS.EMPLOYEES);
+                    if (cached) {
+                        console.log("📦 استخدام الكاش للموظفين");
+                        employees = cached;
+                        employeeDeptMap.clear();
+                        employees.forEach(emp => {
+                            if (emp.id && emp.department && emp.status !== 'Left') {
+                                employeeDeptMap.set(emp.id.toString(), emp.department);
+                            }
+                        });
+                        return employees;
+                    }
+                }
+                
+                console.log("☁️ جلب الموظفين من Firebase");
+                const snapshot = await db.collection('employees').get();
+                employees = [];
+                employeeDeptMap.clear();
+                
+                snapshot.forEach(doc => {
+                    const emp = { id: doc.id, ...doc.data() };
+                    employees.push(emp);
+                    
+                    if (emp.id && emp.department && emp.status !== 'Left') {
+                        employeeDeptMap.set(emp.id.toString(), emp.department);
+                    }
+                });
+                
+                if (window.CacheManager) {
+                    CacheManager.set(CACHE_KEYS.EMPLOYEES, employees);
+                    localStorage.setItem(CACHE_KEYS.EMPLOYEES + '_time', Date.now().toString());
+                }
+                
+                console.log('✅ تم تحميل ' + employees.length + ' موظف');
+                return employees;
+            } catch (error) {
+                console.error("❌ خطأ في تحميل الموظفين:", error);
+                employees = [];
+                return [];
+            }
+        }
+
+        async function loadOffJobData(forceRefresh = false) {
+            try {
+                if (!forceRefresh && window.CacheManager) {
+                    const cachedCourses = CacheManager.get(CACHE_KEYS.OFFJOB_COURSES);
+                    const cachedSessions = CacheManager.get(CACHE_KEYS.OFFJOB_SESSIONS);
+                    const cachedEnrollments = CacheManager.get(CACHE_KEYS.OFFJOB_ENROLLMENTS);
+                    
+                    if (cachedCourses && cachedSessions && cachedEnrollments) {
+                        console.log("📦 استخدام الكاش لـ Off Job");
+                        offJobCourses = cachedCourses;
+                        offJobSessions = cachedSessions;
+                        offJobEnrollments = cachedEnrollments;
+                        return;
+                    }
+                }
+                
+                console.log("☁️ جلب Off Job من Firebase");
+                const coursesSnap = await db.collection('offjob_courses').get();
+                offJobCourses = [];
+                coursesSnap.forEach(doc => { offJobCourses.push(doc.data()); });
+                
+                const sessionsSnap = await db.collection('offjob_sessions').get();
+                offJobSessions = [];
+                sessionsSnap.forEach(doc => { offJobSessions.push(doc.data()); });
+                
+                const enrollmentsSnap = await db.collection('offjob_enrollments').get();
+                offJobEnrollments = [];
+                enrollmentsSnap.forEach(doc => { offJobEnrollments.push(doc.data()); });
+                
+                if (window.CacheManager) {
+                    CacheManager.set(CACHE_KEYS.OFFJOB_COURSES, offJobCourses);
+                    CacheManager.set(CACHE_KEYS.OFFJOB_SESSIONS, offJobSessions);
+                    CacheManager.set(CACHE_KEYS.OFFJOB_ENROLLMENTS, offJobEnrollments);
+                }
+                
+                console.log('✅ Off Job: ' + offJobCourses.length + ' دورات, ' + offJobSessions.length + ' جلسات');
+            } catch (error) {
+                console.error("❌ خطأ في تحميل Off Job:", error);
+            }
+        }
+
+        async function loadOnJobData(forceRefresh = false) {
+            try {
+                if (!forceRefresh && window.CacheManager) {
+                    const cachedCourses = CacheManager.get(CACHE_KEYS.ONJOB_COURSES);
+                    const cachedSessions = CacheManager.get(CACHE_KEYS.ONJOB_SESSIONS);
+                    const cachedEnrollments = CacheManager.get(CACHE_KEYS.ONJOB_ENROLLMENTS);
+                    
+                    if (cachedCourses && cachedSessions && cachedEnrollments) {
+                        console.log("📦 استخدام الكاش لـ On Job");
+                        onJobCourses = cachedCourses;
+                        onJobSessions = cachedSessions;
+                        onJobEnrollments = cachedEnrollments;
+                        return;
+                    }
+                }
+                
+                console.log("☁️ جلب On Job من Firebase");
+                const coursesSnap = await db.collection('onjob_courses').get();
+                onJobCourses = [];
+                coursesSnap.forEach(doc => { onJobCourses.push(doc.data()); });
+                
+                const sessionsSnap = await db.collection('onjob_sessions').get();
+                onJobSessions = [];
+                sessionsSnap.forEach(doc => { onJobSessions.push(doc.data()); });
+                
+                const enrollmentsSnap = await db.collection('onjob_enrollments').get();
+                onJobEnrollments = [];
+                enrollmentsSnap.forEach(doc => { onJobEnrollments.push(doc.data()); });
+                
+                if (window.CacheManager) {
+                    CacheManager.set(CACHE_KEYS.ONJOB_COURSES, onJobCourses);
+                    CacheManager.set(CACHE_KEYS.ONJOB_SESSIONS, onJobSessions);
+                    CacheManager.set(CACHE_KEYS.ONJOB_ENROLLMENTS, onJobEnrollments);
+                }
+                
+                console.log('✅ On Job: ' + onJobCourses.length + ' دورات, ' + onJobSessions.length + ' جلسات');
+            } catch (error) {
+                console.error("❌ خطأ في تحميل On Job:", error);
+            }
+        }
+
+        // ========== تصفية حسب الشهر ==========
+        function filterSessionsByMonth(sessions) {
+            if (currentMonth === -1) return sessions;
+            return sessions.filter(session => {
+                if (!session.session_date) return false;
+                let dateObj = getDateObject(session.session_date);
+                return dateObj && dateObj.getMonth() === currentMonth;
+            });
+        }
+
+        function calculateSessionHoursFromTime(startTime, endTime) {
+            if (!startTime || !endTime) return 0;
+            const startParts = startTime.toString().split(':');
+            const endParts = endTime.toString().split(':');
+            const startHour = parseInt(startParts[0]) || 0;
+            const startMin = parseInt(startParts[1]) || 0;
+            const endHour = parseInt(endParts[0]) || 0;
+            const endMin = parseInt(endParts[1]) || 0;
+            let hours = (endHour - startHour) + (endMin - startMin) / 60;
+            if (hours < 0) hours = 24 + hours;
+            return hours;
+        }
+
+        function getActiveData() {
+            let courses = [];
+            let sessions = [];
+            let enrollments = [];
+            
+            if (currentType === 'offjob') {
+                courses = [...offJobCourses];
+                sessions = [...offJobSessions];
+                enrollments = [...offJobEnrollments];
+            } else if (currentType === 'onjob') {
+                courses = [...onJobCourses];
+                sessions = [...onJobSessions];
+                enrollments = [...onJobEnrollments];
+            } else {
+                const allCourses = [...offJobCourses, ...onJobCourses];
+                const allSessions = [...offJobSessions, ...onJobSessions];
+                const uniqueCourses = new Map();
+                allCourses.forEach(c => { if (c.course_code) uniqueCourses.set(c.course_code.toString(), c); });
+                courses = Array.from(uniqueCourses.values());
+                
+                const uniqueSessions = new Map();
+                allSessions.forEach(s => { if (s.session_code) uniqueSessions.set(s.session_code.toString(), s); });
+                sessions = Array.from(uniqueSessions.values());
+                
+                enrollments = [...offJobEnrollments, ...onJobEnrollments];
+            }
+            
+            const excludedCourseCodes = new Set();
+            courses.forEach(course => {
+                if (isExcludedCourse(course.course_name)) {
+                    excludedCourseCodes.add(course.course_code?.toString());
+                }
+            });
+            
+            const filteredSessions = sessions.filter(session => 
+                !excludedCourseCodes.has(session.course_code?.toString())
+            );
+            
+            return { courses, sessions: filteredSessions, enrollments };
+        }
+
+        function excludeSpecialEmployees(employeeIds) {
+            const excludedLevels = ['HODs', 'GM', 'Director'];
+            const excludedPositions = ['General Manager', 'Hotel Manager', 'Department Head'];
+            
+            return employeeIds.filter(id => {
+                const emp = employees.find(e => e.id == id);
+                if (!emp) return true;
+                if (excludedLevels.includes(emp.level)) return false;
+                if (excludedPositions.some(p => emp.position?.includes(p))) return false;
+                return true;
+            });
+        }
+
+        // ========== حساب إحصائيات الأقسام ==========
+        function calculateDepartmentStats() {
+            const { sessions: filteredSessions, courses, enrollments: allEnrollments } = getActiveData();
+            
+            const filteredSessionsList = filterSessionsByMonth(filteredSessions);
+            const deptStats = new Map();
+            
+            const coursesMap = new Map();
+            courses.forEach(c => { if (c.course_code) coursesMap.set(c.course_code.toString(), c); });
+            
+            console.log('📊 عدد الجلسات للتحليل: ' + filteredSessionsList.length);
+            
+            filteredSessionsList.forEach(session => {
+                const sessionCode = session.session_code;
+                const attendees = allEnrollments.filter(e => e.session_code == sessionCode && e.enrollment_status === 'Completed');
+                const course = coursesMap.get(session.course_code);
+                
+                let sessionHours = getSessionHours(session, course);
+                
+                attendees.forEach(attendee => {
+                    const empId = attendee.employee_id?.toString();
+                    let dept = employeeDeptMap.get(empId);
+                    
+                    if (!dept) {
+                        const employee = employees.find(e => e.id == empId);
+                        if (employee && employee.department) {
+                            dept = employee.department;
+                            employeeDeptMap.set(empId, dept);
+                        }
+                    }
+                    
+                    if (!dept) {
+                        dept = 'قسم غير محدد';
+                    }
+                    
+                    if (!deptStats.has(dept)) {
+                        deptStats.set(dept, { 
+                            sessions: new Set(), 
+                            uniqueEmployees: new Set(), 
+                            hours: 0
+                        });
+                    }
+                    const stats = deptStats.get(dept);
+                    if (empId) stats.uniqueEmployees.add(empId);
+                    stats.hours += sessionHours;
+                    if (!stats.sessions.has(sessionCode)) {
+                        stats.sessions.add(sessionCode);
+                    }
+                });
+            });
+            
+            const result = Array.from(deptStats.keys()).map(dept => ({
+                department: dept,
+                sessions: deptStats.get(dept).sessions.size,
+                uniqueEmployees: deptStats.get(dept).uniqueEmployees.size,
+                hours: parseFloat(deptStats.get(dept).hours.toFixed(1))
+            }));
+            
+            return result.sort((a, b) => b.uniqueEmployees - a.uniqueEmployees);
+        }
+
+        // ========== حساب إحصائيات الشهور ==========
+        function calculateMonthlyStats() {
+            const { courses, sessions, enrollments: allEnrollments } = getActiveData();
+            
+            const monthlyStats = new Map();
+            for (let i = 0; i < 12; i++) {
+                monthlyStats.set(i, { uniqueEmployees: new Set(), sessions: 0, hours: 0 });
+            }
+            
+            const coursesMap = new Map();
+            courses.forEach(c => { if (c.course_code) coursesMap.set(c.course_code.toString(), c); });
+            
+            const sessionsByMonth = new Map();
+            for (let i = 0; i < 12; i++) sessionsByMonth.set(i, []);
+            
+            sessions.forEach(session => {
+                if (!session.session_date) return;
+                let dateObj = getDateObject(session.session_date);
+                if (dateObj) {
+                    const month = dateObj.getMonth();
+                    sessionsByMonth.get(month).push(session);
+                }
+            });
+            
+            const enrollmentsBySession = new Map();
+            allEnrollments.forEach(e => {
+                if (e.enrollment_status === 'Completed') {
+                    const key = e.session_code?.toString();
+                    if (!enrollmentsBySession.has(key)) enrollmentsBySession.set(key, []);
+                    enrollmentsBySession.get(key).push(e.employee_id?.toString());
+                }
+            });
+            
+            for (let month = 0; month < 12; month++) {
+                const monthSessions = sessionsByMonth.get(month);
+                const stats = monthlyStats.get(month);
+                stats.sessions = monthSessions.length;
+                
+                const uniqueEmpSet = new Set();
+                let totalHours = 0;
+                
+                monthSessions.forEach(session => {
+                    const sessionCode = session.session_code?.toString();
+                    const attendees = enrollmentsBySession.get(sessionCode) || [];
+                    attendees.forEach(empId => uniqueEmpSet.add(empId));
+                    
+                    const course = coursesMap.get(session.course_code?.toString());
+                    let hoursPerAttendee = course?.duration_hours || 0;
+                    if (hoursPerAttendee === 0 && session.start_time && session.end_time) {
+                        hoursPerAttendee = calculateSessionHoursFromTime(session.start_time, session.end_time);
+                    }
+                    totalHours += hoursPerAttendee * attendees.length;
+                });
+                
+                stats.uniqueEmployees = uniqueEmpSet.size;
+                stats.hours = parseFloat(totalHours.toFixed(1));
+            }
+            
+            const result = [];
+            for (let i = 0; i < 12; i++) {
+                const stats = monthlyStats.get(i);
+                result.push({
+                    month: i,
+                    monthName: monthNames[i],
+                    uniqueEmployees: stats.uniqueEmployees,
+                    sessions: stats.sessions,
+                    hours: stats.hours
+                });
+            }
+            return result;
+        }
+
+        // ========== حساب أفضل الموظفين ==========
+        function calculateTopEmployees() {
+            const { sessions: allSessions, courses, enrollments: allEnrollments } = getActiveData();
+            
+            const filteredSessions = filterSessionsByMonth(allSessions);
+            
+            const excludedCourseNames = ['تعريف الموظفين الجدد', 'الهاسب', 'New Hire Induction', 'HACCP'];
+            const excludedCourseCodes = new Set();
+            
+            courses.forEach(course => {
+                const courseName = course.course_name?.toLowerCase() || '';
+                const isExcluded = excludedCourseNames.some(excluded => 
+                    courseName.includes(excluded.toLowerCase())
+                );
+                if (isExcluded && course.course_code) {
+                    excludedCourseCodes.add(course.course_code.toString());
+                }
+            });
+            
+            const filteredSessionsWithoutExcluded = filteredSessions.filter(session => 
+                !excludedCourseCodes.has(session.course_code?.toString())
+            );
+            
+            const coursesMap = new Map();
+            courses.forEach(c => { if (c.course_code) coursesMap.set(c.course_code.toString(), c); });
+            
+            const sessionsMap = new Map();
+            filteredSessionsWithoutExcluded.forEach(s => { if (s.session_code) sessionsMap.set(s.session_code.toString(), s); });
+            
+            const employeeStats = new Map();
+            
+            filteredSessionsWithoutExcluded.forEach(session => {
+                const sessionCode = session.session_code;
+                const attendees = allEnrollments.filter(e => e.session_code == sessionCode && e.enrollment_status === 'Completed');
+                const course = coursesMap.get(session.course_code);
+                
+                let sessionHours = getSessionHours(session, course);
+                
+                attendees.forEach(attendee => {
+                    const empId = attendee.employee_id?.toString();
+                    if (!empId) return;
+                    
+                    if (!employeeStats.has(empId)) {
+                        employeeStats.set(empId, { sessions: 0, hours: 0 });
+                    }
+                    const stats = employeeStats.get(empId);
+                    stats.sessions++;
+                    stats.hours += sessionHours;
+                });
+            });
+            
+            let employeeArray = Array.from(employeeStats.keys()).map(empId => {
+                const emp = employees.find(e => e.id == empId);
+                return {
+                    id: empId,
+                    name: emp && emp.fullName ? emp.fullName : 'غير معروف',
+                    department: employeeDeptMap.get(empId) || (emp && emp.department ? emp.department : '-'),
+                    position: emp && emp.position ? emp.position : '-',
+                    level: emp && emp.level ? emp.level : '-',
+                    sessions: employeeStats.get(empId).sessions,
+                    hours: parseFloat(employeeStats.get(empId).hours.toFixed(1))
+                };
+            });
+            
+            let filteredIds = excludeSpecialEmployees(employeeArray.map(e => e.id));
+            employeeArray = employeeArray.filter(e => filteredIds.includes(e.id));
+            
+            const topByHours = [...employeeArray].sort((a, b) => b.hours - a.hours).slice(0, 3);
+            const topBySessions = [...employeeArray].sort((a, b) => b.sessions - a.sessions).slice(0, 3);
+            
+            console.log("🏆 أفضل الموظفين حسب الساعات:", topByHours);
+            console.log("🏆 أفضل الموظفين حسب الجلسات:", topBySessions);
+            
+            return { topBySessions, topByHours };
+        }
+
+        // ========== إعدادات الرسوم البيانية ==========
+        Chart.register(ChartDataLabels);
+
+        const chartOptionsWithLabels = {
+            responsive: true,
+            maintainAspectRatio: true,
+            layout: { 
+                padding: { top: 40, bottom: 20, left: 30, right: 40 } 
+            },
+            plugins: {
+                legend: { 
+                    position: 'top', 
+                    labels: { font: { size: 12 } } 
+                },
+                tooltip: { 
+                    titleFont: { size: 12 }, 
+                    bodyFont: { size: 11 } 
+                },
+                datalabels: { 
+                    display: true, 
+                    color: '#1e3a5f',
+                    backgroundColor: 'rgba(255,255,255,0.95)',
+                    borderRadius: 10,
+                    padding: { left: 8, right: 8, top: 5, bottom: 5 },
+                    anchor: 'end',
+                    align: 'top',
+                    offset: 12,
+                    textAlign: 'center',
+                    font: { 
+                        weight: 'bold', 
+                        size: 16,
+                        family: 'Tajawal'
+                    },
+                    formatter: function(value) {
+                        return value;
+                    }
+                }
+            },
+            scales: { 
+                y: { 
+                    beginAtZero: true, 
+                    title: { display: true, text: 'العدد', font: { weight: 'bold', size: 12 } },
+                    ticks: { stepSize: 1, font: { size: 11 } }
+                },
+                x: { 
+                    ticks: { font: { size: 11 } },
+                    grid: { offset: true }
+                }
+            }
+        };
+
+        const chartOptionsWithLabelsHours = {
+            ...chartOptionsWithLabels,
+            plugins: {
+                ...chartOptionsWithLabels.plugins,
+                datalabels: {
+                    ...chartOptionsWithLabels.plugins.datalabels,
+                    formatter: function(value) {
+                        return value.toFixed(1);
+                    }
+                }
+            }
+        };
+
+        // ========== الرسوم البيانية ==========
+        let deptEmployeesChart = null, deptSessionsChart = null, deptHoursChart = null;
+        let monthlyEmployeesChart = null, monthlySessionsChart = null, monthlyHoursChart = null;
+
+        function initDeptCharts(deptStats) {
+            const employeesSorted = [...deptStats].sort((a, b) => b.uniqueEmployees - a.uniqueEmployees);
+            const sessionsSorted = [...deptStats].sort((a, b) => b.sessions - a.sessions);
+            const hoursSorted = [...deptStats].sort((a, b) => b.hours - a.hours);
+            
+            const ctx1 = document.getElementById('deptEmployeesChart')?.getContext('2d');
+            if (ctx1) {
+                if (deptEmployeesChart) deptEmployeesChart.destroy();
+                deptEmployeesChart = new Chart(ctx1, {
+                    type: 'bar',
+                    data: { 
+                        labels: employeesSorted.map(d => d.department), 
+                        datasets: [{ 
+                            label: '👥 عدد المتدربين', 
+                            data: employeesSorted.map(d => d.uniqueEmployees), 
+                            backgroundColor: '#4299e1', 
+                            borderRadius: 10,
+                            barPercentage: 0.7
+                        }] 
+                    },
+                    options: chartOptionsWithLabels
+                });
+            }
+            
+            const ctx2 = document.getElementById('deptSessionsChart')?.getContext('2d');
+            if (ctx2) {
+                if (deptSessionsChart) deptSessionsChart.destroy();
+                deptSessionsChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: { 
+                        labels: sessionsSorted.map(d => d.department), 
+                        datasets: [{ 
+                            label: '🎯 عدد الجلسات', 
+                            data: sessionsSorted.map(d => d.sessions), 
+                            backgroundColor: '#ed8936', 
+                            borderRadius: 10,
+                            barPercentage: 0.7
+                        }] 
+                    },
+                    options: chartOptionsWithLabels
+                });
+            }
+            
+            const ctx3 = document.getElementById('deptHoursChart')?.getContext('2d');
+            if (ctx3) {
+                if (deptHoursChart) deptHoursChart.destroy();
+                deptHoursChart = new Chart(ctx3, {
+                    type: 'bar',
+                    data: { 
+                        labels: hoursSorted.map(d => d.department), 
+                        datasets: [{ 
+                            label: '⏰ عدد الساعات', 
+                            data: hoursSorted.map(d => d.hours), 
+                            backgroundColor: '#2b7a4b', 
+                            borderRadius: 10,
+                            barPercentage: 0.7
+                        }] 
+                    },
+                    options: chartOptionsWithLabelsHours
+                });
+            }
+        }
+
+        function initMonthlyCharts(monthlyStats) {
+            const months = monthlyStats.map(m => m.monthName);
+            const employeesCount = monthlyStats.map(m => m.uniqueEmployees);
+            const sessionsCount = monthlyStats.map(m => m.sessions);
+            const hoursCount = monthlyStats.map(m => m.hours);
+            
+            const ctx1 = document.getElementById('monthlyEmployeesChart')?.getContext('2d');
+            if (ctx1) {
+                if (monthlyEmployeesChart) monthlyEmployeesChart.destroy();
+                monthlyEmployeesChart = new Chart(ctx1, {
+                    type: 'bar',
+                    data: { 
+                        labels: months, 
+                        datasets: [{ 
+                            label: '👥 عدد المتدربين', 
+                            data: employeesCount, 
+                            backgroundColor: '#4299e1', 
+                            borderRadius: 10,
+                            barPercentage: 0.7
+                        }] 
+                    },
+                    options: chartOptionsWithLabels
+                });
+            }
+            
+            const ctx2 = document.getElementById('monthlySessionsChart')?.getContext('2d');
+            if (ctx2) {
+                if (monthlySessionsChart) monthlySessionsChart.destroy();
+                monthlySessionsChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: { 
+                        labels: months, 
+                        datasets: [{ 
+                            label: '🎯 عدد الجلسات', 
+                            data: sessionsCount, 
+                            backgroundColor: '#ed8936', 
+                            borderRadius: 10,
+                            barPercentage: 0.7
+                        }] 
+                    },
+                    options: chartOptionsWithLabels
+                });
+            }
+            
+            const ctx3 = document.getElementById('monthlyHoursChart')?.getContext('2d');
+            if (ctx3) {
+                if (monthlyHoursChart) monthlyHoursChart.destroy();
+                monthlyHoursChart = new Chart(ctx3, {
+                    type: 'bar',
+                    data: { 
+                        labels: months, 
+                        datasets: [{ 
+                            label: '⏰ عدد الساعات', 
+                            data: hoursCount, 
+                            backgroundColor: '#2b7a4b', 
+                            borderRadius: 10,
+                            barPercentage: 0.7
+                        }] 
+                    },
+                    options: chartOptionsWithLabelsHours
+                });
+            }
+        }
+
+        function renderTopEmployees(topBySessions, topByHours) {
+            const getRankClass = (index) => {
+                if (index === 0) return 'gold';
+                if (index === 1) return 'silver';
+                return 'bronze';
+            };
+            
+            let html = '<div class="top-employees">';
+            
+            html += '<div class="top-card">';
+            html += '<h3>🏆 أكثر الموظفين مشاركة - حسب عدد الجلسات</h3>';
+            html += '<div class="top-list">';
+            
+            if (topBySessions.length === 0) {
+                html += '<div style="text-align:center; padding:1rem;">لا توجد بيانات</div>';
+            } else {
+                for (let i = 0; i < topBySessions.length; i++) {
+                    const emp = topBySessions[i];
+                    html += '<div class="top-item">';
+                    html += '<div class="top-rank ' + getRankClass(i) + '">' + (i + 1) + '</div>';
+                    html += '<div class="top-info">';
+                    html += '<div class="top-name">' + (emp.name || '-') + '</div>';
+                    html += '<div class="top-dept">' + (emp.department || '-') + ' | ' + (emp.position || '-') + '</div>';
+                    html += '</div>';
+                    html += '<div class="top-value">' + emp.sessions + ' جلسة</div>';
+                    html += '</div>';
+                }
+            }
+            
+            html += '</div></div>';
+            
+            html += '<div class="top-card">';
+            html += '<h3>🏆 أكثر الموظفين مشاركة - حسب عدد الساعات</h3>';
+            html += '<div class="top-list">';
+            
+            if (topByHours.length === 0) {
+                html += '<div style="text-align:center; padding:1rem;">لا توجد بيانات</div>';
+            } else {
+                for (let i = 0; i < topByHours.length; i++) {
+                    const emp = topByHours[i];
+                    html += '<div class="top-item">';
+                    html += '<div class="top-rank ' + getRankClass(i) + '">' + (i + 1) + '</div>';
+                    html += '<div class="top-info">';
+                    html += '<div class="top-name">' + (emp.name || '-') + '</div>';
+                    html += '<div class="top-dept">' + (emp.department || '-') + ' | ' + (emp.position || '-') + '</div>';
+                    html += '</div>';
+                    html += '<div class="top-value">' + emp.hours + ' ساعة</div>';
+                    html += '</div>';
+                }
+            }
+            
+            html += '</div></div>';
+            html += '</div>';
+            
+            return html;
+        }
+
+        function renderDepartmentStats(deptStats) {
+            if (deptStats.length === 0) return '<div style="text-align:center; padding:2rem;">لا توجد بيانات</div>';
+            
+            let html = '<div class="dept-stats-grid">';
+            for (let i = 0; i < deptStats.length; i++) {
+                const dept = deptStats[i];
+                html += '<div class="dept-card">';
+                html += '<div class="dept-rank">#' + (i + 1) + '</div>';
+                html += '<div class="dept-info">';
+                html += '<div class="dept-name">🏢 ' + (dept.department || '-') + '</div>';
+                html += '<div class="dept-stats">📚 ' + dept.sessions + ' جلسة | 👥 ' + dept.uniqueEmployees + ' موظف | ⏰ ' + dept.hours + ' ساعة</div>';
+                html += '</div></div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
+        function changeMonth() {
+            currentMonth = parseInt(document.getElementById('monthSelect').value);
+            loadPage(false);
+        }
+
+        function changeType() {
+            currentType = document.getElementById('typeSelect').value;
+            loadPage(false);
+        }
+
+        function logout() {
+            if (window.CacheManager) {
+                for (const key in CACHE_KEYS) {
+                    CacheManager.remove(CACHE_KEYS[key]);
+                    localStorage.removeItem(CACHE_KEYS[key] + '_time');
+                }
+            }
+            auth.signOut().then(() => {
+                sessionStorage.removeItem('loggedUser');
+                window.location.href = 'login.html';
+            });
+        }
+
+        async function loadPage(forceRefresh) {
+            await loadEmployeesData(forceRefresh);
+            await loadOffJobData(forceRefresh);
+            await loadOnJobData(forceRefresh);
+            
+            const deptStats = calculateDepartmentStats();
+            const monthlyStats = calculateMonthlyStats();
+            const { topBySessions, topByHours } = calculateTopEmployees();
+            
+            const monthName = currentMonth === -1 ? "كل الشهور" : monthNames[currentMonth];
+            const typeName = currentType === 'offjob' ? 'Off Job' : (currentType === 'onjob' ? 'On Job' : 'جميع التدريبات');
+            
+            document.getElementById('app').innerHTML = `
+                <div class="navbar">
+                    <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
+                    <div class="nav-links">
+                        <a href="index.html" class="home">🏠 الرئيسية</a>
+                        <a href="#" onclick="logout()" class="logout">🚪 تسجيل خروج</a>
+                    </div>
+                </div>
+
+                <div class="container">
+                    <div class="page-header">
+                        <h1>🏆 تحليل الأداء - الأقسام والموظفين والشهور</h1>
+                        <p>تحليل شامل لمشاركة الأقسام والموظفين والتوزيع الشهري للتدريبات</p>
+                    </div>
+
+
+                    <div class="filter-bar">
+                        <div class="filter-group">
+                            <label>📅 الشهر:</label>
+                            <select id="monthSelect" class="filter-select" onchange="changeMonth()">
+                                <option value="-1" ${currentMonth === -1 ? 'selected' : ''}>كل الشهور</option>
+                                ${monthNames.map((m, i) => `<option value="${i}" ${currentMonth === i ? 'selected' : ''}>${m}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>📚 نوع التدريب:</label>
+                            <select id="typeSelect" class="filter-select" onchange="changeType()">
+                                <option value="all" ${currentType === 'all' ? 'selected' : ''}>جميع التدريبات</option>
+                                <option value="offjob" ${currentType === 'offjob' ? 'selected' : ''}>Off Job</option>
+                                <option value="onjob" ${currentType === 'onjob' ? 'selected' : ''}>On Job</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <span>📊 عرض بيانات ${monthName} - ${typeName}</span>
+                            <button class="refresh-btn" onclick="refreshAllData()">🔄 تحديث البيانات</button>
+                        </div>
+                    </div>
+
+                    <div class="section-title">📊 تحليل الأقسام (${monthName})</div>
+                    <div class="charts-container">
+                        <div class="chart-card"><h3>👥 عدد المتدربين حسب القسم</h3><div class="chart-wrapper"><canvas id="deptEmployeesChart"></canvas></div></div>
+                        <div class="chart-card"><h3>🎯 عدد الجلسات حسب القسم</h3><div class="chart-wrapper"><canvas id="deptSessionsChart"></canvas></div></div>
+                        <div class="chart-card"><h3>⏰ عدد الساعات حسب القسم</h3><div class="chart-wrapper"><canvas id="deptHoursChart"></canvas></div></div>
+                    </div>
+
+                    <div class="section-title">🏅 أفضل الموظفين (${monthName})</div>
+                    ${renderTopEmployees(topBySessions, topByHours)}
+
+                    <div class="section-title">📅 التحليل الشهري (جميع الشهور)</div>
+                    <div class="charts-container">
+                        <div class="chart-card"><h3>👥 عدد المتدربين حسب الشهر</h3><div class="chart-wrapper"><canvas id="monthlyEmployeesChart"></canvas></div></div>
+                        <div class="chart-card"><h3>🎯 عدد الجلسات حسب الشهر</h3><div class="chart-wrapper"><canvas id="monthlySessionsChart"></canvas></div></div>
+                        <div class="chart-card"><h3>⏰ عدد الساعات حسب الشهر</h3><div class="chart-wrapper"><canvas id="monthlyHoursChart"></canvas></div></div>
+                    </div>
+
+
+                <div class="footer">
+                    <p>© 2025 نظام إدارة التعليم والتطوير - جميع الحقوق محفوظة</p>
+                </div>
+            `;
+            
+            updateCacheInfo();
+            
+            setTimeout(() => {
+                initDeptCharts(deptStats);
+                initMonthlyCharts(monthlyStats);
+            }, 100);
+        }
+
+        // ========== بدء التشغيل ==========
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                console.log("✅ مستخدم مسجل دخول:", user.email);
+                await loadPage(false);
+                window.changeMonth = changeMonth;
+                window.changeType = changeType;
+                window.logout = logout;
+                window.refreshAllData = refreshAllData;
+            } else {
+                const loggedUser = JSON.parse(sessionStorage.getItem('loggedUser'));
+                if (loggedUser) {
+                    await loadPage(false);
+                } else {
+                    window.location.href = 'login.html';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
