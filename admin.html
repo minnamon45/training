@@ -958,6 +958,8 @@
             }
         }
 
+        CacheManager.remove(CACHE_KEYS.SECTIONS);
+        CacheManager.remove(CACHE_KEYS.LINKS);
         // ========== إدارة الروابط ==========
         async function addLink() {
             var sectionId = parseInt(document.getElementById('linkSection') && document.getElementById('linkSection').value);
