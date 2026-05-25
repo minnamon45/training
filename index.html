@@ -457,8 +457,8 @@
             if (!cacheInfo) return;
             
             if (window.CacheManager) {
-                const cachedSections = CacheManager.get(CACHE_KEYS.SECTIONS);
-                const cachedLinks = CacheManager.get(CACHE_KEYS.LINKS);
+                const cachedSections = null;
+                const cachedLinks = null;
                 
                 if (cachedSections && cachedLinks) {
                     const cacheTime = localStorage.getItem(CACHE_KEYS.SECTIONS + '_time');
@@ -481,8 +481,8 @@
                 let links = [];
 
                 if (!forceRefresh && window.CacheManager) {
-                    const cachedSections = CacheManager.get(CACHE_KEYS.SECTIONS);
-                    const cachedLinks = CacheManager.get(CACHE_KEYS.LINKS);
+const cachedSections = null;
+const cachedLinks = null;
                     
                     if (cachedSections && cachedLinks) {
                         console.log("📦 استخدام الكاش للأقسام والروابط");
