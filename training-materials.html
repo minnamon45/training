@@ -121,6 +121,7 @@
             overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             transition: transform 0.2s;
+            cursor: pointer;
         }
         .material-card:hover { transform: translateY(-5px); }
         .material-header {
@@ -235,7 +236,8 @@
             
             // منع التسجيل المتكرر خلال 10 دقائق
             if (viewed[materialId] && now - viewed[materialId] < 600000) {
-                return;
+                console.log(`⏭️ تخطي تسجيل مشاهدة للمادة ${materialId} (تم خلال 10 دقائق)`);
+                return false;
             }
             
             viewed[materialId] = now;
@@ -252,10 +254,11 @@
                 const material = materials.find(m => m.id === materialId);
                 if (material) {
                     material.views = (material.views || 0) + 1;
-                    render();
                 }
+                return true;
             } catch (e) {
                 console.error("خطأ في تسجيل المشاهدة:", e);
+                return false;
             }
         }
         
@@ -266,7 +269,8 @@
             
             // منع التسجيل المتكرر خلال 10 دقائق
             if (downloaded[materialId] && now - downloaded[materialId] < 600000) {
-                return;
+                console.log(`⏭️ تخطي تسجيل تحميل للمادة ${materialId} (تم خلال 10 دقائق)`);
+                return false;
             }
             
             downloaded[materialId] = now;
@@ -283,26 +287,35 @@
                 const material = materials.find(m => m.id === materialId);
                 if (material) {
                     material.downloads = (material.downloads || 0) + 1;
-                    render();
                 }
+                return true;
             } catch (e) {
                 console.error("خطأ في تسجيل التحميل:", e);
+                return false;
             }
         }
         
-        // معالج النقر على رابط التحميل
+        // معالج النقر على رابط التحميل (تسجيل مشاهدة + تحميل)
         async function handleDownload(materialId, fileUrl, event) {
             event.preventDefault();
+            event.stopPropagation();
+            
+            // تسجيل مشاهدة وتحويل
             await registerView(materialId);
             await registerDownload(materialId);
-            window.open(fileUrl, '_blank');
+            
+            // فتح الرابط بعد ثانية لضمان تسجيل البيانات
+            setTimeout(() => {
+                window.open(fileUrl, '_blank');
+            }, 300);
         }
         
         // معالج النقر على البطاقة (تسجيل مشاهدة فقط)
         async function handleCardClick(materialId, event) {
-            // منع التسجيل إذا كان النقر على زر التحميل
+            // منع التسجيل إذا كان النقر على زر التحميل أو داخله
             if (event.target.closest('.material-download')) return;
             await registerView(materialId);
+            render(); // إعادة تحميل الواجهة لتحديث الأرقام
         }
         
         async function checkAdminStatus(user) {
