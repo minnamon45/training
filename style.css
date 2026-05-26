@@ -589,3 +589,121 @@ tr:hover {
     border-radius: 1rem;
     transition: width 0.5s;
 }
+/* تنسيق جدول الأقسام المحسن */
+.sections-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.sections-table th {
+    background: linear-gradient(135deg, #1e3a5f, #2b7a4b);
+    color: white;
+    padding: 12px 10px;
+    text-align: center;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.sections-table td {
+    padding: 10px 8px;
+    text-align: center;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: middle;
+}
+
+.sections-table tr:hover {
+    background: #f7fafc;
+}
+
+.sections-table .icon-cell {
+    font-size: 1.5rem;
+    text-align: center;
+}
+
+.sections-table .name-cell {
+    text-align: right;
+    font-weight: 500;
+    min-width: 140px;
+}
+
+.sections-table .desc-cell {
+    text-align: right;
+    color: #4a5568;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.sections-table .links-count {
+    background: #e2e8f0;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: bold;
+    color: #1e3a5f;
+    display: inline-block;
+}
+
+.sections-table .action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.sections-table .edit-btn,
+.sections-table .delete-btn {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.sections-table .edit-btn {
+    background: #4299e1;
+    color: white;
+}
+
+.sections-table .edit-btn:hover {
+    background: #3182ce;
+    transform: scale(1.02);
+}
+
+.sections-table .delete-btn {
+    background: #e53e3e;
+    color: white;
+}
+
+.sections-table .delete-btn:hover {
+    background: #c53030;
+    transform: scale(1.02);
+}
+
+/* للشاشات الصغيرة */
+@media (max-width: 768px) {
+    .sections-table {
+        font-size: 0.75rem;
+    }
+    
+    .sections-table th,
+    .sections-table td {
+        padding: 8px 5px;
+    }
+    
+    .sections-table .icon-cell {
+        font-size: 1.2rem;
+    }
+    
+    .sections-table .desc-cell {
+        max-width: 100px;
+    }
+    
+    .sections-table .edit-btn,
+    .sections-table .delete-btn {
+        padding: 3px 8px;
+        font-size: 0.65rem;
+    }
+}
