@@ -33,6 +33,7 @@
         }
         .nav-links .home { background: #2b7a4b; color: white; }
         .nav-links .logout { background: #e53e3e; color: white; }
+        .nav-links .admin { background: #9f7aea; color: white; }
         
         .container { max-width: 1400px; margin: 1rem auto; padding: 0 1rem; }
         .page-header { margin-bottom: 1rem; }
@@ -79,6 +80,33 @@
             border-radius: 2rem;
             background: white;
             cursor: pointer;
+        }
+        
+        .stats-banner {
+            background: linear-gradient(135deg, #1e3a5f, #2b7a4b);
+            color: white;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            text-align: center;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .stat-label {
+            font-size: 0.7rem;
+            opacity: 0.9;
         }
         
         .materials-grid {
@@ -144,6 +172,10 @@
             align-items: center;
             gap: 0.5rem;
             transition: 0.2s;
+            cursor: pointer;
+            border: none;
+            width: 100%;
+            justify-content: center;
         }
         .material-download:hover { background: #1e5a38; transform: scale(1.02); }
         .empty-msg { text-align: center; padding: 3rem; color: #718096; }
@@ -168,6 +200,7 @@
             .navbar { flex-direction: column; text-align: center; }
             .filter-bar { flex-direction: column; align-items: stretch; }
             .materials-grid { grid-template-columns: 1fr; }
+            .stats-banner { flex-direction: column; }
         }
     </style>
 </head>
@@ -177,11 +210,15 @@
     <script type="module">
         import { auth, db } from "./firebase.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { collection, getDocs, doc, updateDoc, increment, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         
         let materials = [];
         let currentUser = null;
         let isAdmin = false;
+        
+        // مفاتيح الجلسة المحلية لمنع التسجيل المتكرر
+        const VIEWED_KEY = "material_views";
+        const DOWNLOADED_KEY = "material_downloads";
         
         function showToast(msg, isError = false) {
             const toast = document.createElement('div');
@@ -189,6 +226,83 @@
             toast.textContent = msg;
             document.body.appendChild(toast);
             setTimeout(() => toast.remove(), 3000);
+        }
+        
+        // تسجيل مشاهدة المادة
+        async function registerView(materialId) {
+            const viewed = JSON.parse(localStorage.getItem(VIEWED_KEY) || "{}");
+            const now = Date.now();
+            
+            // منع التسجيل المتكرر خلال 10 دقائق
+            if (viewed[materialId] && now - viewed[materialId] < 600000) {
+                return;
+            }
+            
+            viewed[materialId] = now;
+            localStorage.setItem(VIEWED_KEY, JSON.stringify(viewed));
+            
+            try {
+                const materialRef = doc(db, "training_materials", materialId);
+                await updateDoc(materialRef, {
+                    views: increment(1)
+                });
+                console.log(`✅ تم تسجيل مشاهدة للمادة ${materialId}`);
+                
+                // تحديث الواجهة
+                const material = materials.find(m => m.id === materialId);
+                if (material) {
+                    material.views = (material.views || 0) + 1;
+                    render();
+                }
+            } catch (e) {
+                console.error("خطأ في تسجيل المشاهدة:", e);
+            }
+        }
+        
+        // تسجيل تحميل المادة
+        async function registerDownload(materialId) {
+            const downloaded = JSON.parse(localStorage.getItem(DOWNLOADED_KEY) || "{}");
+            const now = Date.now();
+            
+            // منع التسجيل المتكرر خلال 10 دقائق
+            if (downloaded[materialId] && now - downloaded[materialId] < 600000) {
+                return;
+            }
+            
+            downloaded[materialId] = now;
+            localStorage.setItem(DOWNLOADED_KEY, JSON.stringify(downloaded));
+            
+            try {
+                const materialRef = doc(db, "training_materials", materialId);
+                await updateDoc(materialRef, {
+                    downloads: increment(1)
+                });
+                console.log(`✅ تم تسجيل تحميل للمادة ${materialId}`);
+                
+                // تحديث الواجهة
+                const material = materials.find(m => m.id === materialId);
+                if (material) {
+                    material.downloads = (material.downloads || 0) + 1;
+                    render();
+                }
+            } catch (e) {
+                console.error("خطأ في تسجيل التحميل:", e);
+            }
+        }
+        
+        // معالج النقر على رابط التحميل
+        async function handleDownload(materialId, fileUrl, event) {
+            event.preventDefault();
+            await registerView(materialId);
+            await registerDownload(materialId);
+            window.open(fileUrl, '_blank');
+        }
+        
+        // معالج النقر على البطاقة (تسجيل مشاهدة فقط)
+        async function handleCardClick(materialId, event) {
+            // منع التسجيل إذا كان النقر على زر التحميل
+            if (event.target.closest('.material-download')) return;
+            await registerView(materialId);
         }
         
         async function checkAdminStatus(user) {
@@ -223,12 +337,16 @@
             
             const categories = [...new Set(materials.map(m => m.category).filter(Boolean))];
             
+            const totalMaterials = materials.length;
+            const totalViews = materials.reduce((sum, m) => sum + (m.views || 0), 0);
+            const totalDownloads = materials.reduce((sum, m) => sum + (m.downloads || 0), 0);
+            
             let html = `
                 <div class="navbar">
                     <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
                     <div class="nav-links">
                         <a href="index.html" class="home">🏠 الرئيسية</a>
-                        ${isAdmin ? '<a href="admin.html" style="background:#9f7aea;">⚙️ لوحة التحكم</a>' : ''}
+                        ${isAdmin ? '<a href="admin.html" class="admin">⚙️ لوحة التحكم</a>' : ''}
                         <a href="#" onclick="window.logout()" class="logout">🚪 تسجيل خروج</a>
                     </div>
                 </div>
@@ -237,6 +355,13 @@
                         <h1>📚 المواد التدريبية</h1>
                         <p>جميع الملفات والمواد التعليمية المتاحة للتدريب</p>
                     </div>
+                    
+                    <div class="stats-banner">
+                        <div class="stat-item"><span class="stat-number">${totalMaterials}</span><span class="stat-label">📚 المواد</span></div>
+                        <div class="stat-item"><span class="stat-number">${totalViews}</span><span class="stat-label">👁️ مشاهدات</span></div>
+                        <div class="stat-item"><span class="stat-number">${totalDownloads}</span><span class="stat-label">📥 تحميلات</span></div>
+                    </div>
+                    
                     <div class="filter-bar">
                         <div class="search-box">
                             <input type="text" id="searchInput" placeholder="🔍 بحث عن مادة..." onkeyup="window.filterMaterials()">
@@ -250,11 +375,12 @@
                             </select>
                         </div>
                     </div>
+                    
                     <div class="materials-grid" id="materialsGrid">
                         ${filtered.length === 0 ? '<div class="empty-msg">📭 لا توجد مواد تدريبية حالياً</div>' : filtered.map(m => `
-                            <div class="material-card">
+                            <div class="material-card" onclick="window.handleCardClick('${m.id}', event)">
                                 <div class="material-header">
-                                    <span class="material-category">${m.category || 'عام'}</span>
+                                    <span class="material-category">${escapeHtml(m.category || 'عام')}</span>
                                     <span class="material-type">${getTypeIcon(m.type)}</span>
                                     <h3>${escapeHtml(m.title)}</h3>
                                 </div>
@@ -265,7 +391,7 @@
                                         <span>👁️ ${m.views || 0} مشاهدة</span>
                                         <span>📥 ${m.downloads || 0} تحميل</span>
                                     </div>
-                                    ${m.fileUrl ? `<a href="${m.fileUrl}" class="material-download" target="_blank" onclick="window.recordDownload('${m.id}')">📥 تحميل المادة</a>` : ''}
+                                    <button class="material-download" onclick="window.handleDownload('${m.id}', '${m.fileUrl}', event)">📥 تحميل المادة</button>
                                 </div>
                             </div>
                         `).join('')}
@@ -290,11 +416,8 @@
         
         function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
         
-        window.recordDownload = async (id) => {
-            // تسجيل التحميل (يمكن تطويرها لاحقاً)
-            console.log('Download recorded for:', id);
-        };
-        
+        window.handleCardClick = handleCardClick;
+        window.handleDownload = handleDownload;
         window.logout = () => { signOut(auth).then(() => window.location.href = 'login.html'); };
         
         onAuthStateChanged(auth, async (user) => {
