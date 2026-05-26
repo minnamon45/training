@@ -147,11 +147,6 @@
             transform: scale(1.02);
         }
 
-        .btn-import {
-            background: #9f7aea;
-            color: white;
-        }
-
         .btn-secondary {
             background: #4299e1;
             color: white;
@@ -450,10 +445,6 @@
                 width: 100%;
             }
             
-            .search-box input {
-                min-width: auto;
-            }
-            
             .filter-group {
                 justify-content: space-between;
             }
@@ -472,56 +463,14 @@
                 text-align: center;
             }
             
-            .total-card > div:first-child {
-                width: 100%;
-            }
-            
             .total-card .total-number {
                 font-size: 1.5rem;
             }
-            
-            th, td {
-                padding: 0.5rem 0.3rem;
-                font-size: 0.7rem;
-            }
-            
-            th {
-                font-size: 0.7rem;
-            }
-            
-            .edit-btn, .delete-btn {
-                padding: 0.15rem 0.5rem;
-                font-size: 0.65rem;
-            }
         }
 
-        /* ========== شاشات صغيرة جداً (هواتف) ========== */
         @media (max-width: 480px) {
             .container {
                 padding: 0 0.8rem;
-            }
-            
-            .logo h2 {
-                font-size: 0.9rem;
-            }
-            
-            .btn {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.7rem;
-            }
-            
-            .search-box button {
-                padding: 0.5rem 1rem;
-                font-size: 0.7rem;
-            }
-            
-            .filter-group label {
-                font-size: 0.7rem;
-            }
-            
-            .filter-group select {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.7rem;
             }
             
             table {
@@ -529,50 +478,8 @@
             }
             
             th, td {
-                padding: 0.4rem 0.2rem;
-                font-size: 0.65rem;
-            }
-            
-            .modal-content {
-                padding: 1rem;
-            }
-            
-            .modal-content h3 {
-                font-size: 1rem;
-            }
-            
-            .modal-content input,
-            .modal-content select {
-                padding: 0.5rem;
-                font-size: 0.8rem;
-            }
-        }
-
-        /* ========== أجهزة لوحية ========== */
-        @media (min-width: 769px) and (max-width: 1024px) {
-            .container {
-                padding: 0 1.2rem;
-            }
-            
-            th, td {
-                padding: 0.7rem 0.4rem;
-                font-size: 0.75rem;
-            }
-        }
-
-        /* ========== شاشات كبيرة ========== */
-        @media (min-width: 1400px) {
-            .container {
-                max-width: 1600px;
-            }
-            
-            th, td {
-                padding: 1rem;
-                font-size: 0.9rem;
-            }
-            
-            .page-header h1 {
-                font-size: 1.8rem;
+                padding: 0.5rem 0.3rem;
+                font-size: 0.7rem;
             }
         }
     </style>
@@ -605,6 +512,7 @@
                 <button class="refresh-btn" onclick="refreshData()">🔄 تحديث البيانات</button>
             </div>
             <input type="file" id="excelInput" accept=".xlsx, .xls" style="display:none" onchange="importEmployeesExcel(this.files[0])">
+            <button class="btn btn-primary" onclick="document.getElementById('excelInput').click()" style="background:#9f7aea;">📥 استيراد من Excel</button>
         </div>
 
         <div class="filter-bar">
@@ -726,6 +634,52 @@
 
         const CACHE_KEY = 'employees_data_v1';
 
+        // ========== دالة تحويل التاريخ (الأهم) ==========
+        function formatDateToISO(dateValue) {
+            if (!dateValue) return '';
+            
+            // إذا كان رقم (Excel Serial Date)
+            if (typeof dateValue === 'number') {
+                const date = new Date((dateValue - 25569) * 86400000);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            // إذا كان نص
+            if (typeof dateValue === 'string') {
+                let str = dateValue.trim();
+                
+                // تنسيق DD/MM/YYYY
+                if (str.match(/^\d{1,2}\/\d{1,2}\/\d{2,4}$/)) {
+                    let parts = str.split('/');
+                    let day = parts[0].padStart(2, '0');
+                    let month = parts[1].padStart(2, '0');
+                    let year = parts[2];
+                    if (year.length === 2) year = '20' + year;
+                    return `${year}-${month}-${day}`;
+                }
+                
+                // تنسيق DD-MM-YYYY
+                if (str.match(/^\d{1,2}-\d{1,2}-\d{2,4}$/)) {
+                    let parts = str.split('-');
+                    let day = parts[0].padStart(2, '0');
+                    let month = parts[1].padStart(2, '0');
+                    let year = parts[2];
+                    if (year.length === 2) year = '20' + year;
+                    return `${year}-${month}-${day}`;
+                }
+                
+                // تنسيق YYYY-MM-DD (موجود بالفعل)
+                if (str.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
+                    return str;
+                }
+            }
+            
+            return String(dateValue);
+        }
+
         // ========== التحقق من صلاحية الأدمن ==========
         async function checkAdminStatus(user) {
             try {
@@ -817,21 +771,6 @@
         }
 
         // ========== دوال مساعدة ==========
-        function convertDateToISO(dateStr) {
-            if (!dateStr) return '';
-            if (typeof dateStr === 'string' && dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dateStr;
-            const months = { 'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04', 'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08', 'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12' };
-            const match = dateStr.toString().match(/(\d{1,2})-([A-Za-z]{3})-(\d{2,4})/);
-            if (match) {
-                let day = match[1].padStart(2, '0');
-                let month = months[match[2]];
-                let year = match[3];
-                if (year.length === 2) year = '20' + year;
-                return `${year}-${month}-${day}`;
-            }
-            return dateStr;
-        }
-
         function getUniqueDepartments() {
             const depts = new Set();
             employees.forEach(emp => { if (emp.department) depts.add(emp.department); });
@@ -896,29 +835,31 @@
             const tableBody = document.getElementById('tableBody');
             if (tableBody) {
                 if (filtered.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">📭 لا توجد بيانات مطابقة</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">📭 لا توجد بيانات مطابقة<\/td><\/tr>';
                 } else {
                     let html = '';
                     for (let i = 0; i < filtered.length; i++) {
                         const emp = filtered[i];
+                        const formattedDate = formatDateToISO(emp.hireDate);
+                        
                         html += '<tr>';
-                        html += '<td>' + emp.id + '</td>';
-                        html += '<td>' + (emp.fullName || '-') + '</td>';
-                        html += '<td>' + (emp.department || '-') + '</td>';
-                        html += '<td>' + (emp.position || '-') + '</td>';
-                        html += '<td>' + (emp.level || '-') + '</td>';
-                        html += '<td>' + (emp.hireDate || '-') + '</td>';
-                        html += '<td><span class="status-badge ' + ((emp.status || 'Active') === 'Active' ? 'status-active' : 'status-left') + '">' + ((emp.status || 'Active') === 'Active' ? '✅ نشط' : '❌ مستقيل') + '</span></td>';
+                        html += '<td>' + emp.id + '<\/td>';
+                        html += '<td>' + (emp.fullName || '-') + '<\/td>';
+                        html += '<td>' + (emp.department || '-') + '<\/td>';
+                        html += '<td>' + (emp.position || '-') + '<\/td>';
+                        html += '<td>' + (emp.level || '-') + '<\/td>';
+                        html += '<td>' + (formattedDate || '-') + '<\/td>';
+                        html += '<td><span class="status-badge ' + ((emp.status || 'Active') === 'Active' ? 'status-active' : 'status-left') + '">' + ((emp.status || 'Active') === 'Active' ? '✅ نشط' : '❌ مستقيل') + '<\/span><\/td>';
                         
                         if (isAdmin) {
                             html += '<td class="action-buttons">';
-                            html += '<button class="edit-btn" onclick="openEditModal(' + emp.id + ')">✏️ تعديل</button>';
-                            html += '<button class="delete-btn" onclick="deleteEmployee(' + emp.id + ')">🗑️ حذف</button>';
-                            html += '</td>';
+                            html += '<button class="edit-btn" onclick="openEditModal(' + emp.id + ')">✏️ تعديل<\/button>';
+                            html += '<button class="delete-btn" onclick="deleteEmployee(' + emp.id + ')">🗑️ حذف<\/button>';
+                            html += '<\/td>';
                         } else {
-                            html += '<td>-</td>';
+                            html += '<td>-<\/td>';
                         }
-                        html += '</tr>';
+                        html += '<\/tr>';
                     }
                     tableBody.innerHTML = html;
                 }
@@ -971,11 +912,16 @@
             const department = document.getElementById('empDept').value;
             const position = document.getElementById('empPosition').value;
             const level = document.getElementById('empLevel').value;
-            const hireDate = document.getElementById('empHireDate').value;
+            let hireDate = document.getElementById('empHireDate').value;
             const status = document.getElementById('empStatus').value;
 
             if (!id || !fullName) { showToast('❌ الرجاء إدخال كود الموظف والاسم', true); return; }
             if (employees.find(e => e.id == id)) { showToast('❌ هذا الكود موجود بالفعل', true); return; }
+
+            // تنسيق التاريخ إذا كان موجود
+            if (hireDate) {
+                hireDate = formatDateToISO(hireDate);
+            }
 
             const newEmployee = {
                 id: parseInt(id),
@@ -1013,7 +959,7 @@
                 document.getElementById('editDept').value = emp.department || '';
                 document.getElementById('editPosition').value = emp.position || '';
                 document.getElementById('editLevel').value = emp.level || '';
-                document.getElementById('editHireDate').value = emp.hireDate || '';
+                document.getElementById('editHireDate').value = formatDateToISO(emp.hireDate) || '';
                 document.getElementById('editStatus').value = emp.status || 'Active';
                 document.getElementById('editModal').style.display = 'flex';
             }
@@ -1027,11 +973,16 @@
             
             const emp = employees.find(e => e.id === currentEditId);
             if (emp) {
+                let hireDate = document.getElementById('editHireDate').value;
+                if (hireDate) {
+                    hireDate = formatDateToISO(hireDate);
+                }
+                
                 emp.fullName = document.getElementById('editName').value;
                 emp.department = document.getElementById('editDept').value;
                 emp.position = document.getElementById('editPosition').value;
                 emp.level = document.getElementById('editLevel').value;
-                emp.hireDate = document.getElementById('editHireDate').value;
+                emp.hireDate = hireDate;
                 emp.status = document.getElementById('editStatus').value;
 
                 await saveEmployeeToFirebase(emp);
@@ -1060,15 +1011,6 @@
         }
 
         // ========== استيراد وتصدير Excel ==========
-        function convertExcelDate(excelDate) {
-            if (!excelDate) return null;
-            if (typeof excelDate === 'number') {
-                const date = XLSX.SSF.parse_date_code(excelDate);
-                return `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
-            }
-            return excelDate;
-        }
-
         async function importEmployeesExcel(file) {
             if (!isAdmin) {
                 showToast('❌ ليس لديك صلاحية لاستيراد الموظفين', true);
@@ -1100,12 +1042,12 @@
                             if (statusStr === 'left' || statusStr === 'مستقيل') finalStatus = 'Left';
                         }
 
+                        // تحويل التاريخ إذا كان رقم Excel
                         let formattedDate = hireDate;
                         if (hireDate && typeof hireDate === 'number') {
-                            const date = XLSX.SSF.parse_date_code(hireDate);
-                            formattedDate = `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
+                            formattedDate = formatDateToISO(hireDate);
                         } else if (hireDate && typeof hireDate === 'string') {
-                            formattedDate = convertDateToISO(hireDate);
+                            formattedDate = formatDateToISO(hireDate);
                         }
 
                         const existingIndex = employees.findIndex(e => e.id == empId);
@@ -1148,7 +1090,7 @@
                 'Dep': emp.department,
                 'Position': emp.position,
                 'Level': emp.level,
-                'Hire Date': emp.hireDate,
+                'Hire Date': emp.hireDate || '',
                 'Status': emp.status || 'Active'
             }));
             const ws = XLSX.utils.json_to_sheet(exportData);
