@@ -2,7 +2,7 @@
 <html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>سجل تدريبات الموظف</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -12,163 +12,486 @@
     <script src="cache-manager.js"></script>
     <script type="module" src="auth-guard.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { background: #f0f4f8; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        body {
+            background: #f0f4f8;
+        }
+        
+        /* ========== شريط التنقل المتجاوب ========== */
         .navbar {
             background: white;
-            padding: 1rem 2rem;
+            padding: 1rem;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.8rem;
         }
-        .logo h2 { color: #1e3a5f; }
-        .logo span { color: #2b7a4b; }
-        .nav-links { display: flex; gap: .5rem; flex-wrap: wrap; }
-        .nav-links a {
+        
+        .logo h2 {
+            color: #1e3a5f;
+            font-size: 1.2rem;
+        }
+        
+        .logo span {
+            color: #2b7a4b;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .nav-links a, .nav-links button {
             text-decoration: none;
-            padding: .5rem 1rem;
+            padding: 0.4rem 0.8rem;
             border-radius: 2rem;
             color: white;
-            font-size: .85rem;
+            font-size: 0.75rem;
+            border: none;
+            cursor: pointer;
         }
+        
         .home { background: #2b7a4b; }
         .employees-btn { background: #9f7aea; }
         .logout { background: #e53e3e; }
-        .container { max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem; }
-        .page-header { margin-bottom: 2rem; }
-        .page-header h1 { color: #1e3a5f; }
+        .refresh-btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        
+        /* ========== الحاوية الرئيسية ========== */
+        .container {
+            max-width: 1400px;
+            margin: 1rem auto;
+            padding: 0 1rem;
+        }
+        
+        /* ========== رأس الصفحة ========== */
+        .page-header {
+            margin-bottom: 1.5rem;
+        }
+        
+        .page-header h1 {
+            color: #1e3a5f;
+            font-size: 1.5rem;
+        }
+        
+        /* ========== بطاقات الفلترة ========== */
         .filter-card, .search-card, .table-container {
             background: white;
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+            border-radius: 1.2rem;
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
+        
         .filter-card {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.8rem;
         }
-        .filter-group { display: flex; align-items: center; gap: 1rem; }
-        .filter-group label { font-weight: bold; color: #1e3a5f; }
-        .training-type-select, .search-box input {
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-group label {
+            font-weight: bold;
+            color: #1e3a5f;
+            font-size: 0.85rem;
+        }
+        
+        .training-type-select {
             border: 2px solid #e2e8f0;
             border-radius: 2rem;
-            padding: .8rem 1rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            background: white;
         }
-        .search-card { text-align: center; }
-        .search-card h3 { margin-bottom: 1rem; color: #1e3a5f; }
+        
+        /* ========== بطاقة البحث ========== */
+        .search-card {
+            text-align: center;
+        }
+        
+        .search-card h3 {
+            margin-bottom: 0.8rem;
+            color: #1e3a5f;
+            font-size: 1.1rem;
+        }
+        
         .search-box {
             display: flex;
             justify-content: center;
-            gap: 1rem;
+            gap: 0.8rem;
             flex-wrap: wrap;
         }
-        .search-box input { width: 250px; text-align: center; }
+        
+        .search-box input {
+            flex: 1;
+            min-width: 180px;
+            max-width: 250px;
+            border: 2px solid #e2e8f0;
+            border-radius: 2rem;
+            padding: 0.7rem 1rem;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+        
         .search-box button {
             border: none;
             border-radius: 2rem;
-            padding: .8rem 1.5rem;
+            padding: 0.7rem 1.2rem;
             background: #2b7a4b;
             color: white;
             cursor: pointer;
             font-weight: bold;
+            font-size: 0.85rem;
         }
+        
+        /* ========== بطاقة معلومات الموظف ========== */
         .employee-info-card {
-            background: linear-gradient(135deg,#1e3a5f,#2b7a4b);
+            background: linear-gradient(135deg, #1e3a5f, #2b7a4b);
             color: white;
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+            border-radius: 1.2rem;
+            padding: 1.2rem;
+            margin-bottom: 1.5rem;
         }
+        
+        .employee-info-card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 0.8rem;
+        }
+        
         .info-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
-            gap: 1rem;
-            margin-top: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 0.8rem;
+            margin-top: 0.8rem;
         }
+        
+        .info-grid div {
+            font-size: 0.85rem;
+            background: rgba(255,255,255,0.1);
+            padding: 0.5rem;
+            border-radius: 0.8rem;
+        }
+        
+        /* ========== إحصائيات سريعة ========== */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit,minmax(150px,1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
         }
+        
         .stat-card {
             background: white;
             border-radius: 1rem;
-            padding: 1rem;
+            padding: 0.8rem;
             text-align: center;
         }
-        .stat-value { font-size: 1.8rem; font-weight: bold; color: #1e3a5f; }
-        .stat-label { color: #718096; }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e3a5f;
+        }
+        
+        .stat-label {
+            color: #718096;
+            font-size: 0.75rem;
+        }
+        
+        /* ========== أزرار الإجراءات ========== */
         .action-btn {
             border: none;
             border-radius: 2rem;
-            padding: .5rem 1rem;
+            padding: 0.4rem 0.8rem;
             color: white;
             cursor: pointer;
             font-weight: bold;
+            font-size: 0.75rem;
         }
+        
         .print-btn { background: #4299e1; }
         .excel-btn { background: #48bb78; }
+        
+        /* ========== الجدول المتجاوب ========== */
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
         .training-table {
             width: 100%;
             border-collapse: collapse;
+            font-size: 0.8rem;
+            min-width: 600px;
         }
+        
         .training-table th {
             background: #1e3a5f;
             color: white;
-            padding: 12px;
+            padding: 10px 8px;
+            font-size: 0.8rem;
+            white-space: nowrap;
         }
+        
         .training-table td {
             border-bottom: 1px solid #e2e8f0;
-            padding: 12px;
+            padding: 10px 8px;
             text-align: center;
+            font-size: 0.75rem;
         }
+        
+        /* ========== الشارات ========== */
         .badge-category {
             background: #bee3f8;
             border-radius: 1rem;
-            padding: .2rem .5rem;
-            font-size: .75rem;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.7rem;
+            white-space: nowrap;
         }
+        
         .badge-hours {
             background: #e2e8f0;
             border-radius: 1rem;
-            padding: .2rem .5rem;
-            font-size: .75rem;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.7rem;
+            white-space: nowrap;
         }
-        .refresh-btn {
-            background: #4299e1;
-            color: white;
-            border: none;
-            padding: 0.3rem 0.8rem;
-            border-radius: 1rem;
-            cursor: pointer;
-            font-size: 0.8rem;
+        
+        /* ========== رسائل ========== */
+        .empty-msg {
+            text-align: center;
+            color: #718096;
+            padding: 2rem;
+            font-size: 0.85rem;
         }
-        .empty-msg, .footer { text-align: center; color: #718096; }
-        .footer { padding: 2rem; }
+        
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #718096;
+            font-size: 0.75rem;
+        }
+        
+        /* ========== تنبيهات منبثقة ========== */
         .toast-msg {
             position: fixed;
-            bottom: 2rem;
-            right: 2rem;
+            bottom: 1rem;
+            right: 1rem;
+            left: 1rem;
             background: #2b7a4b;
             color: white;
-            padding: 0.8rem 1.5rem;
+            padding: 0.8rem;
             border-radius: 2rem;
+            text-align: center;
             z-index: 1000;
             animation: slideIn 0.3s ease;
+            font-size: 0.85rem;
+            max-width: calc(100% - 2rem);
+            margin: 0 auto;
         }
+        
         .toast-msg.error {
             background: #e53e3e;
         }
+        
         @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        /* ========== رأس الجدول للجوال ========== */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0.8rem;
+            }
+            
+            .logo h2 {
+                font-size: 1rem;
+            }
+            
+            .container {
+                padding: 0 0.8rem;
+                margin: 0.8rem auto;
+            }
+            
+            .page-header h1 {
+                font-size: 1.2rem;
+            }
+            
+            .filter-card, .search-card, .table-container {
+                padding: 1rem;
+            }
+            
+            .filter-group {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .training-type-select {
+                flex: 1;
+            }
+            
+            .search-box input {
+                min-width: 150px;
+            }
+            
+            .info-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .stat-value {
+                font-size: 1.2rem;
+            }
+            
+            .training-table th,
+            .training-table td {
+                padding: 8px 5px;
+            }
+            
+            .training-table th {
+                font-size: 0.7rem;
+            }
+            
+            .training-table td {
+                font-size: 0.65rem;
+            }
+            
+            .badge-category, .badge-hours {
+                font-size: 0.6rem;
+                padding: 0.15rem 0.4rem;
+            }
+        }
+        
+        /* ========== شاشات صغيرة جداً (هواتف صغيرة) ========== */
+        @media (max-width: 480px) {
+            .navbar {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .nav-links {
+                justify-content: center;
+            }
+            
+            .page-header h1 {
+                font-size: 1.1rem;
+                text-align: center;
+            }
+            
+            .filter-card {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .filter-group {
+                justify-content: space-between;
+            }
+            
+            .search-box {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box input {
+                max-width: none;
+                width: 100%;
+            }
+            
+            .search-box button {
+                width: 100%;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .employee-info-card h2 {
+                font-size: 1rem;
+                text-align: center;
+            }
+            
+            .training-table {
+                font-size: 0.7rem;
+                min-width: 550px;
+            }
+            
+            .training-table th,
+            .training-table td {
+                padding: 6px 4px;
+            }
+        }
+        
+        /* ========== أجهزة لوحية ========== */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .container {
+                padding: 0 1.2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .info-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        /* ========== شاشات كبيرة ========== */
+        @media (min-width: 1400px) {
+            .container {
+                max-width: 1600px;
+            }
+            
+            .training-table {
+                font-size: 0.9rem;
+            }
+            
+            .training-table th,
+            .training-table td {
+                padding: 14px 12px;
+            }
         }
     </style>
 </head>
@@ -464,7 +787,6 @@ function printTable() {
     var win = window.open("", "_blank");
     if (!win) return;
     
-    // بناء المستند بالكامل عن طريق الـ DOM والـ Nodes النظيفة بدون كتابة جمل نصية بداخل النافذة
     var doc = win.document;
     doc.title = "سجل تدريب الموظف";
     
@@ -481,7 +803,6 @@ function printTable() {
     h2.textContent = "سجل تدريب الموظف";
     body.appendChild(h2);
     
-    // استنساخ الجدول الأصلي وإضافته
     var cloneTable = table.cloneNode(true);
     body.appendChild(cloneTable);
     
@@ -558,8 +879,9 @@ function renderPage() {
         html += '</div>';
         
         html += '<div class="table-container">';
-        html += '<div style="display:flex; justify-content:space-between; margin-bottom:1rem;"><h3>📚 سجل التدريبات المكتملة (' + typeText + ')</h3>';
-        html += '<div><button class="action-btn print-btn" onclick="printTable()">🖨️ طباعة</button>';
+        html += '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">';
+        html += '<h3 style="font-size:1rem;">📚 سجل التدريبات المكتملة (' + typeText + ')</h3>';
+        html += '<div style="display:flex; gap:0.5rem; flex-wrap:wrap;"><button class="action-btn print-btn" onclick="printTable()">🖨️ طباعة</button>';
         html += '<button class="action-btn excel-btn" onclick="exportToExcel()">📎 تصدير Excel</button></div></div>';
         
         if (currentTrainings.length > 0) {
