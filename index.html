@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Training Dashboard</title>
+    <title>Enterprise Training Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
@@ -55,19 +55,19 @@
             }
         }
         
-        // دالة معالجة النقر على الرابط (تسجيل الزيارة ثم التوجيه)
-        function handleLinkClick(linkId, url, event) {
-            event.preventDefault(); // منع التوجيه المباشر
-            
-            // تسجيل الزيارة
-            registerView(linkId).then(() => {
-                // بعد تسجيل الزيارة، التوجه إلى الرابط
-                window.open(url, '_blank');
-            }).catch(() => {
-                // حتى لو فشل التسجيل، نفتح الرابط
-                window.open(url, '_blank');
-            });
-        }
+// دالة معالجة النقر على الرابط (تسجيل الزيارة ثم التوجيه)
+function handleLinkClick(linkId, url, event) {
+    event.preventDefault(); // منع التوجيه المباشر
+    
+    // تسجيل الزيارة
+    registerView(linkId).then(() => {
+        // بعد تسجيل الزيارة، التوجه إلى الرابط في نفس الصفحة
+        window.location.href = url;
+    }).catch(() => {
+        // حتى لو فشل التسجيل، نفتح الرابط في نفس الصفحة
+        window.location.href = url;
+    });
+}
         
         function render() {
             document.getElementById("app").innerHTML = `
