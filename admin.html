@@ -1,704 +1,528 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة التحكم - نظام إدارة التعليم والتطوير</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="cache-manager.js"></script>
-    <script type="module" src="auth-guard.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Tajawal', sans-serif;
-        }
-
-        body {
-            background: #edf2f7;
-        }
-
-        .navbar {
-            background: white;
-            padding: 1rem 2rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .logo h2 {
-            color: #1e3a5f;
-        }
-
-        .logo span {
-            color: #2b7a4b;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .nav-links a,
-        .nav-links button {
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
-            font-weight: 500;
-            cursor: pointer;
-            border: none;
-            font-size: 0.9rem;
-        }
-
-        .nav-links a:hover,
-        .nav-links button:hover {
-            transform: translateY(-2px);
-            opacity: 0.9;
-        }
-
-        .nav-links .home {
-            background: #2b7a4b;
-            color: white;
-        }
-
-        .nav-links .logout {
-            background: #e53e3e;
-            color: white;
-        }
-
-        .refresh-btn {
-            background: #4299e1;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
-            cursor: pointer;
-            font-size: 0.8rem;
-        }
-
-        .cache-info {
-            font-size: 0.7rem;
-            color: #718096;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            background: white;
-            border: none;
-            padding: 0.8rem 1.8rem;
-            border-radius: 2rem;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            color: #4a5568;
-        }
-
-        .tab-btn.active {
-            background: linear-gradient(135deg, #1e3a5f, #2b7a4b);
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .admin-card {
-            background: white;
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        }
-
-        .admin-card h3 {
-            color: #1e3a5f;
-            margin-bottom: 1rem;
-            border-right: 4px solid #2b7a4b;
-            padding-right: 1rem;
-        }
-
-        input,
-        select,
-        textarea {
-            width: 100%;
-            padding: 0.8rem;
-            margin: 0.5rem 0;
-            border: 2px solid #e2e8f0;
-            border-radius: 0.8rem;
-        }
-
-        button {
-            background: #2b7a4b;
-            color: white;
-            padding: 0.7rem 1.5rem;
-            border: none;
-            border-radius: 0.8rem;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 0.5rem;
-        }
-
-        .msg {
-            background: #c6f6d5;
-            color: #22543d;
-            padding: 0.8rem;
-            border-radius: 0.8rem;
-            margin-bottom: 1rem;
-            display: none;
-        }
-
-        .msg.error {
-            background: #fed7d7;
-            color: #c53030;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 1rem;
-            text-align: right;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        th {
-            background: #f7fafc;
-            color: #1e3a5f;
-        }
-
-        .action-buttons {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .edit-btn {
-            background: #4299e1;
-            color: white;
-            border: none;
-            padding: 0.3rem 0.8rem;
-            border-radius: 1rem;
-            cursor: pointer;
-        }
-
-        .delete-btn {
-            background: #e53e3e;
-            color: white;
-            border: none;
-            padding: 0.3rem 0.8rem;
-            border-radius: 1rem;
-            cursor: pointer;
-        }
-
-        .pin-btn {
-            background: #ed8936;
-            color: white;
-            border: none;
-            padding: 0.3rem 0.8rem;
-            border-radius: 1rem;
-            cursor: pointer;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 1.5rem;
-            padding: 2rem;
-            width: 90%;
-            max-width: 500px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .save-btn {
-            background: #2b7a4b;
-            color: white;
-        }
-
-        .cancel-btn {
-            background: #a0aec0;
-            color: white;
-        }
-
-        .backup-buttons {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .import-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .import-card {
-            background: #f0f4f8;
-            padding: 1rem;
-            border-radius: 1rem;
-            text-align: center;
-        }
-
-        .import-card h4 {
-            color: #1e3a5f;
-            margin-bottom: 0.5rem;
-        }
-
-        .import-card button {
-            width: 100%;
-            margin-top: 0.5rem;
-        }
-
-        .import-status {
-            margin-top: 1rem;
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            display: none;
-        }
-
-        .progress-container {
-            width: 100%;
-            height: 30px;
-            background: #e5e7eb;
-            border-radius: 20px;
-            margin-top: 15px;
-            overflow: hidden;
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background: #2b7a4b;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 12px;
-        }
-
-        .upload-stats {
-            margin-top: 15px;
-            background: #f9fafb;
-            padding: 15px;
-            border-radius: 10px;
-            line-height: 2;
-            font-size: 14px;
-        }
-
-        .upload-log {
-            background: #111827;
-            color: #d1fae5;
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 15px;
-            height: 200px;
-            overflow: auto;
-            font-size: 12px;
-        }
-
-        .upload-log .success {
-            color: #22c55e;
-        }
-
-        .upload-log .error {
-            color: #ef4444;
-        }
-
-        .toast-msg {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: #2b7a4b;
-            color: white;
-            padding: 0.8rem 1.5rem;
-            border-radius: 2rem;
-            z-index: 1000;
-            animation: slideIn 0.3s ease;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        .toast-msg.error {
-            background: #e53e3e;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .footer {
-            text-align: center;
-            padding: 2rem;
-            color: #718096;
-        }
-
-        @media (max-width: 768px) {
-            .navbar {
-                flex-direction: column;
-                text-align: center;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+        body { background: #edf2f7; }
+        .navbar { background: white; padding: 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+        .logo h2 { color: #1e3a5f; }
+        .logo span { color: #2b7a4b; }
+        .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .nav-links a, .nav-links button { text-decoration: none; padding: 0.5rem 1rem; border-radius: 2rem; font-weight: 500; cursor: pointer; border: none; font-size: 0.9rem; }
+        .nav-links a:hover, .nav-links button:hover { transform: translateY(-2px); opacity: 0.9; }
+        .nav-links .home { background: #2b7a4b; color: white; }
+        .nav-links .logout { background: #e53e3e; color: white; }
+        .refresh-btn { background: #4299e1; color: white; border: none; padding: 0.5rem 1rem; border-radius: 2rem; cursor: pointer; font-size: 0.8rem; }
+        .container { max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem; }
+        .tabs { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+        .tab-btn { background: transparent; border: none; padding: 0.8rem 1.8rem; border-radius: 2rem; font-size: 1rem; font-weight: bold; cursor: pointer; color: #4a5568; transition: 0.3s; }
+        .tab-btn.active { background: linear-gradient(135deg, #1e3a5f, #2b7a4b); color: white; }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .admin-card { background: white; border-radius: 1.5rem; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .admin-card h3 { color: #1e3a5f; margin-bottom: 1rem; border-right: 4px solid #2b7a4b; padding-right: 1rem; }
+        input, select, textarea { width: 100%; padding: 0.8rem; margin: 0.5rem 0; border: 2px solid #e2e8f0; border-radius: 0.8rem; }
+        button { background: #2b7a4b; color: white; padding: 0.7rem 1.5rem; border: none; border-radius: 0.8rem; font-weight: bold; cursor: pointer; margin-top: 0.5rem; transition: 0.2s; }
+        button:hover { transform: translateY(-2px); opacity: 0.9; }
+        .msg { background: #c6f6d5; color: #22543d; padding: 0.8rem; border-radius: 0.8rem; margin-bottom: 1rem; display: none; }
+        .msg.error { background: #fed7d7; color: #c53030; }
+        .table-wrapper { overflow-x: auto; border-radius: 1rem; }
+        .sections-table, .links-table, .users-table { width: 100%; border-collapse: collapse; }
+        .sections-table th, .links-table th, .users-table th { background: linear-gradient(135deg, #1e3a5f, #2b7a4b); color: white; padding: 12px; text-align: center; }
+        .sections-table td, .links-table td, .users-table td { padding: 10px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+        .sections-table tr:hover, .links-table tr:hover, .users-table tr:hover { background: #f7fafc; }
+        .sections-table .icon-cell { font-size: 1.5rem; }
+        .sections-table .name-cell { text-align: right; font-weight: 500; }
+        .sections-table .desc-cell { text-align: right; color: #4a5568; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sections-table .links-count { background: #e2e8f0; padding: 4px 10px; border-radius: 20px; font-weight: bold; display: inline-block; }
+        .action-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+        .edit-btn { background: #4299e1; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 1rem; cursor: pointer; }
+        .delete-btn { background: #e53e3e; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 1rem; cursor: pointer; }
+        .pin-btn { background: #ed8936; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 1rem; cursor: pointer; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; border-radius: 1.5rem; padding: 2rem; width: 90%; max-width: 500px; }
+        .modal-buttons { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        .save-btn { background: #2b7a4b; color: white; }
+        .cancel-btn { background: #a0aec0; color: white; }
+        .backup-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .import-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin-top: 1rem; }
+        .import-card { background: #f0f4f8; padding: 1rem; border-radius: 1rem; text-align: center; }
+        .progress-container { width: 100%; height: 30px; background: #e5e7eb; border-radius: 20px; margin-top: 15px; overflow: hidden; }
+        .progress-bar { height: 100%; width: 0%; background: #2b7a4b; transition: 0.3s; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px; }
+        .upload-stats { margin-top: 15px; background: #f9fafb; padding: 15px; border-radius: 10px; line-height: 2; font-size: 14px; }
+        .upload-log { background: #111827; color: #d1fae5; padding: 15px; border-radius: 10px; margin-top: 15px; height: 200px; overflow: auto; font-size: 12px; }
+        .upload-log .success { color: #22c55e; }
+        .upload-log .error { color: #ef4444; }
+        .toast-msg { position: fixed; bottom: 2rem; right: 2rem; background: #2b7a4b; color: white; padding: 0.8rem 1.5rem; border-radius: 2rem; z-index: 1000; animation: slideIn 0.3s ease; }
+        .toast-msg.error { background: #e53e3e; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .footer { text-align: center; padding: 2rem; color: #718096; margin-top: 2rem; }
+        .user-avatar { width: 32px; height: 32px; background: #2b7a4b; color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; }
+        @media (max-width: 768px) { .navbar { flex-direction: column; text-align: center; } .tabs { justify-content: center; } }
     </style>
 </head>
-
 <body>
-    <div id="app">
-        <div style="text-align:center; padding:3rem;">
-            <h2>⏳ جاري تحميل لوحة التحكم...</h2>
-            <p>يرجى الانتظار...</p>
-        </div>
-    </div>
+    <div id="app" style="text-align:center; padding:3rem;">⏳ جاري تحميل لوحة التحكم...</div>
 
-    <script>
-        // ========== Firebase Configuration ==========
-        const firebaseConfig = {
-            apiKey: "AIzaSyA_P5crHXs4XvZVl73n6ikNodLTpsw25mk",
-            authDomain: "training-2a75b.firebaseapp.com",
-            projectId: "training-2a75b",
-            storageBucket: "training-2a75b.firebasestorage.app",
-            messagingSenderId: "849904887764",
-            appId: "1:849904887764:web:b012d60c77b1851c169841"
-        };
-
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
+    <script type="module">
+        import { auth, db } from "./firebase.js";
+        import { onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        
+        let isAdmin = false;
         let currentData = null;
         let currentEditId = null;
         let currentEditSectionId = null;
-        let currentEditUserId = null;
-
-        // متغيرات رفع الملفات
-        let totalOperations = 0;
-        let completedOperations = 0;
-
-        // مفاتيح الكاش
-        const CACHE_KEYS = {
-            SECTIONS: 'admin_sections_v1',
-            LINKS: 'admin_links_v1'
-        };
-
-        function showToast(message, isError) {
+        let usersList = [];
+        
+        const CACHE_KEYS = { SECTIONS: 'admin_sections_v2', LINKS: 'admin_links_v2' };
+        
+        function showToast(message, isError = false) {
             const toast = document.createElement('div');
-            toast.className = 'toast-msg';
-            if (isError) toast.classList.add('error');
+            toast.className = 'toast-msg' + (isError ? ' error' : '');
             toast.textContent = message;
             document.body.appendChild(toast);
-            setTimeout(function() { toast.remove(); }, 3000);
+            setTimeout(() => toast.remove(), 3000);
         }
-
-        // ========== عرض حالة الكاش ==========
-        function updateCacheInfo() {
-            var cacheInfo = document.getElementById('cacheInfo');
-            if (!cacheInfo) return;
-            
-            if (window.CacheManager) {
-                var cachedSections = CacheManager.get(CACHE_KEYS.SECTIONS);
-                var cachedLinks = CacheManager.get(CACHE_KEYS.LINKS);
-                
-                if (cachedSections && cachedLinks) {
-                    var cacheTime = localStorage.getItem(CACHE_KEYS.SECTIONS + '_time');
-                    if (cacheTime) {
-                        var date = new Date(parseInt(cacheTime));
-                        cacheInfo.innerHTML = '📦 البيانات من الكاش - آخر تحديث: ' + date.toLocaleString('ar-EG') + ' &nbsp;|&nbsp; <a href="#" onclick="refreshAdminData(); return false;" style="color:#4299e1;">🔄 تحديث يدوي</a>';
-                    } else {
-                        //cacheInfo.innerHTML = '📦 البيانات من الكاش &nbsp;|&nbsp; <a href="#" onclick="refreshAdminData(); return false;" style="color:#4299e1;">🔄 تحديث يدوي</a>';
-                    }
-                } else {
-                    cacheInfo.innerHTML = '☁️ البيانات من Firebase (تم التحديث الآن)';
-                }
+        
+        function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+        
+        async function checkAdminStatus(user) {
+            try {
+                const adminUIDs = ["rAvzMQ7ixeP2oPreQZPSedKxQFu1"];
+                if (adminUIDs.includes(user.uid)) { isAdmin = true; return true; }
+                const adminDoc = await getDocs(query(collection(db, "admins"), where("uid", "==", user.uid)));
+                if (!adminDoc.empty) { isAdmin = true; return true; }
+                const adminEmails = ["admin@test.com", "mina@test.com"];
+                if (adminEmails.includes(user.email)) { isAdmin = true; return true; }
+                isAdmin = false;
+                return false;
+            } catch (error) { console.error(error); isAdmin = false; return false; }
+        }
+        
+        async function fetchAllUsers() {
+            try {
+                const usersSnap = await getDocs(collection(db, "users"));
+                usersList = [];
+                usersSnap.forEach(doc => { usersList.push({ uid: doc.id, ...doc.data() }); });
+                renderUsersList();
+                return usersList;
+            } catch (error) { console.error(error); return []; }
+        }
+        
+        async function addNewUser() {
+            const email = document.getElementById('newUserEmail')?.value;
+            const password = document.getElementById('newUserPassword')?.value;
+            const role = document.getElementById('newUserRole')?.value;
+            if (!email || !password) { showToast('❌ الرجاء إدخال البريد الإلكتروني وكلمة المرور', true); return; }
+            if (password.length < 6) { showToast('❌ كلمة المرور يجب أن تكون 6 أحرف على الأقل', true); return; }
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                await setDoc(doc(db, "users", userCredential.user.uid), {
+                    uid: userCredential.user.uid,
+                    email: email,
+                    role: role || 'user',
+                    createdAt: new Date().toISOString(),
+                    createdBy: auth.currentUser?.uid
+                });
+                showToast(`✅ تم إنشاء المستخدم ${email} بنجاح`);
+                document.getElementById('newUserEmail').value = '';
+                document.getElementById('newUserPassword').value = '';
+                await fetchAllUsers();
+            } catch (error) {
+                let errorMsg = '❌ فشل إنشاء المستخدم';
+                if (error.code === 'auth/email-already-in-use') errorMsg = '❌ هذا البريد الإلكتروني مستخدم بالفعل';
+                else if (error.code === 'auth/invalid-email') errorMsg = '❌ البريد الإلكتروني غير صالح';
+                else if (error.code === 'auth/weak-password') errorMsg = '❌ كلمة المرور ضعيفة - استخدم 6 أحرف على الأقل';
+                showToast(errorMsg, true);
             }
         }
-
-        // ========== تحديث بيانات لوحة التحكم يدوياً ==========
-        async function refreshAdminData() {
-            showToast("🔄 جاري تحديث البيانات...", false);
-            if (window.CacheManager) {
-                CacheManager.remove(CACHE_KEYS.SECTIONS);
-                CacheManager.remove(CACHE_KEYS.LINKS);
-                localStorage.removeItem(CACHE_KEYS.SECTIONS + '_time');
-                localStorage.removeItem(CACHE_KEYS.LINKS + '_time');
-            }
-            await loadDataFromFirebase(true);
-            renderSectionsList();
-            renderLinksList();
-            updateCacheInfo();
-            showToast("✅ تم تحديث البيانات بنجاح", false);
+        
+        async function deleteUserAccount(uid, email) {
+            if (!confirm(`⚠️ هل أنت متأكد من حذف المستخدم ${email}؟`)) return;
+            try {
+                await deleteDoc(doc(db, "users", uid));
+                showToast(`✅ تم حذف المستخدم ${email}`);
+                await fetchAllUsers();
+            } catch (error) { showToast('❌ فشل حذف المستخدم', true); }
         }
-
-        // ========== دوال مساعدة ==========
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function showMsg(elementId, msg, isError) {
-            const el = document.getElementById(elementId);
-            if (el) {
-                el.innerHTML = msg;
-                el.className = isError ? 'msg error' : 'msg';
-                el.style.display = 'block';
-                setTimeout(function() { el.style.display = 'none'; }, 3000);
-            }
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        function switchTab(tab) {
-            var tabs = document.querySelectorAll('.tab-content');
-            for (var i = 0; i < tabs.length; i++) {
-                tabs[i].classList.remove('active');
-            }
-            var btns = document.querySelectorAll('.tab-btn');
-            for (var j = 0; j < btns.length; j++) {
-                btns[j].classList.remove('active');
-            }
-            document.getElementById(tab + 'Tab').classList.add('active');
-            event.target.classList.add('active');
-        }
-
-        function logout() {
-            if (window.CacheManager) {
-                CacheManager.remove(CACHE_KEYS.SECTIONS);
-                CacheManager.remove(CACHE_KEYS.LINKS);
-                localStorage.removeItem(CACHE_KEYS.SECTIONS + '_time');
-                localStorage.removeItem(CACHE_KEYS.LINKS + '_time');
-            }
-            auth.signOut().then(function() {
-                sessionStorage.removeItem('loggedUser');
-                window.location.href = 'login.html';
-            }).catch(function() {
-                window.location.href = 'login.html';
+        
+        function renderUsersList() {
+            const container = document.getElementById('usersList');
+            if (!container) return;
+            if (usersList.length === 0) { container.innerHTML = '<div style="text-align:center; padding:2rem;">📭 لا يوجد مستخدمين</div>'; return; }
+            let html = '<div class="table-wrapper"><table class="users-table"><thead><tr><th>#</th><th>البريد الإلكتروني</th><th>الدور</th><th>تاريخ الإنشاء</th><th>العمليات</th><tr></thead><tbody>';
+            usersList.forEach((user, index) => {
+                html += `<tr><td>${index + 1}</td><td><span class="user-avatar">${(user.email?.charAt(0) || 'U').toUpperCase()}</span> ${escapeHtml(user.email || '-')}</td>`;
+                html += `<td><span style="background:#e2e8f0; padding:0.2rem 0.8rem; border-radius:1rem;">${escapeHtml(user.role || 'user')}</span></td>`;
+                html += `<td>${user.createdAt ? new Date(user.createdAt).toLocaleDateString('ar-EG') : '-'}</td>`;
+                html += `<td class="action-buttons"><button class="delete-btn" onclick="window.deleteUserAccount('${user.uid}', '${escapeHtml(user.email)}')">🗑️ حذف</button></td></tr>`;
             });
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
         }
-
-        // ========== دوال رفع الملفات ==========
+        
+        async function loadDataFromFirebase(forceRefresh = false) {
+            try {
+                let sections = [], links = [];
+                if (!forceRefresh && window.CacheManager) {
+                    const cachedSections = CacheManager.get(CACHE_KEYS.SECTIONS);
+                    const cachedLinks = CacheManager.get(CACHE_KEYS.LINKS);
+                    if (cachedSections && cachedLinks) { sections = cachedSections; links = cachedLinks; }
+                }
+                if (sections.length === 0) {
+                    const sectionsSnap = await getDocs(collection(db, "sections"));
+                    sections = sectionsSnap.docs.map(d => ({ id: parseInt(d.id), ...d.data() }));
+                    const linksSnap = await getDocs(collection(db, "links"));
+                    links = linksSnap.docs.map(d => ({ id: parseInt(d.id), ...d.data() }));
+                    if (window.CacheManager) { CacheManager.set(CACHE_KEYS.SECTIONS, sections); CacheManager.set(CACHE_KEYS.LINKS, links); }
+                }
+                currentData = { sections: sections.map(s => ({ ...s, links: links.filter(l => l.sectionId === s.id) })) };
+                return currentData;
+            } catch(e) { console.error(e); return null; }
+        }
+        
+        async function saveSection(section) { await setDoc(doc(db, "sections", section.id.toString()), section); if (window.CacheManager) CacheManager.remove(CACHE_KEYS.SECTIONS); }
+        async function saveLink(link, sectionId) { await setDoc(doc(db, "links", link.id.toString()), { ...link, sectionId }); if (window.CacheManager) CacheManager.remove(CACHE_KEYS.LINKS); }
+        async function deleteSectionFromFirebase(sectionId) {
+            await deleteDoc(doc(db, "sections", sectionId.toString()));
+            const linksSnap = await getDocs(query(collection(db, "links"), where("sectionId", "==", sectionId)));
+            const batch = writeBatch(db);
+            linksSnap.forEach(d => batch.delete(doc(db, "links", d.id)));
+            await batch.commit();
+            if (window.CacheManager) { CacheManager.remove(CACHE_KEYS.SECTIONS); CacheManager.remove(CACHE_KEYS.LINKS); }
+        }
+        async function deleteLinkFromFirebase(linkId) { await deleteDoc(doc(db, "links", linkId.toString())); if (window.CacheManager) CacheManager.remove(CACHE_KEYS.LINKS); }
+        
+        function renderSectionsList() {
+            const container = document.getElementById('sectionsList');
+            if (!container || !currentData) return;
+            if (currentData.sections.length === 0) { container.innerHTML = '<div style="text-align:center; padding:2rem;">📭 لا توجد أقسام</div>'; return; }
+            let html = `<div class="table-wrapper"><table class="sections-table"><thead><tr><th>#</th><th>الأيقونة</th><th>اسم القسم</th><th>الوصف</th><th>عدد الروابط</th><th>العمليات</th></tr></thead><tbody>`;
+            currentData.sections.forEach((s, i) => {
+                html += `<tr><td>${i + 1}</td><td class="icon-cell">${s.icon || '📁'}</td><td class="name-cell">${escapeHtml(s.name)}</td>`;
+                html += `<td class="desc-cell" title="${escapeHtml(s.description || '-')}">${escapeHtml(s.description || '-')}</td>`;
+                html += `<td><span class="links-count">${s.links ? s.links.length : 0}</span></td>`;
+                html += `<td class="action-buttons"><button class="edit-btn" onclick="window.openEditSection(${s.id})">✏️ تعديل</button><button class="delete-btn" onclick="window.deleteSection(${s.id})">🗑️ حذف</button></td></tr>`;
+            });
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        }
+        
+        function renderLinksList() {
+            const container = document.getElementById('linksList');
+            if (!container || !currentData) return;
+            let html = '';
+            currentData.sections.forEach(section => {
+                html += `<div class="admin-card"><h3>${section.icon || '📁'} ${escapeHtml(section.name)}</h3>`;
+                if (section.links && section.links.length) {
+                    html += '<div class="table-wrapper"><table class="links-table"><thead><tr><th>العنوان</th><th>الرابط</th><th>النوع</th><th>مشاهدات</th><th>مثبت</th><th>العمليات</th></tr></thead><tbody>';
+                    section.links.forEach(link => {
+                        html += `<tr><td style="text-align:right;">${escapeHtml(link.title)}</td><td style="direction:ltr;">${link.url || '-'}</td>`;
+                        html += `<td>${link.type === 'internal' ? 'داخلي' : 'خارجي'}</td><td>👁️ ${link.views || 0}</td>`;
+                        html += `<td>${link.pinned ? '✅ نعم' : '❌ لا'}</td>`;
+                        html += `<td class="action-buttons"><button class="edit-btn" onclick="window.openEditLink(${section.id},${link.id})">✏️</button>`;
+                        html += `<button class="pin-btn" onclick="window.togglePin(${section.id},${link.id})">${link.pinned ? '📌 إلغاء' : '📌 تثبيت'}</button>`;
+                        html += `<button class="delete-btn" onclick="window.deleteLink(${section.id},${link.id})">🗑️</button></td></tr>`;
+                    });
+                    html += '</tbody></table></div>';
+                } else { html += '<div style="color:#a0aec0; padding:1rem;">📭 لا توجد روابط</div>'; }
+                html += '</div>';
+            });
+            container.innerHTML = html;
+        }
+        
+        async function addSection() {
+            const name = document.getElementById('sectionName')?.value;
+            if (!name) { showToast('❌ الرجاء إدخال اسم القسم', true); return; }
+            const sectionsSnap = await getDocs(collection(db, "sections"));
+            let maxId = 0;
+            sectionsSnap.forEach(d => { const id = parseInt(d.id); if (id > maxId) maxId = id; });
+            const newSection = { id: maxId + 1, name, icon: document.getElementById('sectionIcon')?.value || '📁', description: document.getElementById('sectionDesc')?.value || '' };
+            await saveSection(newSection);
+            await loadDataFromFirebase(true);
+            renderSectionsList(); renderLinksList();
+            showToast('✅ تم إضافة القسم');
+            ['sectionName','sectionIcon','sectionDesc'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+        }
+        
+        window.deleteSection = async (id) => { if(confirm('⚠️ هل أنت متأكد من حذف هذا القسم؟')){ await deleteSectionFromFirebase(id); await loadDataFromFirebase(true); renderSectionsList(); renderLinksList(); showToast('🗑️ تم حذف القسم'); } };
+        window.openEditSection = (id) => { const section = currentData.sections.find(s => s.id === id); if(section){ currentEditId = id; document.getElementById('editSectionName').value = section.name; document.getElementById('editSectionIcon').value = section.icon || ''; document.getElementById('editSectionDesc').value = section.description || ''; document.getElementById('editSectionModal').style.display = 'flex'; } };
+        window.saveSectionEdit = async () => { const section = currentData.sections.find(s => s.id === currentEditId); if(section){ section.name = document.getElementById('editSectionName').value; section.icon = document.getElementById('editSectionIcon').value || '📁'; section.description = document.getElementById('editSectionDesc').value; await saveSection(section); document.getElementById('editSectionModal').style.display = 'none'; await loadDataFromFirebase(true); renderSectionsList(); renderLinksList(); showToast('✅ تم تعديل القسم'); } };
+        
+        async function addLink() {
+            const sectionId = parseInt(document.getElementById('linkSection')?.value);
+            const title = document.getElementById('linkTitle')?.value;
+            if (!title) { showToast('❌ الرجاء إدخال عنوان الرابط', true); return; }
+            const linksSnap = await getDocs(collection(db, "links"));
+            let maxId = 0;
+            linksSnap.forEach(d => { const id = parseInt(d.id); if(id > maxId) maxId = id; });
+            const newLink = { id: maxId + 1, title, url: document.getElementById('linkUrl')?.value || '#', type: document.getElementById('linkType')?.value, views: 0, pinned: false };
+            await saveLink(newLink, sectionId);
+            await loadDataFromFirebase(true);
+            renderLinksList();
+            showToast('✅ تم إضافة الرابط');
+            ['linkTitle','linkUrl'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+        }
+        
+        window.deleteLink = async (sectionId, linkId) => { if(confirm('⚠️ هل أنت متأكد من حذف هذا الرابط؟')){ await deleteLinkFromFirebase(linkId); await loadDataFromFirebase(true); renderLinksList(); showToast('🗑️ تم حذف الرابط'); } };
+        window.openEditLink = (sectionId, linkId) => {
+            const section = currentData.sections.find(s => s.id === sectionId);
+            if(section){ const link = section.links.find(l => l.id === linkId); if(link){ currentEditSectionId = sectionId; currentEditId = linkId; document.getElementById('editLinkTitle').value = link.title; document.getElementById('editLinkUrl').value = link.url || ''; document.getElementById('editLinkType').value = link.type || 'internal'; document.getElementById('editLinkModal').style.display = 'flex'; } }
+        };
+        window.saveLinkEdit = async () => {
+            const section = currentData.sections.find(s => s.id === currentEditSectionId);
+            if(section){ const link = section.links.find(l => l.id === currentEditId); if(link){ link.title = document.getElementById('editLinkTitle').value; link.url = document.getElementById('editLinkUrl').value; link.type = document.getElementById('editLinkType').value; await saveLink(link, currentEditSectionId); document.getElementById('editLinkModal').style.display = 'none'; await loadDataFromFirebase(true); renderLinksList(); showToast('✅ تم تعديل الرابط'); } }
+        };
+        window.togglePin = async (sectionId, linkId) => {
+            const section = currentData.sections.find(s => s.id === sectionId);
+            if(section){ const link = section.links.find(l => l.id === linkId); if(link){ link.pinned = !link.pinned; await saveLink(link, sectionId); await loadDataFromFirebase(true); renderLinksList(); showToast(link.pinned ? '📌 تم تثبيت الرابط' : '📍 تم إلغاء التثبيت'); } }
+        };
+        
+        async function exportAllToJSON() {
+            const sectionsSnap = await getDocs(collection(db, "sections"));
+            const linksSnap = await getDocs(collection(db, "links"));
+            const usersSnap = await getDocs(collection(db, "users"));
+            const data = { sections: sectionsSnap.docs.map(d => d.data()), links: linksSnap.docs.map(d => d.data()), users: usersSnap.docs.map(d => ({ uid: d.id, ...d.data() })) };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `backup_${new Date().toISOString().slice(0,19)}.json`; a.click(); URL.revokeObjectURL(a.href);
+            showToast('📥 تم تصدير النسخة الاحتياطية');
+        }
+        
+        async function importBackupJSON(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if (data.sections) { for (const section of data.sections) { await setDoc(doc(db, "sections", section.id.toString()), section); } }
+                    if (data.links) { for (const link of data.links) { await setDoc(doc(db, "links", link.id.toString()), link); } }
+                    showToast('✅ تم استيراد البيانات بنجاح');
+                    if (window.CacheManager) { CacheManager.remove(CACHE_KEYS.SECTIONS); CacheManager.remove(CACHE_KEYS.LINKS); }
+                    await loadDataFromFirebase(true);
+                    renderSectionsList(); renderLinksList();
+                } catch (error) { showToast('❌ خطأ في استيراد الملف', true); }
+            };
+            reader.readAsText(file);
+        }
+        
+        // ========== دوال رفع Excel المتكاملة ==========
+        let totalOperations = 0;
+        let completedOperations = 0;
+        
         function updateUploadProgress() {
-            var percent = Math.floor((completedOperations / totalOperations) * 100) || 0;
-            var progressBar = document.getElementById("uploadProgressBar");
+            const percent = totalOperations > 0 ? Math.floor((completedOperations / totalOperations) * 100) : 0;
+            const progressBar = document.getElementById("uploadProgressBar");
             if (progressBar) {
                 progressBar.style.width = percent + "%";
                 progressBar.innerHTML = percent + "%";
             }
-            var doneSpan = document.getElementById("uploadDoneCount");
-            var totalSpan = document.getElementById("uploadTotalCount");
+            const doneSpan = document.getElementById("uploadDoneCount");
+            const totalSpan = document.getElementById("uploadTotalCount");
             if (doneSpan) doneSpan.innerText = completedOperations;
             if (totalSpan) totalSpan.innerText = totalOperations;
         }
-
-        function addUploadLog(message, type) {
-            var logBox = document.getElementById("uploadLog");
+        
+        function addUploadLog(message, type = "") {
+            const logBox = document.getElementById("uploadLog");
             if (logBox) {
-                logBox.innerHTML += '<div class="' + (type || '') + '">' + message + '</div>';
+                const colorClass = type === "success" ? "success" : (type === "error" ? "error" : "");
+                logBox.innerHTML += `<div class="${colorClass}">${new Date().toLocaleTimeString()} - ${message}</div>`;
                 logBox.scrollTop = logBox.scrollHeight;
             }
         }
-
+        
         function setUploadStatus(text) {
-            var statusSpan = document.getElementById("uploadStatus");
+            const statusSpan = document.getElementById("uploadStatus");
             if (statusSpan) statusSpan.innerText = text;
         }
-
+        
         function readWorkbook(file) {
-            return new Promise(function(resolve, reject) {
-                var reader = new FileReader();
-                reader.onload = function(e) {
-                    var data = new Uint8Array(e.target.result);
-                    var workbook = XLSX.read(data, { type: 'array' });
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
                     resolve(workbook);
                 };
                 reader.onerror = reject;
                 reader.readAsArrayBuffer(file);
             });
         }
-
+        
         function sheetToJson(workbook, sheetName) {
-            var sheet = workbook.Sheets[sheetName];
+            const sheet = workbook.Sheets[sheetName];
             if (!sheet) return [];
             return XLSX.utils.sheet_to_json(sheet);
         }
-
+        
+        function convertExcelDate(excelDate) {
+            if (!excelDate) return "";
+            if (typeof excelDate === 'number') {
+                const date = XLSX.SSF.parse_date_code(excelDate);
+                return `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
+            }
+            return excelDate;
+        }
+        
         async function uploadEmployees(data) {
-            setUploadStatus("رفع الموظفين");
-            addUploadLog("بدء رفع الموظفين...", "");
-            
-            for (var i = 0; i < data.length; i++) {
-                var row = data[i];
-                var docId = String(row["Employee ID"] || row["employee_id"] || row["id"] || i).trim();
-                
-                await db.collection("employees").doc(docId).set({
+            setUploadStatus("رفع الموظفين...");
+            addUploadLog(`📥 بدء رفع ${data.length} موظف`);
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                const docId = String(row["Employee ID"] || row["employee_id"] || row["id"] || i).trim();
+                const employeeData = {
+                    id: parseInt(docId) || docId,
                     fullName: row["Full Name"] || row["full_name"] || row["name"] || "",
                     department: row["Dep"] || row["department"] || "",
                     position: row["Position"] || row["position"] || "",
                     level: row["Level"] || row["level"] || "",
-                    hireDate: row["Hire Date"] || row["hire_date"] || "",
+                    hireDate: convertExcelDate(row["Hire Date"] || row["hire_date"]),
                     status: row["Status"] || row["status"] || "Active"
-                });
-                
+                };
+                await setDoc(doc(db, "employees", docId), employeeData);
                 completedOperations++;
                 updateUploadProgress();
-                addUploadLog("employees: " + (i + 1) + " / " + data.length, "");
+                if ((i + 1) % 10 === 0) addUploadLog(`📊 تم رفع ${i + 1}/${data.length} موظف`);
             }
-            
-            addUploadLog("تم رفع الموظفين", "success");
+            addUploadLog(`✅ تم رفع ${data.length} موظف بنجاح`, "success");
         }
-
-        async function uploadCollection(collectionName, data) {
-            setUploadStatus("رفع " + collectionName);
-            addUploadLog("بدء رفع " + collectionName + "...", "");
+        
+        async function uploadTrainingData(collectionPrefix, workbook) {
+            const courses = sheetToJson(workbook, "Courses");
+            const sessions = sheetToJson(workbook, "Sessions");
+            const enrollments = sheetToJson(workbook, "Enrollments");
+            addUploadLog(`📚 ${collectionPrefix}: ${courses.length} كورس, ${sessions.length} جلسة, ${enrollments.length} تسجيل`);
             
-            for (var i = 0; i < data.length; i++) {
-                var row = data[i];
-                var docId = String(i);
-                
-                if (collectionName.indexOf("courses") !== -1) {
-                    docId = String(row.course_code || row["Course Code"] || i).trim().toLowerCase();
-                } else if (collectionName.indexOf("sessions") !== -1) {
-                    docId = String(row.session_code || row["Session Code"] || i).trim().toLowerCase();
-                } else if (collectionName.indexOf("enrollments") !== -1) {
-                    var emp = row.employee_id || row["Employee ID"] || "emp";
-                    var session = row.session_code || row["Session Code"] || "session";
-                    docId = String(emp).trim().toLowerCase() + "_" + String(session).trim().toLowerCase();
-                }
-                
-                await db.collection(collectionName).doc(docId).set({
-                    ...row,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            setUploadStatus(`رفع ${collectionPrefix} - الكورسات`);
+            for (let i = 0; i < courses.length; i++) {
+                const course = courses[i];
+                const docId = String(course.course_code || i).trim().toLowerCase();
+                await setDoc(doc(db, `${collectionPrefix}_courses`, docId), {
+                    course_code: course.course_code,
+                    course_name: course.course_name,
+                    category: course.category || "",
+                    duration_hours: parseFloat(course.duration_hours) || 0,
+                    description: course.description || ""
                 });
-                
                 completedOperations++;
                 updateUploadProgress();
-                addUploadLog(collectionName + ": " + (i + 1) + " / " + data.length, "");
             }
             
-            addUploadLog("تم رفع " + collectionName, "success");
-        }
-
-        async function uploadTrainingFile(workbook, prefix) {
-            var coursesData = sheetToJson(workbook, "Courses");
-            var sessionsData = sheetToJson(workbook, "Sessions");
-            var enrollmentsData = sheetToJson(workbook, "Enrollments");
+            setUploadStatus(`رفع ${collectionPrefix} - الجلسات`);
+            for (let i = 0; i < sessions.length; i++) {
+                const session = sessions[i];
+                const docId = String(session.session_code || i).trim().toLowerCase();
+                await setDoc(doc(db, `${collectionPrefix}_sessions`, docId), {
+                    session_code: session.session_code,
+                    course_code: session.course_code,
+                    session_date: convertExcelDate(session.session_date),
+                    trainer_name: session.trainer_name || "",
+                    start_time: session.start_time || "",
+                    end_time: session.end_time || "",
+                    location: session.location || ""
+                });
+                completedOperations++;
+                updateUploadProgress();
+            }
             
-            totalOperations += coursesData.length + sessionsData.length + enrollmentsData.length;
-            updateUploadProgress();
-            
-            await uploadCollection(prefix + "_courses", coursesData);
-            await uploadCollection(prefix + "_sessions", sessionsData);
-            await uploadCollection(prefix + "_enrollments", enrollmentsData);
+            setUploadStatus(`رفع ${collectionPrefix} - التسجيلات`);
+            for (let i = 0; i < enrollments.length; i++) {
+                const enrollment = enrollments[i];
+                const empId = String(enrollment.employee_id || i).trim();
+                const sessionCode = String(enrollment.session_code || "").trim();
+                const docId = `${empId}_${sessionCode}`;
+                await setDoc(doc(db, `${collectionPrefix}_enrollments`, docId), {
+                    employee_id: enrollment.employee_id,
+                    session_code: enrollment.session_code,
+                    enrollment_status: enrollment.enrollment_status || "Completed",
+                    score: enrollment.score ? parseFloat(enrollment.score) : null,
+                    completion_date: convertExcelDate(enrollment.completion_date)
+                });
+                completedOperations++;
+                updateUploadProgress();
+            }
+            addUploadLog(`✅ تم رفع ${collectionPrefix} بنجاح`, "success");
         }
-
-        async function startUpload() {
-            var employeesFile = document.getElementById("employeesFile") && document.getElementById("employeesFile").files[0];
-            var offjobFile = document.getElementById("offjobFile") && document.getElementById("offjobFile").files[0];
-            var onjobFile = document.getElementById("onjobFile") && document.getElementById("onjobFile").files[0];
+        
+        window.startUpload = async () => {
+            const employeesFile = document.getElementById("employeesFile")?.files[0];
+            const offjobFile = document.getElementById("offjobFile")?.files[0];
+            const onjobFile = document.getElementById("onjobFile")?.files[0];
             
             if (!employeesFile && !offjobFile && !onjobFile) {
-                alert("اختر ملف واحد على الأقل");
+                showToast("❌ الرجاء اختيار ملف واحد على الأقل", true);
                 return;
             }
             
             completedOperations = 0;
             totalOperations = 0;
             
-            var logBox = document.getElementById("uploadLog");
+            if (employeesFile) {
+                const empWorkbook = await readWorkbook(employeesFile);
+                const empData = sheetToJson(empWorkbook, "Sheet1");
+                totalOperations += empData.length;
+            }
+            if (offjobFile) {
+                const offWorkbook = await readWorkbook(offjobFile);
+                const courses = sheetToJson(offWorkbook, "Courses");
+                const sessions = sheetToJson(offWorkbook, "Sessions");
+                const enrollments = sheetToJson(offWorkbook, "Enrollments");
+                totalOperations += courses.length + sessions.length + enrollments.length;
+            }
+            if (onjobFile) {
+                const onWorkbook = await readWorkbook(onjobFile);
+                const courses = sheetToJson(onWorkbook, "Courses");
+                const sessions = sheetToJson(onWorkbook, "Sessions");
+                const enrollments = sheetToJson(onWorkbook, "Enrollments");
+                totalOperations += courses.length + sessions.length + enrollments.length;
+            }
+            
+            const logBox = document.getElementById("uploadLog");
             if (logBox) logBox.innerHTML = "";
             updateUploadProgress();
-            setUploadStatus("قراءة الملفات");
-            addUploadLog("قراءة الملفات...", "");
+            setUploadStatus("بدء رفع البيانات...");
+            addUploadLog("🚀 بدء عملية رفع البيانات إلى Firebase");
             
             try {
                 if (employeesFile) {
-                    addUploadLog("قراءة ملف الموظفين...", "");
-                    var employeesWorkbook = await readWorkbook(employeesFile);
-                    var employeesData = sheetToJson(employeesWorkbook, "Sheet1");
-                    totalOperations += employeesData.length;
-                    updateUploadProgress();
-                    await uploadEmployees(employeesData);
+                    addUploadLog("📄 قراءة ملف الموظفين...");
+                    const employeesWorkbook = await readWorkbook(employeesFile);
+                    const employeesData = sheetToJson(employeesWorkbook, "Sheet1");
+                    if (employeesData.length === 0) {
+                        addUploadLog("⚠️ لم يتم العثور على بيانات في Sheet1", "error");
+                    } else {
+                        await uploadEmployees(employeesData);
+                    }
                 }
                 
                 if (offjobFile) {
-                    addUploadLog("قراءة ملف Off Job...", "");
-                    var offjobWorkbook = await readWorkbook(offjobFile);
-                    await uploadTrainingFile(offjobWorkbook, "offjob");
+                    addUploadLog("📄 قراءة ملف Off Job...");
+                    const offjobWorkbook = await readWorkbook(offjobFile);
+                    await uploadTrainingData("offjob", offjobWorkbook);
                 }
                 
                 if (onjobFile) {
-                    addUploadLog("قراءة ملف On Job...", "");
-                    var onjobWorkbook = await readWorkbook(onjobFile);
-                    await uploadTrainingFile(onjobWorkbook, "onjob");
+                    addUploadLog("📄 قراءة ملف On Job...");
+                    const onjobWorkbook = await readWorkbook(onjobFile);
+                    await uploadTrainingData("onjob", onjobWorkbook);
                 }
                 
-                setUploadStatus("اكتمل الرفع");
-                addUploadLog("تم رفع البيانات بنجاح", "success");
-                showToast("✅ تم رفع البيانات بنجاح", false);
+                setUploadStatus("اكتمل الرفع بنجاح ✅");
+                addUploadLog("🎉 تم رفع جميع البيانات بنجاح إلى Firebase!", "success");
+                showToast("✅ تم رفع البيانات بنجاح");
+                
+                if (window.CacheManager) {
+                    CacheManager.remove(CACHE_KEYS.SECTIONS);
+                    CacheManager.remove(CACHE_KEYS.LINKS);
+                }
                 
                 await loadDataFromFirebase(true);
                 renderSectionsList();
@@ -706,576 +530,63 @@
                 
             } catch (error) {
                 console.error(error);
-                addUploadLog(error.message, "error");
+                setUploadStatus("فشل الرفع ❌");
+                addUploadLog(`❌ خطأ: ${error.message}`, "error");
                 showToast("❌ فشل رفع البيانات", true);
             }
+        };
+        
+        async function refreshAdminData() { showToast("🔄 جاري تحديث البيانات..."); if(window.CacheManager){ CacheManager.remove(CACHE_KEYS.SECTIONS); CacheManager.remove(CACHE_KEYS.LINKS); } await loadDataFromFirebase(true); renderSectionsList(); renderLinksList(); await fetchAllUsers(); showToast("✅ تم تحديث البيانات"); }
+        
+        function logout() { signOut(auth).then(() => window.location.href = 'login.html'); }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function switchTab(tab) { 
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); 
+            document.getElementById(tab + 'Tab').classList.add('active'); 
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); 
+            if (event && event.target) event.target.classList.add('active');
         }
-
-        // ========== تحميل البيانات من Firebase مع الكاش ==========
-        async function loadDataFromFirebase(forceRefresh) {
-            try {
-                console.log("📥 جاري تحميل البيانات من Firebase...");
-                
-                var sections = [];
-                var links = [];
-                
-                if (!forceRefresh && window.CacheManager) {
-                    var cachedSections = CacheManager.get(CACHE_KEYS.SECTIONS);
-                    var cachedLinks = CacheManager.get(CACHE_KEYS.LINKS);
-                    
-                    if (cachedSections && cachedLinks) {
-                        console.log("📦 استخدام الكاش للأقسام والروابط");
-                        sections = cachedSections;
-                        links = cachedLinks;
-                        
-                        var sectionsWithLinks = sections.map(function(section) {
-                            return {
-                                ...section,
-                                links: links.filter(function(link) { return link.sectionId === section.id; })
-                            };
-                        });
-                        
-                        currentData = { sections: sectionsWithLinks };
-                        console.log("✅ تم تحميل " + sections.length + " قسم و " + links.length + " رابط من الكاش");
-                        updateCacheInfo();
-                        return currentData;
-                    }
-                }
-                
-                console.log("☁️ جلب بيانات جديدة من Firebase");
-                var sectionsSnapshot = await db.collection('sections').get();
-                sections = [];
-                sectionsSnapshot.forEach(function(doc) {
-                    sections.push({ id: parseInt(doc.id), ...doc.data() });
-                });
-                
-                var linksSnapshot = await db.collection('links').get();
-                links = [];
-                linksSnapshot.forEach(function(doc) {
-                    links.push({ id: parseInt(doc.id), ...doc.data() });
-                });
-                
-                if (window.CacheManager) {
-                    CacheManager.set(CACHE_KEYS.SECTIONS, sections);
-                    CacheManager.set(CACHE_KEYS.LINKS, links);
-                    localStorage.setItem(CACHE_KEYS.SECTIONS + '_time', Date.now().toString());
-                }
-                
-                var sectionsWithLinks = sections.map(function(section) {
-                    return {
-                        ...section,
-                        links: links.filter(function(link) { return link.sectionId === section.id; })
-                    };
-                });
-                
-                currentData = { sections: sectionsWithLinks };
-                console.log("✅ تم تحميل " + sections.length + " قسم و " + links.length + " رابط من Firebase");
-                updateCacheInfo();
-                return currentData;
-            } catch (error) {
-                console.error("❌ خطأ في تحميل البيانات:", error);
-                return null;
-            }
-        }
-
-        // ========== حفظ البيانات إلى Firebase ==========
-        async function saveSectionToFirebase(section) {
-            try {
-                await db.collection('sections').doc(section.id.toString()).set(section);
-                if (window.CacheManager) {
-                    CacheManager.remove(CACHE_KEYS.SECTIONS);
-                    localStorage.removeItem(CACHE_KEYS.SECTIONS + '_time');
-                }
-                return true;
-            } catch (error) {
-                console.error("خطأ في حفظ القسم:", error);
-                return false;
-            }
-        }
-
-        async function saveLinkToFirebase(link, sectionId) {
-            try {
-                var linkData = { ...link, sectionId: sectionId };
-                await db.collection('links').doc(link.id.toString()).set(linkData);
-                if (window.CacheManager) {
-                    CacheManager.remove(CACHE_KEYS.LINKS);
-                    localStorage.removeItem(CACHE_KEYS.LINKS + '_time');
-                }
-                return true;
-            } catch (error) {
-                console.error("خطأ في حفظ الرابط:", error);
-                return false;
-            }
-        }
-
-        async function deleteSectionFromFirebase(sectionId) {
-            try {
-                await db.collection('sections').doc(sectionId.toString()).delete();
-                var linksSnapshot = await db.collection('links').where('sectionId', '==', sectionId).get();
-                linksSnapshot.forEach(async function(doc) {
-                    await db.collection('links').doc(doc.id).delete();
-                });
-                if (window.CacheManager) {
-                    CacheManager.remove(CACHE_KEYS.SECTIONS);
-                    CacheManager.remove(CACHE_KEYS.LINKS);
-                    localStorage.removeItem(CACHE_KEYS.SECTIONS + '_time');
-                    localStorage.removeItem(CACHE_KEYS.LINKS + '_time');
-                }
-                return true;
-            } catch (error) {
-                console.error("خطأ في حذف القسم:", error);
-                return false;
-            }
-        }
-
-        async function deleteLinkFromFirebase(linkId) {
-            try {
-                await db.collection('links').doc(linkId.toString()).delete();
-                if (window.CacheManager) {
-                    CacheManager.remove(CACHE_KEYS.LINKS);
-                    localStorage.removeItem(CACHE_KEYS.LINKS + '_time');
-                }
-                return true;
-            } catch (error) {
-                console.error("خطأ في حذف الرابط:", error);
-                return false;
-            }
-        }
-
-        // ========== عرض البيانات ==========
-        function renderSectionsList() {
-            var container = document.getElementById('sectionsList');
-            if (!container || !currentData) return;
-            var html = '<div class="table-wrapper"><table><thead><tr><th>#</th><th>الأيقونة</th><th>اسم القسم</th><th>الوصف</th><th>عدد الروابط</th><th>العمليات</th></tr></thead><tbody>';
-            for (var i = 0; i < currentData.sections.length; i++) {
-                var section = currentData.sections[i];
-                html += '<tr>';
-                html += '<td>' + (i + 1) + '</td>';
-                html += '<td style="font-size:1.5rem;">' + (section.icon || '📁') + '</td>';
-                html += '<td>' + escapeHtml(section.name) + '</td>';
-                html += '<td>' + escapeHtml(section.description || '-') + '</td>';
-                html += '<td>' + (section.links ? section.links.length : 0) + '</td>';
-                html += '<td class="action-buttons"><button class="edit-btn" onclick="openEditSection(' + section.id + ')">✏️ تعديل</button><button class="delete-btn" onclick="deleteSection(' + section.id + ')">🗑️ حذف</button></td>';
-                html += '</tr>';
-            }
-            html += '</tbody></table></div>';
-            container.innerHTML = html;
-        }
-
-        function renderLinksList() {
-            var container = document.getElementById('linksList');
-            if (!container || !currentData) return;
-            
-            var html = '';
-            for (var i = 0; i < currentData.sections.length; i++) {
-                var section = currentData.sections[i];
-                html += '<div class="admin-card"><h3>' + (section.icon || '📁') + ' ' + escapeHtml(section.name) + '</h3>';
-                
-                if (section.links && section.links.length > 0) {
-                    html += '<div class="table-wrapper"><table><thead><tr><th>العنوان</th><th>الرابط</th><th>النوع</th><th>مشاهدات</th><th>مثبت</th><th>العمليات</th></tr></thead><tbody>';
-                    for (var j = 0; j < section.links.length; j++) {
-                        var link = section.links[j];
-                        html += '<tr>';
-                        html += '<td>' + escapeHtml(link.title) + '</td>';
-                        html += '<td style="direction:ltr;">' + (link.url || '-') + '</td>';
-                        html += '<td>' + (link.type === 'internal' ? 'داخلي' : 'خارجي') + '</td>';
-                        html += '<td>👁️ ' + (link.views || 0) + '</td>';
-                        html += '<td>' + (link.pinned ? '✅ نعم' : '❌ لا') + '</td>';
-                        html += '<td class="action-buttons"><button class="edit-btn" onclick="openEditLink(' + section.id + ',' + link.id + ')">✏️</button><button class="pin-btn" onclick="togglePin(' + section.id + ',' + link.id + ')">' + (link.pinned ? '📌 إلغاء' : '📌 تثبيت') + '</button><button class="delete-btn" onclick="deleteLink(' + section.id + ',' + link.id + ')">🗑️</button></td>';
-                        html += '</tr>';
-                    }
-                    html += '</tbody></table></div>';
-                } else {
-                    html += '<div style="color:#a0aec0; padding:1rem;">📭 لا توجد روابط</div>';
-                }
-                html += '</div>';
-            }
-            container.innerHTML = html;
-        }
-
-        // ========== إدارة الأقسام ==========
-        async function addSection() {
-            var name = document.getElementById('sectionName') && document.getElementById('sectionName').value;
-            var icon = document.getElementById('sectionIcon') && document.getElementById('sectionIcon').value;
-            var description = document.getElementById('sectionDesc') && document.getElementById('sectionDesc').value;
-            if (!name) { showMsg('sectionMsg', '❌ الرجاء إدخال اسم القسم', true); return; }
-
-            var sectionsSnapshot = await db.collection('sections').get();
-            var maxId = 0;
-            sectionsSnapshot.forEach(function(doc) {
-                var id = parseInt(doc.id);
-                if (id > maxId) maxId = id;
-            });
-            var newId = maxId + 1;
-
-            var newSection = { id: newId, name: name, icon: icon || '📁', description: description || '' };
-
-            await saveSectionToFirebase(newSection);
-            await loadDataFromFirebase(true);
-
-            showMsg('sectionMsg', '✅ تم إضافة القسم بنجاح', false);
-            if (document.getElementById('sectionName')) document.getElementById('sectionName').value = '';
-            if (document.getElementById('sectionIcon')) document.getElementById('sectionIcon').value = '';
-            if (document.getElementById('sectionDesc')) document.getElementById('sectionDesc').value = '';
-
-            renderSectionsList();
-            renderLinksList();
-        }
-
-        async function deleteSection(id) {
-            if (confirm('⚠️ هل أنت متأكد من حذف هذا القسم؟')) {
-                await deleteSectionFromFirebase(id);
-                await loadDataFromFirebase(true);
-                renderSectionsList();
-                renderLinksList();
-                showMsg('sectionMsg', '🗑️ تم حذف القسم بنجاح', false);
-            }
-        }
-
-        function openEditSection(id) {
-            var section = currentData.sections.find(function(s) { return s.id === id; });
-            if (section) {
-                currentEditId = id;
-                if (document.getElementById('editSectionName')) document.getElementById('editSectionName').value = section.name;
-                if (document.getElementById('editSectionIcon')) document.getElementById('editSectionIcon').value = section.icon || '';
-                if (document.getElementById('editSectionDesc')) document.getElementById('editSectionDesc').value = section.description || '';
-                if (document.getElementById('editSectionModal')) document.getElementById('editSectionModal').style.display = 'flex';
-            }
-        }
-
-        async function saveSectionEdit() {
-            var section = currentData.sections.find(function(s) { return s.id === currentEditId; });
-            if (section) {
-                section.name = document.getElementById('editSectionName').value;
-                section.icon = document.getElementById('editSectionIcon').value || '📁';
-                section.description = document.getElementById('editSectionDesc').value;
-                await saveSectionToFirebase(section);
-                closeModal('editSectionModal');
-                await loadDataFromFirebase(true);
-                renderSectionsList();
-                renderLinksList();
-                showMsg('sectionMsg', '✅ تم تعديل القسم بنجاح', false);
-            }
-        }
-
-        CacheManager.remove(CACHE_KEYS.SECTIONS);
-        CacheManager.remove(CACHE_KEYS.LINKS);
-        // ========== إدارة الروابط ==========
-        async function addLink() {
-            var sectionId = parseInt(document.getElementById('linkSection') && document.getElementById('linkSection').value);
-            var title = document.getElementById('linkTitle') && document.getElementById('linkTitle').value;
-            var url = document.getElementById('linkUrl') && document.getElementById('linkUrl').value;
-            var type = document.getElementById('linkType') && document.getElementById('linkType').value;
-            if (!title) { showMsg('linkMsg', '❌ الرجاء إدخال عنوان الرابط', true); return; }
-
-            var linksSnapshot = await db.collection('links').get();
-            var maxId = 0;
-            linksSnapshot.forEach(function(doc) {
-                var id = parseInt(doc.id);
-                if (id > maxId) maxId = id;
-            });
-            var newId = maxId + 1;
-
-            var newLink = { id: newId, title: title, url: url || '#', type: type, views: 0, pinned: false };
-
-            await saveLinkToFirebase(newLink, sectionId);
-            await loadDataFromFirebase(true);
-
-            showMsg('linkMsg', '✅ تم إضافة الرابط بنجاح', false);
-            if (document.getElementById('linkTitle')) document.getElementById('linkTitle').value = '';
-            if (document.getElementById('linkUrl')) document.getElementById('linkUrl').value = '';
-
-            renderLinksList();
-        }
-
-        async function deleteLink(sectionId, linkId) {
-            if (confirm('⚠️ هل أنت متأكد من حذف هذا الرابط؟')) {
-                await deleteLinkFromFirebase(linkId);
-                await loadDataFromFirebase(true);
-                renderLinksList();
-                showMsg('linkMsg', '🗑️ تم حذف الرابط بنجاح', false);
-            }
-        }
-
-        function openEditLink(sectionId, linkId) {
-            var section = currentData.sections.find(function(s) { return s.id === sectionId; });
-            if (section) {
-                var link = section.links.find(function(l) { return l.id === linkId; });
-                if (link) {
-                    currentEditSectionId = sectionId;
-                    currentEditId = linkId;
-                    if (document.getElementById('editLinkTitle')) document.getElementById('editLinkTitle').value = link.title;
-                    if (document.getElementById('editLinkUrl')) document.getElementById('editLinkUrl').value = link.url || '';
-                    if (document.getElementById('editLinkType')) document.getElementById('editLinkType').value = link.type || 'internal';
-                    if (document.getElementById('editLinkModal')) document.getElementById('editLinkModal').style.display = 'flex';
-                }
-            }
-        }
-
-        async function saveLinkEdit() {
-            var section = currentData.sections.find(function(s) { return s.id === currentEditSectionId; });
-            if (section) {
-                var link = section.links.find(function(l) { return l.id === currentEditId; });
-                if (link) {
-                    link.title = document.getElementById('editLinkTitle').value;
-                    link.url = document.getElementById('editLinkUrl').value;
-                    link.type = document.getElementById('editLinkType').value;
-                    await saveLinkToFirebase(link, currentEditSectionId);
-                    closeModal('editLinkModal');
-                    await loadDataFromFirebase(true);
-                    renderLinksList();
-                    showMsg('linkMsg', '✅ تم تعديل الرابط بنجاح', false);
-                }
-            }
-        }
-
-        async function togglePin(sectionId, linkId) {
-            var section = currentData.sections.find(function(s) { return s.id === sectionId; });
-            if (section) {
-                var link = section.links.find(function(l) { return l.id === linkId; });
-                if (link) {
-                    link.pinned = !link.pinned;
-                    await saveLinkToFirebase(link, sectionId);
-                    await loadDataFromFirebase(true);
-                    renderLinksList();
-                    showMsg('linkMsg', link.pinned ? '📌 تم تثبيت الرابط' : '📍 تم إلغاء التثبيت', false);
-                }
-            }
-        }
-
-        // ========== استيراد/تصدير JSON ==========
-        async function importBackupJSON(file) {
-            var reader = new FileReader();
-            reader.onload = async function(event) {
-                try {
-                    var data = JSON.parse(event.target.result);
-                    showToast('🔄 جاري استيراد البيانات...', false);
-
-                    if (data.sections) {
-                        for (var i = 0; i < data.sections.length; i++) {
-                            await db.collection('sections').doc(data.sections[i].id.toString()).set(data.sections[i]);
-                        }
-                    }
-
-                    if (data.links) {
-                        for (var j = 0; j < data.links.length; j++) {
-                            await db.collection('links').doc(data.links[j].id.toString()).set(data.links[j]);
-                        }
-                    }
-
-                    showToast('✅ تم استيراد البيانات بنجاح', false);
-                    if (window.CacheManager) {
-                        CacheManager.remove(CACHE_KEYS.SECTIONS);
-                        CacheManager.remove(CACHE_KEYS.LINKS);
-                        localStorage.removeItem(CACHE_KEYS.SECTIONS + '_time');
-                        localStorage.removeItem(CACHE_KEYS.LINKS + '_time');
-                    }
-                    await loadDataFromFirebase(true);
-                    renderSectionsList();
-                    renderLinksList();
-                } catch (error) {
-                    showToast('❌ خطأ في استيراد الملف', true);
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        async function exportAllToJSON() {
-            showToast('🔄 جاري تصدير البيانات...', false);
-
-            var sectionsSnapshot = await db.collection('sections').get();
-            var sections = [];
-            sectionsSnapshot.forEach(function(doc) { sections.push(doc.data()); });
-
-            var linksSnapshot = await db.collection('links').get();
-            var links = [];
-            linksSnapshot.forEach(function(doc) { links.push(doc.data()); });
-
-            var exportData = { sections: sections, links: links };
-
-            var jsonStr = JSON.stringify(exportData, null, 2);
-            var blob = new Blob([jsonStr], { type: 'application/json' });
-            var url = URL.createObjectURL(blob);
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = 'backup_' + new Date().toISOString().slice(0, 19) + '.json';
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast('📥 تم تصدير النسخة الاحتياطية', false);
-        }
-
-        // ========== تحميل الصفحة الرئيسية ==========
+        
         async function loadAdminPage() {
             await loadDataFromFirebase(false);
-
-            var sectionsOptions = '';
-            if (currentData && currentData.sections) {
-                for (var i = 0; i < currentData.sections.length; i++) {
-                    var s = currentData.sections[i];
-                    sectionsOptions += '<option value="' + s.id + '">' + (s.icon || '📁') + ' ' + s.name + '</option>';
-                }
-            }
-
+            await fetchAllUsers();
+            const sectionsOptions = currentData?.sections.map(s => `<option value="${s.id}">${s.icon || '📁'} ${s.name}</option>`).join('');
             document.getElementById('app').innerHTML = `
-                <div class="navbar">
-                    <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
-                    <div class="nav-links">
-                        <a href="index.html" class="home">🏠 الرئيسية</a>
-                        <a href="#" onclick="logout()" class="logout">🚪 تسجيل خروج</a>
-                    </div>
-                </div>
+                <div class="navbar"><div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div><div class="nav-links"><a href="index.html" class="home">🏠 الرئيسية</a><a href="#" onclick="window.logout()" class="logout">🚪 تسجيل خروج</a></div></div>
                 <div class="container">
-
-                    <!-- قسم إدارة البيانات (JSON) -->
-                    <div class="admin-card" style="background:#fef5e7;">
-                        <h3>📁 إدارة البيانات (JSON)</h3>
-                        <div class="backup-buttons">
-                            <button onclick="exportAllToJSON()" style="background:#4299e1;">📥 تصدير JSON</button>
-                            <button onclick="document.getElementById('jsonImportInput').click()" style="background:#9f7aea;">📤 استيراد JSON</button>
-                            <input type="file" id="jsonImportInput" accept=".json" style="display:none" onchange="importBackupJSON(this.files[0])">
-                            <button class="refresh-btn" onclick="refreshAdminData()">🔄 تحديث البيانات</button>
-                        </div>
-                    </div>
-
-                    <!-- قسم رفع Excel إلى Firebase -->
-                    <div class="admin-card" style="background:#e8f0fe;">
-                        <h3>📥 استيراد البيانات من Excel إلى Firebase</h3>
-                        <div class="import-grid">
-                            <div class="import-card">
-                                <h4>👥 بيانات الموظفين</h4>
-                                <input type="file" id="employeesFile" accept=".xlsx, .xls">
-                            </div>
-                            <div class="import-card">
-                                <h4>📘 تدريبات Off Job</h4>
-                                <input type="file" id="offjobFile" accept=".xlsx, .xls">
-                            </div>
-                            <div class="import-card">
-                                <h4>📗 تدريبات On Job</h4>
-                                <input type="file" id="onjobFile" accept=".xlsx, .xls">
-                            </div>
-                        </div>
-                        <button onclick="startUpload()" style="background:#2b7a4b; width:100%;">🚀 بدء رفع البيانات</button>
-                        
-                        <div class="progress-container">
-                            <div class="progress-bar" id="uploadProgressBar">0%</div>
-                        </div>
-                        
-                        <div class="upload-stats">
-                            عدد العمليات: <span id="uploadDoneCount">0</span> / <span id="uploadTotalCount">0</span><br>
-                            الحالة الحالية: <span id="uploadStatus">في انتظار بدء الرفع...</span>
-                        </div>
-                        
-                        <div class="upload-log" id="uploadLog"></div>
-                    </div>
-
-                    <!-- أقسام إدارة الأقسام والروابط -->
-                    <div class="tabs">
-                        <button class="tab-btn active" onclick="switchTab('sections')">📂 إدارة الأقسام</button>
-                        <button class="tab-btn" onclick="switchTab('links')">🔗 إدارة الروابط</button>
-                    </div>
-                    
+                    <div class="tabs"><button class="tab-btn active" onclick="window.switchTab('sections')">📂 الأقسام والروابط</button><button class="tab-btn" onclick="window.switchTab('users')">👥 إدارة المستخدمين</button><button class="tab-btn" onclick="window.switchTab('data')">💾 استيراد/تصدير</button></div>
                     <div id="sectionsTab" class="tab-content active">
-                        <div class="admin-card">
-                            <h3>➕ إضافة قسم جديد</h3>
-                            <div id="sectionMsg" class="msg"></div>
-                            <input type="text" id="sectionName" placeholder="اسم القسم">
-                            <input type="text" id="sectionIcon" placeholder="أيقونة القسم (👥)">
-                            <input type="text" id="sectionDesc" placeholder="وصف القسم">
-                            <button onclick="addSection()">إضافة قسم</button>
-                        </div>
-                        <div class="admin-card">
-                            <h3>📋 قائمة الأقسام</h3>
-                            <div id="sectionsList"></div>
-                        </div>
+                        <div class="admin-card"><h3>➕ إضافة قسم جديد</h3><div id="sectionMsg" class="msg"></div><input type="text" id="sectionName" placeholder="اسم القسم"><input type="text" id="sectionIcon" placeholder="أيقونة القسم (📁)"><input type="text" id="sectionDesc" placeholder="وصف القسم"><button onclick="window.addSection()">إضافة قسم</button></div>
+                        <div class="admin-card"><h3>📋 قائمة الأقسام</h3><div id="sectionsList"></div></div>
+                        <div class="admin-card"><h3>🔗 إضافة رابط جديد</h3><div id="linkMsg" class="msg"></div><select id="linkSection">${sectionsOptions}</select><input type="text" id="linkTitle" placeholder="عنوان الرابط"><input type="url" id="linkUrl" placeholder="الرابط"><select id="linkType"><option value="internal">رابط داخلي</option><option value="external">رابط خارجي</option></select><button onclick="window.addLink()">إضافة رابط</button></div>
+                        <div class="admin-card"><h3>📋 الروابط حسب الأقسام</h3><div id="linksList"></div></div>
                     </div>
-                    
-                    <div id="linksTab" class="tab-content">
-                        <div class="admin-card">
-                            <h3>🔗 إضافة رابط جديد</h3>
-                            <div id="linkMsg" class="msg"></div>
-                            <select id="linkSection">${sectionsOptions}</select>
-                            <input type="text" id="linkTitle" placeholder="عنوان الرابط">
-                            <input type="url" id="linkUrl" placeholder="رابط الملف أو الصفحة">
-                            <select id="linkType">
-                                <option value="internal">رابط داخلي</option>
-                                <option value="external">رابط خارجي</option>
-                            </select>
-                            <button onclick="addLink()">إضافة رابط</button>
-                        </div>
-                        <div class="admin-card">
-                            <h3>📋 الروابط حسب الأقسام</h3>
-                            <div id="linksList"></div>
-                        </div>
+                    <div id="usersTab" class="tab-content">
+                        <div class="admin-card"><h3>➕ إضافة مستخدم جديد</h3><div id="userMsg" class="msg"></div><input type="email" id="newUserEmail" placeholder="البريد الإلكتروني *"><input type="password" id="newUserPassword" placeholder="كلمة المرور * (6 أحرف على الأقل)"><select id="newUserRole"><option value="user">👤 مستخدم عادي</option><option value="admin">👑 أدمن</option></select><button onclick="window.addNewUser()">➕ إنشاء مستخدم</button></div>
+                        <div class="admin-card"><h3>📋 قائمة المستخدمين</h3><div id="usersList"></div></div>
+                    </div>
+                    <div id="dataTab" class="tab-content">
+                        <div class="admin-card" style="background:#fef5e7;"><h3>📁 إدارة البيانات (JSON)</h3><div class="backup-buttons"><button onclick="window.exportAllToJSON()" style="background:#4299e1;">📥 تصدير JSON</button><button onclick="document.getElementById('jsonImportInput').click()" style="background:#9f7aea;">📤 استيراد JSON</button><input type="file" id="jsonImportInput" accept=".json" style="display:none" onchange="window.importBackupJSON(this.files[0])"><button class="refresh-btn" onclick="window.refreshAdminData()">🔄 تحديث البيانات</button></div></div>
+                        <div class="admin-card" style="background:#e8f0fe;"><h3>📥 استيراد البيانات من Excel إلى Firebase</h3><div class="import-grid"><div class="import-card"><h4>👥 بيانات الموظفين</h4><input type="file" id="employeesFile" accept=".xlsx, .xls"></div><div class="import-card"><h4>📘 تدريبات Off Job</h4><input type="file" id="offjobFile" accept=".xlsx, .xls"></div><div class="import-card"><h4>📗 تدريبات On Job</h4><input type="file" id="onjobFile" accept=".xlsx, .xls"></div></div><button onclick="window.startUpload()" style="background:#2b7a4b; width:100%;">🚀 بدء رفع البيانات</button>
+                        <div class="progress-container"><div class="progress-bar" id="uploadProgressBar">0%</div></div>
+                        <div class="upload-stats">عدد العمليات: <span id="uploadDoneCount">0</span> / <span id="uploadTotalCount">0</span><br>الحالة الحالية: <span id="uploadStatus">في انتظار بدء الرفع...</span></div>
+                        <div class="upload-log" id="uploadLog"></div></div>
                     </div>
                 </div>
-                
-                <div id="editSectionModal" class="modal">
-                    <div class="modal-content">
-                        <h3>✏️ تعديل القسم</h3>
-                        <input type="text" id="editSectionName" placeholder="اسم القسم">
-                        <input type="text" id="editSectionIcon" placeholder="الأيقونة">
-                        <input type="text" id="editSectionDesc" placeholder="الوصف">
-                        <div class="modal-buttons">
-                            <button class="save-btn" onclick="saveSectionEdit()">💾 حفظ</button>
-                            <button class="cancel-btn" onclick="closeModal('editSectionModal')">❌ إلغاء</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="editLinkModal" class="modal">
-                    <div class="modal-content">
-                        <h3>✏️ تعديل الرابط</h3>
-                        <input type="text" id="editLinkTitle" placeholder="عنوان الرابط">
-                        <input type="url" id="editLinkUrl" placeholder="الرابط">
-                        <select id="editLinkType">
-                            <option value="internal">رابط داخلي</option>
-                            <option value="external">رابط خارجي</option>
-                        </select>
-                        <div class="modal-buttons">
-                            <button class="save-btn" onclick="saveLinkEdit()">💾 حفظ</button>
-                            <button class="cancel-btn" onclick="closeModal('editLinkModal')">❌ إلغاء</button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="footer">
-                    <p>© 2025 نظام إدارة التعليم والتطوير - جميع الحقوق محفوظة</p>
-                </div>
+                <div id="editSectionModal" class="modal"><div class="modal-content"><h3>✏️ تعديل القسم</h3><input type="text" id="editSectionName" placeholder="اسم القسم"><input type="text" id="editSectionIcon" placeholder="الأيقونة"><input type="text" id="editSectionDesc" placeholder="الوصف"><div class="modal-buttons"><button class="save-btn" onclick="window.saveSectionEdit()">💾 حفظ</button><button class="cancel-btn" onclick="window.closeModal('editSectionModal')">❌ إلغاء</button></div></div></div>
+                <div id="editLinkModal" class="modal"><div class="modal-content"><h3>✏️ تعديل الرابط</h3><input type="text" id="editLinkTitle" placeholder="عنوان الرابط"><input type="url" id="editLinkUrl" placeholder="الرابط"><select id="editLinkType"><option value="internal">رابط داخلي</option><option value="external">رابط خارجي</option></select><div class="modal-buttons"><button class="save-btn" onclick="window.saveLinkEdit()">💾 حفظ</button><button class="cancel-btn" onclick="window.closeModal('editLinkModal')">❌ إلغاء</button></div></div></div>
+                <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير - جميع الحقوق محفوظة</p></div>
             `;
-
-            renderSectionsList();
-            renderLinksList();
-            updateCacheInfo();
-
-            window.addSection = addSection;
-            window.deleteSection = deleteSection;
-            window.openEditSection = openEditSection;
-            window.saveSectionEdit = saveSectionEdit;
-            window.addLink = addLink;
-            window.deleteLink = deleteLink;
-            window.openEditLink = openEditLink;
-            window.saveLinkEdit = saveLinkEdit;
-            window.togglePin = togglePin;
-            window.closeModal = closeModal;
-            window.switchTab = switchTab;
-            window.logout = logout;
-            window.exportAllToJSON = exportAllToJSON;
-            window.importBackupJSON = importBackupJSON;
-            window.startUpload = startUpload;
-            window.refreshAdminData = refreshAdminData;
+            renderSectionsList(); renderLinksList(); renderUsersList();
+            window.addSection = addSection; window.addLink = addLink; window.logout = logout; window.closeModal = closeModal; window.switchTab = switchTab; window.exportAllToJSON = exportAllToJSON; window.refreshAdminData = refreshAdminData; window.addNewUser = addNewUser; window.deleteUserAccount = deleteUserAccount; window.importBackupJSON = importBackupJSON;
         }
-
-        // ========== بدء التشغيل ==========
-        auth.onAuthStateChanged(async function(user) {
-            if (user) {
-                console.log("✅ User logged in:", user.email);
-                await loadAdminPage();
-            } else {
-                console.log("❌ No user logged in, redirecting to login");
-                window.location.href = 'login.html';
-            }
+        
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { window.location.href = 'login.html'; return; }
+            const adminStatus = await checkAdminStatus(user);
+            if (!adminStatus) { showToast("❌ غير مصرح بالدخول - هذا القسم للأدمن فقط", true); setTimeout(() => { window.location.href = 'index.html'; }, 1500); return; }
+            await loadAdminPage();
         });
     </script>
 </body>
-
 </html>
