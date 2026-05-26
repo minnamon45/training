@@ -828,7 +828,7 @@
                     <div class="quick-enroll-form">
                         <div class="form-group">
                             <label>📝 كود الجلسة</label>
-                            <input type="text" id="quickSessionCode" placeholder="مثال: SAFE-01-S1">
+                            <input type="text" id="quickSessionCode" placeholder="مثال: 2101">
                         </div>
                         <div class="form-group">
                             <label>👤 كود الموظف</label>
@@ -925,7 +925,7 @@
                     <div class="quick-enroll-form">
                         <div class="form-group">
                             <label>📝 كود الجلسة</label>
-                            <input type="text" id="quickSessionCode" placeholder="مثال: SAFE-01-S1">
+                            <input type="text" id="quickSessionCode" placeholder="مثال: 2101">
                         </div>
                         <div class="form-group">
                             <label>👤 كود الموظف</label>
@@ -1140,15 +1140,15 @@
                         <input type="hidden" id="enrollmentId">
                         
                         <div id="courseFields">
-                            <div class="form-group"><label>كود الكورس *</label><input type="text" id="courseCode" placeholder="مثال: SAFE-01"></div>
-                            <div class="form-group"><label>اسم الكورس *</label><input type="text" id="courseName" placeholder="مثال: السلامة والصحة المهنية"></div>
-                            <div class="form-group"><label>التصنيف</label><input type="text" id="courseCategory" placeholder="مثال: أمن وسلامة"></div>
-                            <div class="form-group"><label>عدد الساعات</label><input type="number" id="courseHours" step="0.5" placeholder="0"></div>
+                            <div class="form-group"><label>كود الكورس *</label><input type="text" id="courseCode" placeholder="كود الكورس"></div>
+                            <div class="form-group"><label>اسم الكورس *</label><input type="text" id="courseName" placeholder="اسم الكورس"></div>
+                            <div class="form-group"><label>التصنيف</label><input type="text" id="courseCategory" placeholder="التصنيف"></div>
+                            <div class="form-group"><label>عدد الساعات</label><input type="number" id="courseHours" step="0.5" placeholder="عدد الساعات"></div>
                         </div>
                         
                         <div id="sessionFields" style="display:none;">
-                            <div class="form-group"><label>كود الجلسة *</label><input type="text" id="sessionCode" placeholder="مثال: SAFE-01-S1"></div>
-                            <div class="form-group"><label>كود الكورس *</label><input type="text" id="sessionCourseCode" placeholder="مثال: SAFE-01"></div>
+                            <div class="form-group"><label>كود الجلسة *</label><input type="text" id="sessionCode" placeholder="كود الجلسة"></div>
+                            <div class="form-group"><label>كود الكورس *</label><input type="text" id="sessionCourseCode" placeholder="كود الكورس"></div>
                             <div class="form-group"><label>التاريخ</label><input type="date" id="sessionDate"></div>
                             <div class="time-input-group">
                                 <div class="form-group" style="flex:1"><label>وقت البداية</label><input type="time" id="sessionStartTime"></div>
@@ -1159,7 +1159,7 @@
                         
                         <div id="enrollmentFields" style="display:none;">
                             <div class="form-group"><label>كود الموظف *</label><input type="text" id="enrollmentEmpId" placeholder="مثال: 123"></div>
-                            <div class="form-group"><label>كود الجلسة *</label><input type="text" id="enrollmentSessionCode" placeholder="مثال: SAFE-01-S1"></div>
+                            <div class="form-group"><label>كود الجلسة *</label><input type="text" id="enrollmentSessionCode" placeholder="كود الجلسة"></div>
                             <div class="form-group"><label>الحالة</label><select id="enrollmentStatus"><option value="Completed">✅ مكتمل</option><option value="Pending">⏳ قيد الانتظار</option><option value="Failed">❌ راسب</option></select></div>
                             <div class="form-group"><label>الدرجة</label><input type="number" id="enrollmentScore" step="0.1" placeholder="0-100"></div>
                         </div>
