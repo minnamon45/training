@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>المواد التدريبية - نظام إدارة التعليم والتطوير</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+        body { background: #f0f4f8; }
+        
+        .navbar {
+            background: white;
+            padding: 0.8rem 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+        .logo h2 { color: #1e3a5f; font-size: 1.1rem; }
+        .logo span { color: #2b7a4b; }
+        .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .nav-links a, .nav-links button {
+            text-decoration: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            font-size: 0.75rem;
+        }
+        .nav-links .home { background: #2b7a4b; color: white; }
+        .nav-links .logout { background: #e53e3e; color: white; }
+        
+        .container { max-width: 1400px; margin: 1rem auto; padding: 0 1rem; }
+        .page-header { margin-bottom: 1rem; }
+        .page-header h1 { color: #1e3a5f; font-size: 1.4rem; }
+        .page-header p { color: #718096; font-size: 0.8rem; }
+        
+        .filter-bar {
+            background: white;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+        }
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+            min-width: 200px;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 0.6rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 2rem;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        .search-box button {
+            padding: 0.6rem 1.2rem;
+            background: #2b7a4b;
+            color: white;
+            border: none;
+            border-radius: 2rem;
+            cursor: pointer;
+        }
+        .filter-group select {
+            padding: 0.5rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 2rem;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .materials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .material-card {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .material-card:hover { transform: translateY(-5px); }
+        .material-header {
+            background: linear-gradient(135deg, #1e3a5f, #2b7a4b);
+            color: white;
+            padding: 1rem;
+            position: relative;
+        }
+        .material-category {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 0.2rem 0.6rem;
+            border-radius: 1rem;
+            font-size: 0.7rem;
+            margin-bottom: 0.5rem;
+        }
+        .material-header h3 { font-size: 1rem; margin-bottom: 0.3rem; }
+        .material-type {
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            font-size: 1.5rem;
+        }
+        .material-body { padding: 1rem; }
+        .material-description {
+            color: #4a5568;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            margin-bottom: 1rem;
+        }
+        .material-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-size: 0.7rem;
+            color: #718096;
+        }
+        .material-download {
+            background: #2b7a4b;
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: 0.2s;
+        }
+        .material-download:hover { background: #1e5a38; transform: scale(1.02); }
+        .empty-msg { text-align: center; padding: 3rem; color: #718096; }
+        .footer { text-align: center; padding: 1rem; color: #718096; font-size: 0.7rem; }
+        .toast-msg {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            left: 1rem;
+            background: #2b7a4b;
+            color: white;
+            padding: 0.8rem;
+            border-radius: 2rem;
+            text-align: center;
+            z-index: 1000;
+            max-width: calc(100% - 2rem);
+            margin: 0 auto;
+        }
+        .toast-msg.error { background: #e53e3e; }
+        
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; text-align: center; }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .materials-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">⏳ جاري التحميل...</div>
+
+    <script type="module">
+        import { auth, db } from "./firebase.js";
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        
+        let materials = [];
+        let currentUser = null;
+        let isAdmin = false;
+        
+        function showToast(msg, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-msg' + (isError ? ' error' : '');
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        async function checkAdminStatus(user) {
+            try {
+                const adminDoc = await getDocs(query(collection(db, "admins"), where("uid", "==", user.uid)));
+                isAdmin = !adminDoc.empty;
+                const adminEmails = ["admin@test.com", "mina@test.com"];
+                if (adminEmails.includes(user.email)) isAdmin = true;
+            } catch(e) { isAdmin = false; }
+            return isAdmin;
+        }
+        
+        async function loadMaterials() {
+            const snapshot = await getDocs(collection(db, "training_materials"));
+            materials = [];
+            snapshot.forEach(doc => {
+                materials.push({ id: doc.id, ...doc.data() });
+            });
+            materials.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            render();
+        }
+        
+        function render() {
+            const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+            const categoryFilter = document.getElementById('categoryFilter')?.value || 'all';
+            
+            let filtered = materials.filter(m => {
+                const matchSearch = searchTerm === '' || m.title?.toLowerCase().includes(searchTerm) || m.description?.toLowerCase().includes(searchTerm);
+                const matchCategory = categoryFilter === 'all' || m.category === categoryFilter;
+                return matchSearch && matchCategory;
+            });
+            
+            const categories = [...new Set(materials.map(m => m.category).filter(Boolean))];
+            
+            let html = `
+                <div class="navbar">
+                    <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
+                    <div class="nav-links">
+                        <a href="index.html" class="home">🏠 الرئيسية</a>
+                        ${isAdmin ? '<a href="admin.html" style="background:#9f7aea;">⚙️ لوحة التحكم</a>' : ''}
+                        <a href="#" onclick="window.logout()" class="logout">🚪 تسجيل خروج</a>
+                    </div>
+                </div>
+                <div class="container">
+                    <div class="page-header">
+                        <h1>📚 المواد التدريبية</h1>
+                        <p>جميع الملفات والمواد التعليمية المتاحة للتدريب</p>
+                    </div>
+                    <div class="filter-bar">
+                        <div class="search-box">
+                            <input type="text" id="searchInput" placeholder="🔍 بحث عن مادة..." onkeyup="window.filterMaterials()">
+                            <button onclick="window.filterMaterials()">🔍 بحث</button>
+                        </div>
+                        <div class="filter-group">
+                            <label>📂 التصنيف:</label>
+                            <select id="categoryFilter" onchange="window.filterMaterials()">
+                                <option value="all">جميع التصنيفات</option>
+                                ${categories.map(c => `<option value="${c}">${c}</option>`).join('')}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="materials-grid" id="materialsGrid">
+                        ${filtered.length === 0 ? '<div class="empty-msg">📭 لا توجد مواد تدريبية حالياً</div>' : filtered.map(m => `
+                            <div class="material-card">
+                                <div class="material-header">
+                                    <span class="material-category">${m.category || 'عام'}</span>
+                                    <span class="material-type">${getTypeIcon(m.type)}</span>
+                                    <h3>${escapeHtml(m.title)}</h3>
+                                </div>
+                                <div class="material-body">
+                                    <div class="material-description">${escapeHtml(m.description || 'لا يوجد وصف')}</div>
+                                    <div class="material-meta">
+                                        <span>📅 ${formatDate(m.createdAt)}</span>
+                                        <span>👁️ ${m.views || 0} مشاهدة</span>
+                                        <span>📥 ${m.downloads || 0} تحميل</span>
+                                    </div>
+                                    ${m.fileUrl ? `<a href="${m.fileUrl}" class="material-download" target="_blank" onclick="window.recordDownload('${m.id}')">📥 تحميل المادة</a>` : ''}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير</p></div>
+            `;
+            document.getElementById('app').innerHTML = html;
+            window.filterMaterials = () => render();
+        }
+        
+        function getTypeIcon(type) {
+            const icons = { pdf: '📄', video: '🎥', ppt: '📊', doc: '📝', excel: '📈', image: '🖼️', link: '🔗', other: '📁' };
+            return icons[type] || '📁';
+        }
+        
+        function formatDate(timestamp) {
+            if (!timestamp) return '-';
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+        }
+        
+        function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+        
+        window.recordDownload = async (id) => {
+            // تسجيل التحميل (يمكن تطويرها لاحقاً)
+            console.log('Download recorded for:', id);
+        };
+        
+        window.logout = () => { signOut(auth).then(() => window.location.href = 'login.html'); };
+        
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) { window.location.href = 'login.html'; return; }
+            currentUser = user;
+            await checkAdminStatus(user);
+            await loadMaterials();
+        });
+    </script>
+</body>
+</html>
