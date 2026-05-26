@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="ar">
-
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>إدارة الموظفين - نظام إدارة التعليم والتطوير</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -23,19 +22,21 @@
             background: #f0f4f8;
         }
 
+        /* ========== شريط التنقل المتجاوب ========== */
         .navbar {
             background: white;
-            padding: 1rem 2rem;
+            padding: 0.8rem 1rem;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.8rem;
         }
 
         .logo h2 {
             color: #1e3a5f;
+            font-size: 1.1rem;
         }
 
         .logo span {
@@ -51,12 +52,12 @@
         .nav-links a,
         .nav-links button {
             text-decoration: none;
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 0.8rem;
             border-radius: 2rem;
             font-weight: 500;
             cursor: pointer;
             border: none;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
         }
 
         .nav-links a:hover,
@@ -75,60 +76,65 @@
             color: white;
         }
 
+        /* ========== الحاوية الرئيسية ========== */
         .container {
             max-width: 1400px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
+            margin: 1rem auto;
+            padding: 0 1rem;
         }
 
+        /* ========== رأس الصفحة ========== */
         .page-header {
-            margin-bottom: 2rem;
+            margin-bottom: 1rem;
         }
 
         .page-header h1 {
             color: #1e3a5f;
-            font-size: 2rem;
+            font-size: 1.4rem;
         }
 
+        /* ========== بطاقة الإجمالي ========== */
         .total-card {
             background: linear-gradient(135deg, #1e3a5f, #2b7a4b);
             color: white;
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.8rem;
         }
 
         .total-card h3 {
-            font-size: 1.2rem;
+            font-size: 1rem;
             opacity: 0.9;
         }
 
         .total-card .total-number {
-            font-size: 2.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
         }
 
+        /* ========== شريط الإجراءات ========== */
         .action-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 1rem;
-            margin-bottom: 2rem;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
         }
 
         .btn {
-            padding: 0.7rem 1.5rem;
+            padding: 0.5rem 1rem;
             border: none;
             border-radius: 2rem;
             font-weight: bold;
             cursor: pointer;
             transition: 0.3s;
+            font-size: 0.8rem;
         }
 
         .btn-primary {
@@ -146,29 +152,22 @@
             color: white;
         }
 
-        .btn-import:hover {
-            background: #805ad5;
-        }
-
         .btn-secondary {
             background: #4299e1;
             color: white;
         }
 
-        .btn-secondary:hover {
-            background: #3182ce;
-        }
-
+        /* ========== شريط الفلترة ========== */
         .filter-bar {
             background: white;
             border-radius: 1rem;
-            padding: 1rem 1.5rem;
-            margin-bottom: 2rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 1rem;
+            gap: 0.8rem;
         }
 
         .search-box {
@@ -176,15 +175,15 @@
             align-items: center;
             gap: 0.5rem;
             flex: 1;
-            max-width: 450px;
+            min-width: 200px;
         }
 
         .search-box input {
             flex: 1;
-            padding: 0.8rem 1rem;
+            padding: 0.6rem 1rem;
             border: 2px solid #e2e8f0;
             border-radius: 2rem;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             outline: none;
         }
 
@@ -193,63 +192,76 @@
         }
 
         .search-box button {
-            padding: 0.8rem 1.5rem;
+            padding: 0.6rem 1.2rem;
             background: #2b7a4b;
             color: white;
             border: none;
             border-radius: 2rem;
             cursor: pointer;
+            font-size: 0.8rem;
         }
 
         .filter-group {
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group label {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #1e3a5f;
         }
 
         .filter-group select {
-            padding: 0.7rem 1rem;
+            padding: 0.5rem 1rem;
             border: 2px solid #e2e8f0;
             border-radius: 2rem;
             background: white;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
         }
 
         .refresh-btn {
             background: #4299e1;
             color: white;
             border: none;
-            padding: 0.5rem 1rem;
+            padding: 0.4rem 0.8rem;
             border-radius: 2rem;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
         }
 
+        /* ========== الجدول المتجاوب ========== */
         .table-container {
             background: white;
-            border-radius: 1.5rem;
-            padding: 1.5rem;
+            border-radius: 1rem;
+            padding: 1rem;
             overflow-x: auto;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            -webkit-overflow-scrolling: touch;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 700px;
         }
 
         th,
         td {
-            padding: 1rem;
+            padding: 0.8rem 0.5rem;
             text-align: center;
             border-bottom: 1px solid #e2e8f0;
+            font-size: 0.8rem;
         }
 
         th {
             background: #f7fafc;
             color: #1e3a5f;
             font-weight: bold;
+            font-size: 0.85rem;
         }
 
         tr:hover {
@@ -258,33 +270,36 @@
 
         .action-buttons {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.4rem;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         .edit-btn {
             background: #4299e1;
             color: white;
             border: none;
-            padding: 0.3rem 0.8rem;
+            padding: 0.2rem 0.6rem;
             border-radius: 1rem;
             cursor: pointer;
+            font-size: 0.7rem;
         }
 
         .delete-btn {
             background: #e53e3e;
             color: white;
             border: none;
-            padding: 0.3rem 0.8rem;
+            padding: 0.2rem 0.6rem;
             border-radius: 1rem;
             cursor: pointer;
+            font-size: 0.7rem;
         }
 
         .status-badge {
             display: inline-block;
-            padding: 0.2rem 0.8rem;
+            padding: 0.2rem 0.6rem;
             border-radius: 2rem;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: bold;
         }
 
@@ -298,6 +313,7 @@
             color: #c53030;
         }
 
+        /* ========== النوافذ المنبثقة ========== */
         .modal {
             display: none;
             position: fixed;
@@ -309,45 +325,50 @@
             justify-content: center;
             align-items: center;
             z-index: 1000;
+            padding: 1rem;
         }
 
         .modal-content {
             background: white;
-            border-radius: 1.5rem;
-            padding: 2rem;
+            border-radius: 1rem;
+            padding: 1.2rem;
             width: 90%;
-            max-width: 500px;
+            max-width: 450px;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-content h3 {
             color: #1e3a5f;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             border-right: 4px solid #2b7a4b;
-            padding-right: 1rem;
+            padding-right: 0.8rem;
+            font-size: 1.2rem;
         }
 
         .modal-content input,
         .modal-content select {
             width: 100%;
-            padding: 0.8rem;
-            margin: 0.5rem 0;
+            padding: 0.6rem;
+            margin: 0.4rem 0;
             border: 2px solid #e2e8f0;
             border-radius: 0.8rem;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .modal-buttons {
             display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
+            gap: 0.8rem;
+            margin-top: 1rem;
         }
 
         .modal-buttons button {
             flex: 1;
-            padding: 0.7rem;
+            padding: 0.6rem;
             border-radius: 0.8rem;
             font-weight: bold;
             cursor: pointer;
+            font-size: 0.85rem;
         }
 
         .save-btn {
@@ -362,16 +383,22 @@
             border: none;
         }
 
+        /* ========== التنبيهات المنبثقة ========== */
         .toast-msg {
             position: fixed;
-            bottom: 2rem;
-            right: 2rem;
+            bottom: 1rem;
+            right: 1rem;
+            left: 1rem;
             background: #2b7a4b;
             color: white;
-            padding: 0.8rem 1.5rem;
+            padding: 0.8rem;
             border-radius: 2rem;
+            text-align: center;
             z-index: 1000;
             animation: slideIn 0.3s ease;
+            font-size: 0.85rem;
+            max-width: calc(100% - 2rem);
+            margin: 0 auto;
         }
 
         .toast-msg.error {
@@ -383,7 +410,6 @@
                 transform: translateX(100%);
                 opacity: 0;
             }
-
             to {
                 transform: translateX(0);
                 opacity: 1;
@@ -392,24 +418,161 @@
 
         .footer {
             text-align: center;
-            padding: 2rem;
+            padding: 1rem;
             color: #718096;
-            margin-top: 2rem;
+            margin-top: 1rem;
+            font-size: 0.7rem;
         }
 
+        /* ========== التجاوب مع الشاشات الصغيرة ========== */
         @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .nav-links {
+                justify-content: center;
+            }
+            
+            .page-header h1 {
+                font-size: 1.2rem;
+                text-align: center;
+            }
+            
             .filter-bar {
                 flex-direction: column;
                 align-items: stretch;
             }
-
+            
             .search-box {
                 max-width: none;
+                width: 100%;
             }
-
+            
+            .search-box input {
+                min-width: auto;
+            }
+            
+            .filter-group {
+                justify-content: space-between;
+            }
+            
             .action-bar {
                 flex-direction: column;
                 align-items: stretch;
+            }
+            
+            .action-bar > div {
+                justify-content: center;
+            }
+            
+            .total-card {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .total-card > div:first-child {
+                width: 100%;
+            }
+            
+            .total-card .total-number {
+                font-size: 1.5rem;
+            }
+            
+            th, td {
+                padding: 0.5rem 0.3rem;
+                font-size: 0.7rem;
+            }
+            
+            th {
+                font-size: 0.7rem;
+            }
+            
+            .edit-btn, .delete-btn {
+                padding: 0.15rem 0.5rem;
+                font-size: 0.65rem;
+            }
+        }
+
+        /* ========== شاشات صغيرة جداً (هواتف) ========== */
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 0.8rem;
+            }
+            
+            .logo h2 {
+                font-size: 0.9rem;
+            }
+            
+            .btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.7rem;
+            }
+            
+            .search-box button {
+                padding: 0.5rem 1rem;
+                font-size: 0.7rem;
+            }
+            
+            .filter-group label {
+                font-size: 0.7rem;
+            }
+            
+            .filter-group select {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.7rem;
+            }
+            
+            table {
+                min-width: 600px;
+            }
+            
+            th, td {
+                padding: 0.4rem 0.2rem;
+                font-size: 0.65rem;
+            }
+            
+            .modal-content {
+                padding: 1rem;
+            }
+            
+            .modal-content h3 {
+                font-size: 1rem;
+            }
+            
+            .modal-content input,
+            .modal-content select {
+                padding: 0.5rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* ========== أجهزة لوحية ========== */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .container {
+                padding: 0 1.2rem;
+            }
+            
+            th, td {
+                padding: 0.7rem 0.4rem;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* ========== شاشات كبيرة ========== */
+        @media (min-width: 1400px) {
+            .container {
+                max-width: 1600px;
+            }
+            
+            th, td {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+            
+            .page-header h1 {
+                font-size: 1.8rem;
             }
         }
     </style>
@@ -434,13 +597,11 @@
         <div id="totalCard"></div>
 
         <div class="action-bar">
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button class="btn btn-primary"
-            id="addEmployeeBtn"
-            style="display:none"
-            onclick="document.getElementById('addModal').style.display='flex'">
-            ➕ إضافة موظف
-            </button>                <button class="btn btn-secondary" onclick="exportEmployeesToExcel()">📤 تصدير إلى Excel</button>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center;">
+                <button class="btn btn-primary" id="addEmployeeBtn" style="display:none" onclick="document.getElementById('addModal').style.display='flex'">
+                    ➕ إضافة موظف
+                </button>
+                <button class="btn btn-secondary" onclick="exportEmployeesToExcel()">📤 تصدير إلى Excel</button>
                 <button class="refresh-btn" onclick="refreshData()">🔄 تحديث البيانات</button>
             </div>
             <input type="file" id="excelInput" accept=".xlsx, .xls" style="display:none" onchange="importEmployeesExcel(this.files[0])">
@@ -485,7 +646,7 @@
                 </thead>
                 <tbody id="tableBody">
                     <tr>
-                        <td colspan="8" style="text-align:center;">⏳ جاري تحميل البيانات...</span></td>
+                        <td colspan="8" style="text-align:center;">⏳ جاري تحميل البيانات...</td>
                     </tr>
                 </tbody>
             </table>
@@ -535,6 +696,7 @@
     </div>
 
     <div class="footer">
+        <p>© 2025 نظام إدارة التعليم والتطوير - جميع الحقوق محفوظة</p>
     </div>
 
     <script>
@@ -562,63 +724,26 @@
         let currentEditId = null;
         let isAdmin = false;
 
-        // مفتاح الكاش لهذه الصفحة
         const CACHE_KEY = 'employees_data_v1';
 
         // ========== التحقق من صلاحية الأدمن ==========
-async function checkAdminStatus(user) {
+        async function checkAdminStatus(user) {
+            try {
+                const adminDoc = await db.collection('admins').doc(user.uid).get();
+                isAdmin = adminDoc.exists;
+            } catch (error) {
+                console.error("Error checking admin status:", error);
+                isAdmin = false;
+            }
 
-    try {
+            const addBtn = document.getElementById('addEmployeeBtn');
+            const actionsHeader = document.getElementById('actionsHeader');
 
-        // التحقق من Collection admins
-        const adminDoc = await db
-            .collection('admins')
-            .doc(user.uid)
-            .get();
+            if (addBtn) addBtn.style.display = isAdmin ? 'inline-block' : 'none';
+            if (actionsHeader) actionsHeader.style.display = isAdmin ? 'table-cell' : 'none';
 
-        // لو المستخدم أدمن
-        if (adminDoc.exists) {
-
-            isAdmin = true;
-
-        } else {
-
-            isAdmin = false;
-
+            return isAdmin;
         }
-
-    } catch (error) {
-
-        console.error("Error checking admin status:", error);
-
-        isAdmin = false;
-
-    }
-
-    // زر إضافة موظف
-    const addBtn = document.getElementById('addEmployeeBtn');
-
-    // عنوان العمليات
-    const actionsHeader = document.getElementById('actionsHeader');
-
-    // زر الاستيراد
-    const importBtn = document.querySelector('.btn-import');
-
-    // إظهار أو إخفاء العناصر
-    if (addBtn) {
-        addBtn.style.display = isAdmin ? 'inline-block' : 'none';
-    }
-
-    if (actionsHeader) {
-        actionsHeader.style.display = isAdmin ? 'table-cell' : 'none';
-    }
-
-    if (importBtn) {
-        importBtn.style.display = isAdmin ? 'inline-block' : 'none';
-    }
-
-    return isAdmin;
-}
 
         // ========== تحميل البيانات من Firebase مع الكاش ==========
         async function loadEmployeesFromFirebase(forceRefresh = false) {
@@ -626,13 +751,11 @@ async function checkAdminStatus(user) {
                 if (!forceRefresh && window.CacheManager) {
                     const cached = CacheManager.get(CACHE_KEY);
                     if (cached) {
-                        console.log("📦 استخدام البيانات من الكاش");
                         employees = cached;
                         return employees;
                     }
                 }
                 
-                console.log("☁️ جلب بيانات جديدة من Firebase");
                 const snapshot = await db.collection('employees').get();
                 employees = [];
                 snapshot.forEach(doc => {
@@ -642,10 +765,8 @@ async function checkAdminStatus(user) {
                 
                 if (window.CacheManager) {
                     CacheManager.set(CACHE_KEY, employees);
-                    localStorage.setItem(CACHE_KEY + '_time', Date.now().toString());
                 }
                 
-                console.log(`✅ تم تحميل ${employees.length} موظف`);
                 return employees;
             } catch (error) {
                 console.error("❌ خطأ في تحميل الموظفين:", error);
@@ -659,7 +780,6 @@ async function checkAdminStatus(user) {
             showToast("🔄 جاري تحديث البيانات...");
             if (window.CacheManager) {
                 CacheManager.remove(CACHE_KEY);
-                localStorage.removeItem(CACHE_KEY + '_time');
             }
             await loadEmployeesFromFirebase(true);
             await updateUI();
@@ -670,10 +790,8 @@ async function checkAdminStatus(user) {
         async function saveEmployeeToFirebase(employee) {
             try {
                 await db.collection('employees').doc(employee.id.toString()).set(employee);
-                console.log(`✅ تم حفظ الموظف ${employee.id} في Firebase`);
                 if (window.CacheManager) {
                     CacheManager.remove(CACHE_KEY);
-                    localStorage.removeItem(CACHE_KEY + '_time');
                 }
                 return true;
             } catch (error) {
@@ -687,10 +805,8 @@ async function checkAdminStatus(user) {
         async function deleteEmployeeFromFirebase(id) {
             try {
                 await db.collection('employees').doc(id.toString()).delete();
-                console.log(`✅ تم حذف الموظف ${id} من Firebase`);
                 if (window.CacheManager) {
                     CacheManager.remove(CACHE_KEY);
-                    localStorage.removeItem(CACHE_KEY + '_time');
                 }
                 return true;
             } catch (error) {
@@ -753,12 +869,12 @@ async function checkAdminStatus(user) {
                         <div>
                             <h3>📊 إجمالي الموظفين</h3>
                             <div class="total-number">${totalEmployees}</div>
-                            <div style="display: flex; gap: 1rem; margin-top: 0.5rem; font-size: 0.8rem;">
-                                <span style="background:rgba(255,255,255,0.2); padding:0.2rem 0.8rem; border-radius:1rem;">✅ نشط: ${activeCount}</span>
-                                <span style="background:rgba(255,255,255,0.2); padding:0.2rem 0.8rem; border-radius:1rem;">❌ مستقيل: ${leftCount}</span>
+                            <div style="display: flex; gap: 0.8rem; margin-top: 0.3rem; flex-wrap: wrap; justify-content: center;">
+                                <span style="background:rgba(255,255,255,0.2); padding:0.2rem 0.6rem; border-radius:1rem; font-size:0.7rem;">✅ نشط: ${activeCount}</span>
+                                <span style="background:rgba(255,255,255,0.2); padding:0.2rem 0.6rem; border-radius:1rem; font-size:0.7rem;">❌ مستقيل: ${leftCount}</span>
                             </div>
                         </div>
-                        ${searchTerm || filterDept !== 'all' || filterStatus !== 'all' ? `<div style="background:rgba(255,255,255,0.2); padding:0.5rem 1rem; border-radius:2rem;">🔍 عدد النتائج: ${filteredCount}</div>` : ''}
+                        ${searchTerm || filterDept !== 'all' || filterStatus !== 'all' ? `<div style="background:rgba(255,255,255,0.2); padding:0.3rem 0.8rem; border-radius:2rem; font-size:0.7rem;">🔍 النتائج: ${filteredCount}</div>` : ''}
                     </div>
                 `;
             }
@@ -780,30 +896,29 @@ async function checkAdminStatus(user) {
             const tableBody = document.getElementById('tableBody');
             if (tableBody) {
                 if (filtered.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">📭 لا توجد بيانات مطابقة<\/td><\/tr>';
+                    tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">📭 لا توجد بيانات مطابقة</td></tr>';
                 } else {
                     let html = '';
                     for (let i = 0; i < filtered.length; i++) {
                         const emp = filtered[i];
                         html += '<tr>';
-                        html += '<td>' + emp.id + '<\/td>';
-                        html += '<td>' + (emp.fullName || '-') + '<\/td>';
-                        html += '<td>' + (emp.department || '-') + '<\/td>';
-                        html += '<td>' + (emp.position || '-') + '<\/td>';
-                        html += '<td>' + (emp.level || '-') + '<\/td>';
-                        html += '<td>' + (emp.hireDate || '-') + '<\/td>';
-                        html += '<td><span class="status-badge ' + ((emp.status || 'Active') === 'Active' ? 'status-active' : 'status-left') + '">' + ((emp.status || 'Active') === 'Active' ? '✅ نشط' : '❌ مستقيل') + '<\/span><\/td>';
+                        html += '<td>' + emp.id + '</td>';
+                        html += '<td>' + (emp.fullName || '-') + '</td>';
+                        html += '<td>' + (emp.department || '-') + '</td>';
+                        html += '<td>' + (emp.position || '-') + '</td>';
+                        html += '<td>' + (emp.level || '-') + '</td>';
+                        html += '<td>' + (emp.hireDate || '-') + '</td>';
+                        html += '<td><span class="status-badge ' + ((emp.status || 'Active') === 'Active' ? 'status-active' : 'status-left') + '">' + ((emp.status || 'Active') === 'Active' ? '✅ نشط' : '❌ مستقيل') + '</span></td>';
                         
-                        // أزرار العمليات - تظهر فقط للأدمن
                         if (isAdmin) {
                             html += '<td class="action-buttons">';
-                            html += '<button class="edit-btn" onclick="openEditModal(' + emp.id + ')">✏️ تعديل<\/button>';
-                            html += '<button class="delete-btn" onclick="deleteEmployee(' + emp.id + ')">🗑️ حذف<\/button>';
-                            html += '<\/td>';
+                            html += '<button class="edit-btn" onclick="openEditModal(' + emp.id + ')">✏️ تعديل</button>';
+                            html += '<button class="delete-btn" onclick="deleteEmployee(' + emp.id + ')">🗑️ حذف</button>';
+                            html += '</td>';
                         } else {
-                            html += '<td>-<\/td>';
+                            html += '<td>-</td>';
                         }
-                        html += '<\/tr>';
+                        html += '</tr>';
                     }
                     tableBody.innerHTML = html;
                 }
@@ -1055,7 +1170,6 @@ async function checkAdminStatus(user) {
         function logout() {
             if (window.CacheManager) {
                 CacheManager.remove(CACHE_KEY);
-                localStorage.removeItem(CACHE_KEY + '_time');
             }
             auth.signOut().then(() => {
                 sessionStorage.removeItem('loggedUser');
@@ -1066,11 +1180,9 @@ async function checkAdminStatus(user) {
         // ========== التحقق من تسجيل الدخول ==========
         auth.onAuthStateChanged(async (user) => {
             if (user) {
-                console.log("✅ User logged in:", user.email);
                 await checkAdminStatus(user);
                 await updateUI();
             } else {
-                console.log("❌ No user, redirecting to login");
                 window.location.href = 'login.html';
             }
         });
@@ -1091,5 +1203,4 @@ async function checkAdminStatus(user) {
         window.refreshData = refreshData;
     </script>
 </body>
-
 </html>
