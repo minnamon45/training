@@ -2,7 +2,7 @@
 <html dir="rtl" lang="ar">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>لوحة التحكم - نظام إدارة التعليم والتطوير</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -34,10 +34,10 @@
         .msg { background: #c6f6d5; color: #22543d; padding: 0.8rem; border-radius: 0.8rem; margin-bottom: 1rem; display: none; }
         .msg.error { background: #fed7d7; color: #c53030; }
         .table-wrapper { overflow-x: auto; border-radius: 1rem; }
-        .sections-table, .links-table, .users-table { width: 100%; border-collapse: collapse; }
-        .sections-table th, .links-table th, .users-table th { background: linear-gradient(135deg, #1e3a5f, #2b7a4b); color: white; padding: 12px; text-align: center; }
-        .sections-table td, .links-table td, .users-table td { padding: 10px; text-align: center; border-bottom: 1px solid #e2e8f0; }
-        .sections-table tr:hover, .links-table tr:hover, .users-table tr:hover { background: #f7fafc; }
+        .sections-table, .links-table, .users-table, .materials-table { width: 100%; border-collapse: collapse; }
+        .sections-table th, .links-table th, .users-table th, .materials-table th { background: linear-gradient(135deg, #1e3a5f, #2b7a4b); color: white; padding: 12px; text-align: center; }
+        .sections-table td, .links-table td, .users-table td, .materials-table td { padding: 10px; text-align: center; border-bottom: 1px solid #e2e8f0; }
+        .sections-table tr:hover, .links-table tr:hover, .users-table tr:hover, .materials-table tr:hover { background: #f7fafc; }
         .sections-table .icon-cell { font-size: 1.5rem; }
         .sections-table .name-cell { text-align: right; font-weight: 500; }
         .sections-table .desc-cell { text-align: right; color: #4a5568; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -65,6 +65,7 @@
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .footer { text-align: center; padding: 2rem; color: #718096; margin-top: 2rem; }
         .user-avatar { width: 32px; height: 32px; background: #2b7a4b; color: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; }
+        .material-type-badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.7rem; background: #e2e8f0; }
         @media (max-width: 768px) { .navbar { flex-direction: column; text-align: center; } .tabs { justify-content: center; } }
     </style>
 </head>
@@ -81,8 +82,9 @@
         let currentEditId = null;
         let currentEditSectionId = null;
         let usersList = [];
+        let trainingMaterials = [];
         
-        const CACHE_KEYS = { SECTIONS: 'admin_sections_v2', LINKS: 'admin_links_v2' };
+        const CACHE_KEYS = { SECTIONS: 'admin_sections_v2', LINKS: 'admin_links_v2', MATERIALS: 'admin_materials_v1' };
         
         function showToast(message, isError = false) {
             const toast = document.createElement('div');
@@ -107,6 +109,7 @@
             } catch (error) { console.error(error); isAdmin = false; return false; }
         }
         
+        // ========== إدارة المستخدمين ==========
         async function fetchAllUsers() {
             try {
                 const usersSnap = await getDocs(collection(db, "users"));
@@ -158,17 +161,20 @@
             const container = document.getElementById('usersList');
             if (!container) return;
             if (usersList.length === 0) { container.innerHTML = '<div style="text-align:center; padding:2rem;">📭 لا يوجد مستخدمين</div>'; return; }
-            let html = '<div class="table-wrapper"><table class="users-table"><thead><tr><th>#</th><th>البريد الإلكتروني</th><th>الدور</th><th>تاريخ الإنشاء</th><th>العمليات</th><tr></thead><tbody>';
+            let html = '<div class="table-wrapper"><table class="users-table"><thead><tr><th>#</th><th>البريد الإلكتروني</th><th>الدور</th><th>تاريخ الإنشاء</th><th>العمليات</th></tr></thead><tbody>';
             usersList.forEach((user, index) => {
-                html += `<tr><td>${index + 1}</td><td><span class="user-avatar">${(user.email?.charAt(0) || 'U').toUpperCase()}</span> ${escapeHtml(user.email || '-')}</td>`;
+                html += `<tr><td style="width:40px;">${index + 1}</td>`;
+                html += `<td style="text-align:right;"><span class="user-avatar">${(user.email?.charAt(0) || 'U').toUpperCase()}</span> ${escapeHtml(user.email || '-')}</td>`;
                 html += `<td><span style="background:#e2e8f0; padding:0.2rem 0.8rem; border-radius:1rem;">${escapeHtml(user.role || 'user')}</span></td>`;
                 html += `<td>${user.createdAt ? new Date(user.createdAt).toLocaleDateString('ar-EG') : '-'}</td>`;
-                html += `<td class="action-buttons"><button class="delete-btn" onclick="window.deleteUserAccount('${user.uid}', '${escapeHtml(user.email)}')">🗑️ حذف</button></td></tr>`;
+                html += `<td class="action-buttons"><button class="delete-btn" onclick="window.deleteUserAccount('${user.uid}', '${escapeHtml(user.email)}')">🗑️ حذف</button></td>`;
+                html += `</tr>`;
             });
-            html += '</tbody></table></div>';
+            html += '</tbody>}</div>';
             container.innerHTML = html;
         }
         
+        // ========== إدارة الأقسام والروابط ==========
         async function loadDataFromFirebase(forceRefresh = false) {
             try {
                 let sections = [], links = [];
@@ -207,12 +213,14 @@
             if (currentData.sections.length === 0) { container.innerHTML = '<div style="text-align:center; padding:2rem;">📭 لا توجد أقسام</div>'; return; }
             let html = `<div class="table-wrapper"><table class="sections-table"><thead><tr><th>#</th><th>الأيقونة</th><th>اسم القسم</th><th>الوصف</th><th>عدد الروابط</th><th>العمليات</th></tr></thead><tbody>`;
             currentData.sections.forEach((s, i) => {
-                html += `<tr><td>${i + 1}</td><td class="icon-cell">${s.icon || '📁'}</td><td class="name-cell">${escapeHtml(s.name)}</td>`;
-                html += `<td class="desc-cell" title="${escapeHtml(s.description || '-')}">${escapeHtml(s.description || '-')}</td>`;
+                html += `<tr><td style="width:40px;">${i + 1}</td>`;
+                html += `<td class="icon-cell">${s.icon || '📁'}</td>`;
+                html += `<td class="name-cell" style="text-align:right;">${escapeHtml(s.name)}</td>`;
+                html += `<td class="desc-cell" title="${escapeHtml(s.description || '-')}" style="text-align:right;">${escapeHtml(s.description || '-')}</td>`;
                 html += `<td><span class="links-count">${s.links ? s.links.length : 0}</span></td>`;
                 html += `<td class="action-buttons"><button class="edit-btn" onclick="window.openEditSection(${s.id})">✏️ تعديل</button><button class="delete-btn" onclick="window.deleteSection(${s.id})">🗑️ حذف</button></td></tr>`;
             });
-            html += `</tbody></table></div>`;
+            html += `</tbody>}</div>`;
             container.innerHTML = html;
         }
         
@@ -225,14 +233,16 @@
                 if (section.links && section.links.length) {
                     html += '<div class="table-wrapper"><table class="links-table"><thead><tr><th>العنوان</th><th>الرابط</th><th>النوع</th><th>مشاهدات</th><th>مثبت</th><th>العمليات</th></tr></thead><tbody>';
                     section.links.forEach(link => {
-                        html += `<tr><td style="text-align:right;">${escapeHtml(link.title)}</td><td style="direction:ltr;">${link.url || '-'}</td>`;
-                        html += `<td>${link.type === 'internal' ? 'داخلي' : 'خارجي'}</td><td>👁️ ${link.views || 0}</td>`;
+                        html += `<tr><td style="text-align:right;">${escapeHtml(link.title)}</td>`;
+                        html += `<td style="direction:ltr;">${link.url || '-'}</td>`;
+                        html += `<td>${link.type === 'internal' ? 'داخلي' : 'خارجي'}</td>`;
+                        html += `<td>👁️ ${link.views || 0}</td>`;
                         html += `<td>${link.pinned ? '✅ نعم' : '❌ لا'}</td>`;
                         html += `<td class="action-buttons"><button class="edit-btn" onclick="window.openEditLink(${section.id},${link.id})">✏️</button>`;
                         html += `<button class="pin-btn" onclick="window.togglePin(${section.id},${link.id})">${link.pinned ? '📌 إلغاء' : '📌 تثبيت'}</button>`;
                         html += `<button class="delete-btn" onclick="window.deleteLink(${section.id},${link.id})">🗑️</button></td></tr>`;
                     });
-                    html += '</tbody></table></div>';
+                    html += '</tbody>}</div>';
                 } else { html += '<div style="color:#a0aec0; padding:1rem;">📭 لا توجد روابط</div>'; }
                 html += '</div>';
             });
@@ -286,11 +296,127 @@
             if(section){ const link = section.links.find(l => l.id === linkId); if(link){ link.pinned = !link.pinned; await saveLink(link, sectionId); await loadDataFromFirebase(true); renderLinksList(); showToast(link.pinned ? '📌 تم تثبيت الرابط' : '📍 تم إلغاء التثبيت'); } }
         };
         
+        // ========== إدارة المواد التدريبية ==========
+        async function loadTrainingMaterials(forceRefresh = false) {
+            try {
+                if (!forceRefresh && window.CacheManager) {
+                    const cached = CacheManager.get(CACHE_KEYS.MATERIALS);
+                    if (cached) {
+                        trainingMaterials = cached;
+                        renderMaterialsList();
+                        return;
+                    }
+                }
+                const snapshot = await getDocs(collection(db, "training_materials"));
+                trainingMaterials = [];
+                snapshot.forEach(doc => {
+                    trainingMaterials.push({ id: doc.id, ...doc.data() });
+                });
+                trainingMaterials.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                if (window.CacheManager) {
+                    CacheManager.set(CACHE_KEYS.MATERIALS, trainingMaterials);
+                }
+                renderMaterialsList();
+            } catch (error) { console.error("خطأ في تحميل المواد:", error); }
+        }
+        
+        async function saveMaterial(material) {
+            const docRef = material.id ? doc(db, "training_materials", material.id) : doc(collection(db, "training_materials"));
+            if (!material.id) material.id = docRef.id;
+            material.updatedAt = new Date().toISOString();
+            await setDoc(docRef, material);
+            if (window.CacheManager) CacheManager.remove(CACHE_KEYS.MATERIALS);
+            await loadTrainingMaterials(true);
+            showToast('✅ تم حفظ المادة بنجاح');
+        }
+        
+        async function deleteMaterial(id) {
+            if (confirm('⚠️ هل أنت متأكد من حذف هذه المادة؟')) {
+                await deleteDoc(doc(db, "training_materials", id));
+                if (window.CacheManager) CacheManager.remove(CACHE_KEYS.MATERIALS);
+                await loadTrainingMaterials(true);
+                showToast('🗑️ تم حذف المادة');
+            }
+        }
+        
+        function openAddMaterialModal() {
+            document.getElementById('materialId').value = '';
+            document.getElementById('materialTitle').value = '';
+            document.getElementById('materialDesc').value = '';
+            document.getElementById('materialCategory').value = '';
+            document.getElementById('materialType').value = 'pdf';
+            document.getElementById('materialFileUrl').value = '';
+            document.getElementById('materialModal').style.display = 'flex';
+        }
+        
+        function openEditMaterialModal(material) {
+            document.getElementById('materialId').value = material.id;
+            document.getElementById('materialTitle').value = material.title;
+            document.getElementById('materialDesc').value = material.description || '';
+            document.getElementById('materialCategory').value = material.category || '';
+            document.getElementById('materialType').value = material.type || 'pdf';
+            document.getElementById('materialFileUrl').value = material.fileUrl || '';
+            document.getElementById('materialModal').style.display = 'flex';
+        }
+        
+        async function saveMaterialForm() {
+            const material = {
+                id: document.getElementById('materialId').value,
+                title: document.getElementById('materialTitle').value,
+                description: document.getElementById('materialDesc').value,
+                category: document.getElementById('materialCategory').value,
+                type: document.getElementById('materialType').value,
+                fileUrl: document.getElementById('materialFileUrl').value,
+                createdAt: new Date().toISOString(),
+                views: 0,
+                downloads: 0
+            };
+            if (!material.title) { showToast('❌ الرجاء إدخال عنوان المادة', true); return; }
+            if (!material.fileUrl) { showToast('❌ الرجاء إدخال رابط الملف', true); return; }
+            await saveMaterial(material);
+            document.getElementById('materialModal').style.display = 'none';
+        }
+        
+        function renderMaterialsList() {
+            const container = document.getElementById('materialsList');
+            if (!container) return;
+            
+            if (trainingMaterials.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:2rem;">📭 لا توجد مواد تدريبية</div>';
+                return;
+            }
+            
+            let html = '<div class="table-wrapper"><table class="materials-table"><thead><tr><th>#</th><th>العنوان</th><th>التصنيف</th><th>النوع</th><th>الرابط</th><th>مشاهدات</th><th>العمليات</th></tr></thead><tbody>';
+            trainingMaterials.forEach((m, i) => {
+                html += `<tr>
+                    <td style="width:40px;">${i+1}</td>
+                    <td style="text-align:right;">${escapeHtml(m.title)}</td>
+                    <td>${escapeHtml(m.category || '-')}</td>
+                    <td><span class="material-type-badge">${m.type || 'pdf'}</span></td>
+                    <td style="direction:ltr; font-size:0.7rem;">${m.fileUrl ? m.fileUrl.substring(0, 40) + '...' : '-'}</td>
+                    <td>${m.views || 0}</td>
+                    <td class="action-buttons">
+                        <button class="edit-btn" onclick='window.openEditMaterialModal(${JSON.stringify(m).replace(/'/g, "&#39;")})'>✏️ تعديل</button>
+                        <button class="delete-btn" onclick="window.deleteMaterial('${m.id}')">🗑️ حذف</button>
+                    </td>
+                </tr>`;
+            });
+            html += '</tbody>}</div>';
+            container.innerHTML = html;
+        }
+        
+        // ========== استيراد/تصدير JSON ==========
         async function exportAllToJSON() {
             const sectionsSnap = await getDocs(collection(db, "sections"));
             const linksSnap = await getDocs(collection(db, "links"));
             const usersSnap = await getDocs(collection(db, "users"));
-            const data = { sections: sectionsSnap.docs.map(d => d.data()), links: linksSnap.docs.map(d => d.data()), users: usersSnap.docs.map(d => ({ uid: d.id, ...d.data() })) };
+            const materialsSnap = await getDocs(collection(db, "training_materials"));
+            const data = { 
+                sections: sectionsSnap.docs.map(d => d.data()), 
+                links: linksSnap.docs.map(d => d.data()), 
+                users: usersSnap.docs.map(d => ({ uid: d.id, ...d.data() })),
+                materials: materialsSnap.docs.map(d => d.data())
+            };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `backup_${new Date().toISOString().slice(0,19)}.json`; a.click(); URL.revokeObjectURL(a.href);
             showToast('📥 تم تصدير النسخة الاحتياطية');
@@ -304,16 +430,18 @@
                     const data = JSON.parse(event.target.result);
                     if (data.sections) { for (const section of data.sections) { await setDoc(doc(db, "sections", section.id.toString()), section); } }
                     if (data.links) { for (const link of data.links) { await setDoc(doc(db, "links", link.id.toString()), link); } }
+                    if (data.materials) { for (const material of data.materials) { await setDoc(doc(db, "training_materials", material.id), material); } }
                     showToast('✅ تم استيراد البيانات بنجاح');
-                    if (window.CacheManager) { CacheManager.remove(CACHE_KEYS.SECTIONS); CacheManager.remove(CACHE_KEYS.LINKS); }
+                    if (window.CacheManager) { CacheManager.remove(CACHE_KEYS.SECTIONS); CacheManager.remove(CACHE_KEYS.LINKS); CacheManager.remove(CACHE_KEYS.MATERIALS); }
                     await loadDataFromFirebase(true);
+                    await loadTrainingMaterials(true);
                     renderSectionsList(); renderLinksList();
                 } catch (error) { showToast('❌ خطأ في استيراد الملف', true); }
             };
             reader.readAsText(file);
         }
         
-        // ========== دوال رفع Excel المتكاملة ==========
+        // ========== دوال رفع Excel ==========
         let totalOperations = 0;
         let completedOperations = 0;
         
@@ -536,7 +664,7 @@
             }
         };
         
-        async function refreshAdminData() { showToast("🔄 جاري تحديث البيانات..."); if(window.CacheManager){ CacheManager.remove(CACHE_KEYS.SECTIONS); CacheManager.remove(CACHE_KEYS.LINKS); } await loadDataFromFirebase(true); renderSectionsList(); renderLinksList(); await fetchAllUsers(); showToast("✅ تم تحديث البيانات"); }
+        async function refreshAdminData() { showToast("🔄 جاري تحديث البيانات..."); if(window.CacheManager){ CacheManager.remove(CACHE_KEYS.SECTIONS); CacheManager.remove(CACHE_KEYS.LINKS); CacheManager.remove(CACHE_KEYS.MATERIALS); } await loadDataFromFirebase(true); await loadTrainingMaterials(true); renderSectionsList(); renderLinksList(); await fetchAllUsers(); showToast("✅ تم تحديث البيانات"); }
         
         function logout() { signOut(auth).then(() => window.location.href = 'login.html'); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
@@ -549,22 +677,37 @@
         
         async function loadAdminPage() {
             await loadDataFromFirebase(false);
+            await loadTrainingMaterials(false);
             await fetchAllUsers();
             const sectionsOptions = currentData?.sections.map(s => `<option value="${s.id}">${s.icon || '📁'} ${s.name}</option>`).join('');
+            
             document.getElementById('app').innerHTML = `
                 <div class="navbar"><div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div><div class="nav-links"><a href="index.html" class="home">🏠 الرئيسية</a><a href="#" onclick="window.logout()" class="logout">🚪 تسجيل خروج</a></div></div>
                 <div class="container">
-                    <div class="tabs"><button class="tab-btn active" onclick="window.switchTab('sections')">📂 الأقسام والروابط</button><button class="tab-btn" onclick="window.switchTab('users')">👥 إدارة المستخدمين</button><button class="tab-btn" onclick="window.switchTab('data')">💾 استيراد/تصدير</button></div>
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="window.switchTab('sections')">📂 الأقسام والروابط</button>
+                        <button class="tab-btn" onclick="window.switchTab('materials')">📚 المواد التدريبية</button>
+                        <button class="tab-btn" onclick="window.switchTab('users')">👥 إدارة المستخدمين</button>
+                        <button class="tab-btn" onclick="window.switchTab('data')">💾 استيراد/تصدير</button>
+                    </div>
+                    
                     <div id="sectionsTab" class="tab-content active">
                         <div class="admin-card"><h3>➕ إضافة قسم جديد</h3><div id="sectionMsg" class="msg"></div><input type="text" id="sectionName" placeholder="اسم القسم"><input type="text" id="sectionIcon" placeholder="أيقونة القسم (📁)"><input type="text" id="sectionDesc" placeholder="وصف القسم"><button onclick="window.addSection()">إضافة قسم</button></div>
                         <div class="admin-card"><h3>📋 قائمة الأقسام</h3><div id="sectionsList"></div></div>
                         <div class="admin-card"><h3>🔗 إضافة رابط جديد</h3><div id="linkMsg" class="msg"></div><select id="linkSection">${sectionsOptions}</select><input type="text" id="linkTitle" placeholder="عنوان الرابط"><input type="url" id="linkUrl" placeholder="الرابط"><select id="linkType"><option value="internal">رابط داخلي</option><option value="external">رابط خارجي</option></select><button onclick="window.addLink()">إضافة رابط</button></div>
                         <div class="admin-card"><h3>📋 الروابط حسب الأقسام</h3><div id="linksList"></div></div>
                     </div>
+                    
+                    <div id="materialsTab" class="tab-content">
+                        <div class="admin-card"><h3>➕ إضافة مادة تدريبية جديدة</h3><button onclick="window.openAddMaterialModal()" style="background:#2b7a4b;">➕ إضافة مادة</button></div>
+                        <div class="admin-card"><h3>📋 قائمة المواد التدريبية</h3><div id="materialsList"></div></div>
+                    </div>
+                    
                     <div id="usersTab" class="tab-content">
                         <div class="admin-card"><h3>➕ إضافة مستخدم جديد</h3><div id="userMsg" class="msg"></div><input type="email" id="newUserEmail" placeholder="البريد الإلكتروني *"><input type="password" id="newUserPassword" placeholder="كلمة المرور * (6 أحرف على الأقل)"><select id="newUserRole"><option value="user">👤 مستخدم عادي</option><option value="admin">👑 أدمن</option></select><button onclick="window.addNewUser()">➕ إنشاء مستخدم</button></div>
                         <div class="admin-card"><h3>📋 قائمة المستخدمين</h3><div id="usersList"></div></div>
                     </div>
+                    
                     <div id="dataTab" class="tab-content">
                         <div class="admin-card" style="background:#fef5e7;"><h3>📁 إدارة البيانات (JSON)</h3><div class="backup-buttons"><button onclick="window.exportAllToJSON()" style="background:#4299e1;">📥 تصدير JSON</button><button onclick="document.getElementById('jsonImportInput').click()" style="background:#9f7aea;">📤 استيراد JSON</button><input type="file" id="jsonImportInput" accept=".json" style="display:none" onchange="window.importBackupJSON(this.files[0])"><button class="refresh-btn" onclick="window.refreshAdminData()">🔄 تحديث البيانات</button></div></div>
                         <div class="admin-card" style="background:#e8f0fe;"><h3>📥 استيراد البيانات من Excel إلى Firebase</h3><div class="import-grid"><div class="import-card"><h4>👥 بيانات الموظفين</h4><input type="file" id="employeesFile" accept=".xlsx, .xls"></div><div class="import-card"><h4>📘 تدريبات Off Job</h4><input type="file" id="offjobFile" accept=".xlsx, .xls"></div><div class="import-card"><h4>📗 تدريبات On Job</h4><input type="file" id="onjobFile" accept=".xlsx, .xls"></div></div><button onclick="window.startUpload()" style="background:#2b7a4b; width:100%;">🚀 بدء رفع البيانات</button>
@@ -573,12 +716,20 @@
                         <div class="upload-log" id="uploadLog"></div></div>
                     </div>
                 </div>
+                
                 <div id="editSectionModal" class="modal"><div class="modal-content"><h3>✏️ تعديل القسم</h3><input type="text" id="editSectionName" placeholder="اسم القسم"><input type="text" id="editSectionIcon" placeholder="الأيقونة"><input type="text" id="editSectionDesc" placeholder="الوصف"><div class="modal-buttons"><button class="save-btn" onclick="window.saveSectionEdit()">💾 حفظ</button><button class="cancel-btn" onclick="window.closeModal('editSectionModal')">❌ إلغاء</button></div></div></div>
                 <div id="editLinkModal" class="modal"><div class="modal-content"><h3>✏️ تعديل الرابط</h3><input type="text" id="editLinkTitle" placeholder="عنوان الرابط"><input type="url" id="editLinkUrl" placeholder="الرابط"><select id="editLinkType"><option value="internal">رابط داخلي</option><option value="external">رابط خارجي</option></select><div class="modal-buttons"><button class="save-btn" onclick="window.saveLinkEdit()">💾 حفظ</button><button class="cancel-btn" onclick="window.closeModal('editLinkModal')">❌ إلغاء</button></div></div></div>
+                <div id="materialModal" class="modal"><div class="modal-content"><h3>📚 إضافة / تعديل مادة تدريبية</h3><input type="hidden" id="materialId"><input type="text" id="materialTitle" placeholder="عنوان المادة *"><textarea id="materialDesc" placeholder="وصف المادة" rows="3"></textarea><input type="text" id="materialCategory" placeholder="التصنيف (مثال: أمن وسلامة، مهارات قيادية)"><select id="materialType"><option value="pdf">📄 PDF</option><option value="video">🎥 فيديو</option><option value="ppt">📊 PowerPoint</option><option value="doc">📝 مستند Word</option><option value="excel">📈 Excel</option><option value="image">🖼️ صورة</option><option value="link">🔗 رابط خارجي</option><option value="other">📁 أخرى</option></select><input type="url" id="materialFileUrl" placeholder="رابط الملف أو الفيديو *"><div class="modal-buttons"><button class="save-btn" onclick="window.saveMaterialForm()">💾 حفظ</button><button class="cancel-btn" onclick="window.closeModal('materialModal')">❌ إلغاء</button></div></div></div>
+                
                 <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير - جميع الحقوق محفوظة</p></div>
             `;
-            renderSectionsList(); renderLinksList(); renderUsersList();
-            window.addSection = addSection; window.addLink = addLink; window.logout = logout; window.closeModal = closeModal; window.switchTab = switchTab; window.exportAllToJSON = exportAllToJSON; window.refreshAdminData = refreshAdminData; window.addNewUser = addNewUser; window.deleteUserAccount = deleteUserAccount; window.importBackupJSON = importBackupJSON;
+            renderSectionsList(); renderLinksList(); renderUsersList(); renderMaterialsList();
+            
+            window.addSection = addSection; window.addLink = addLink; window.logout = logout; window.closeModal = closeModal; 
+            window.switchTab = switchTab; window.exportAllToJSON = exportAllToJSON; window.refreshAdminData = refreshAdminData; 
+            window.addNewUser = addNewUser; window.deleteUserAccount = deleteUserAccount; window.importBackupJSON = importBackupJSON;
+            window.openAddMaterialModal = openAddMaterialModal; window.openEditMaterialModal = openEditMaterialModal;
+            window.saveMaterialForm = saveMaterialForm; window.deleteMaterial = deleteMaterial;
         }
         
         onAuthStateChanged(auth, async (user) => {
