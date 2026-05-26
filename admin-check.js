@@ -1,27 +1,24 @@
-firebase.auth().onAuthStateChanged((user) => {
+import { auth } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+const admins = [
+    "admin@test.com",
+    "mina@test.com"
+];
+
+document.documentElement.style.visibility = "hidden";
+
+onAuthStateChanged(auth, (user) => {
 
     if (!user) {
-
-        window.location.href = "login.html";
-
+        location.href = "login.html";
         return;
     }
 
-    // ايميلات الادمن
-    const admins = [
-
-        "admin@test.com",
-
-        "mina@test.com"
-    ];
-
-    // ليس أدمن
     if (!admins.includes(user.email)) {
-
-        window.location.href = "index.html";
-
+        location.href = "index.html";
         return;
     }
 
-    document.body.style.display = "block";
+    document.documentElement.style.visibility = "visible";
 });
