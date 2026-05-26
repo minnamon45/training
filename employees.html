@@ -11,7 +11,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="cache-manager.js"></script>
-    <script type="module" src="auth-guard.js"></script>
     <style>
         * {
             margin: 0;
@@ -227,12 +226,6 @@
             font-size: 0.8rem;
         }
 
-        .cache-info {
-            font-size: 0.7rem;
-            color: #718096;
-            margin-top: 0.5rem;
-        }
-
         .table-container {
             background: white;
             border-radius: 1.5rem;
@@ -442,12 +435,15 @@
 
         <div class="action-bar">
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-                <button class="btn btn-secondary" onclick="exportEmployeesToExcel()">📤 تصدير إلى Excel</button>
+            <button class="btn btn-primary"
+            id="addEmployeeBtn"
+            style="display:none"
+            onclick="document.getElementById('addModal').style.display='flex'">
+            ➕ إضافة موظف
+            </button>                <button class="btn btn-secondary" onclick="exportEmployeesToExcel()">📤 تصدير إلى Excel</button>
                 <button class="refresh-btn" onclick="refreshData()">🔄 تحديث البيانات</button>
             </div>
-            <input type="file" id="excelInput" accept=".xlsx, .xls" style="display:none"
-                onchange="importEmployeesExcel(this.files[0])">
-
+            <input type="file" id="excelInput" accept=".xlsx, .xls" style="display:none" onchange="importEmployeesExcel(this.files[0])">
         </div>
 
         <div class="filter-bar">
@@ -455,8 +451,7 @@
                 <input type="text" id="searchInput" placeholder="🔍 بحث بالكود أو بالاسم..."
                     onkeypress="if(event.key==='Enter') searchEmployees()">
                 <button onclick="searchEmployees()">🔍 بحث</button>
-                <button id="clearSearchBtn" onclick="clearSearch()" style="background:#718096; display:none;">✖️
-                    إلغاء</button>
+                <button id="clearSearchBtn" onclick="clearSearch()" style="background:#718096; display:none;">✖️ إلغاء</button>
             </div>
             <div class="filter-group">
                 <label>📂 القسم:</label>
@@ -474,7 +469,6 @@
             </div>
         </div>
 
-
         <div class="table-container">
             <table id="employeesTable">
                 <thead>
@@ -486,12 +480,12 @@
                         <th>Level</th>
                         <th>Hire Date</th>
                         <th>Status</th>
-                        <th>العمليات</th>
+                        <th id="actionsHeader">العمليات</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
                     <tr>
-                        <td colspan="8" style="text-align:center;">⏳ جاري تحميل البيانات...</td>
+                        <td colspan="8" style="text-align:center;">⏳ جاري تحميل البيانات...</span></td>
                     </tr>
                 </tbody>
             </table>
@@ -567,41 +561,74 @@
         let filterDept = "all";
         let filterStatus = "all";
         let currentEditId = null;
+        let isAdmin = false;
 
         // مفتاح الكاش لهذه الصفحة
         const CACHE_KEY = 'employees_data_v1';
 
-        // ========== عرض حالة الكاش ==========
-        function updateCacheInfo() {
-            const cacheInfo = document.getElementById('cacheInfo');
-            if (!cacheInfo) return;
-            
-            if (window.CacheManager) {
-                const cached = CacheManager.get(CACHE_KEY);
-                if (cached) {
-                    const cacheTime = localStorage.getItem(CACHE_KEY + '_time');
-                    if (cacheTime) {
-                        const date = new Date(parseInt(cacheTime));
-                      //  cacheInfo.innerHTML = `📦 البيانات من الكاش - آخر تحديث: ${date.toLocaleString('ar-EG')} &nbsp;|&nbsp; <a href="#" onclick="refreshData(); return false;" style="color:#4299e1;">🔄 تحديث يدوي</a>`;
-                    } else {
-                        cacheInfo.innerHTML = `📦 البيانات من الكاش &nbsp;|&nbsp; <a href="#" onclick="refreshData(); return false;" style="color:#4299e1;">🔄 تحديث يدوي</a>`;
-                    }
-                } else {
-                    cacheInfo.innerHTML = `☁️ البيانات من Firebase (تم التحديث الآن)`;
-                }
-            }
+        // ========== التحقق من صلاحية الأدمن ==========
+async function checkAdminStatus(user) {
+
+    try {
+
+        // التحقق من Collection admins
+        const adminDoc = await db
+            .collection('admins')
+            .doc(user.uid)
+            .get();
+
+        // لو المستخدم أدمن
+        if (adminDoc.exists) {
+
+            isAdmin = true;
+
+        } else {
+
+            isAdmin = false;
+
         }
+
+    } catch (error) {
+
+        console.error("Error checking admin status:", error);
+
+        isAdmin = false;
+
+    }
+
+    // زر إضافة موظف
+    const addBtn = document.getElementById('addEmployeeBtn');
+
+    // عنوان العمليات
+    const actionsHeader = document.getElementById('actionsHeader');
+
+    // زر الاستيراد
+    const importBtn = document.querySelector('.btn-import');
+
+    // إظهار أو إخفاء العناصر
+    if (addBtn) {
+        addBtn.style.display = isAdmin ? 'inline-block' : 'none';
+    }
+
+    if (actionsHeader) {
+        actionsHeader.style.display = isAdmin ? 'table-cell' : 'none';
+    }
+
+    if (importBtn) {
+        importBtn.style.display = isAdmin ? 'inline-block' : 'none';
+    }
+
+    return isAdmin;
+}
 
         // ========== تحميل البيانات من Firebase مع الكاش ==========
         async function loadEmployeesFromFirebase(forceRefresh = false) {
             try {
-                // محاولة القراءة من الكاش أولاً
                 if (!forceRefresh && window.CacheManager) {
                     const cached = CacheManager.get(CACHE_KEY);
                     if (cached) {
                         console.log("📦 استخدام البيانات من الكاش");
                         employees = cached;
-                        updateCacheInfo();
                         return employees;
                     }
                 }
@@ -614,14 +641,11 @@
                 });
                 employees.sort((a, b) => a.id - b.id);
                 
-                // حفظ في الكاش
                 if (window.CacheManager) {
                     CacheManager.set(CACHE_KEY, employees);
-                    // تخزين الوقت بشكل منفصل للعرض
                     localStorage.setItem(CACHE_KEY + '_time', Date.now().toString());
                 }
                 
-                updateCacheInfo();
                 console.log(`✅ تم تحميل ${employees.length} موظف`);
                 return employees;
             } catch (error) {
@@ -643,12 +667,11 @@
             showToast("✅ تم تحديث البيانات بنجاح");
         }
 
-        // ========== حفظ موظف إلى Firebase (مع تحديث الكاش) ==========
+        // ========== حفظ موظف إلى Firebase ==========
         async function saveEmployeeToFirebase(employee) {
             try {
                 await db.collection('employees').doc(employee.id.toString()).set(employee);
                 console.log(`✅ تم حفظ الموظف ${employee.id} في Firebase`);
-                // تحديث الكاش بعد الحفظ
                 if (window.CacheManager) {
                     CacheManager.remove(CACHE_KEY);
                     localStorage.removeItem(CACHE_KEY + '_time');
@@ -661,12 +684,11 @@
             }
         }
 
-        // ========== حذف موظف من Firebase (مع تحديث الكاش) ==========
+        // ========== حذف موظف من Firebase ==========
         async function deleteEmployeeFromFirebase(id) {
             try {
                 await db.collection('employees').doc(id.toString()).delete();
                 console.log(`✅ تم حذف الموظف ${id} من Firebase`);
-                // تحديث الكاش بعد الحذف
                 if (window.CacheManager) {
                     CacheManager.remove(CACHE_KEY);
                     localStorage.removeItem(CACHE_KEY + '_time');
@@ -759,23 +781,32 @@
             const tableBody = document.getElementById('tableBody');
             if (tableBody) {
                 if (filtered.length === 0) {
-                    tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">📭 لا توجد بيانات مطابقة</td></tr>';
+                    tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">📭 لا توجد بيانات مطابقة<\/td><\/tr>';
                 } else {
-                    tableBody.innerHTML = filtered.map(emp => `
-                        <tr>
-                            <td>${emp.id}</td>
-                            <td>${emp.fullName || '-'}</td>
-                            <td>${emp.department || '-'}</td>
-                            <td>${emp.position || '-'}</td>
-                            <td>${emp.level || '-'}</td>
-                            <td>${emp.hireDate || '-'}</td>
-                            <td><span class="status-badge ${(emp.status || 'Active') === 'Active' ? 'status-active' : 'status-left'}">${(emp.status || 'Active') === 'Active' ? '✅ نشط' : '❌ مستقيل'}</span></td>
-                            <td class="action-buttons">
-                                <button class="edit-btn" onclick="openEditModal(${emp.id})">✏️ تعديل</button>
-                                <button class="delete-btn" onclick="deleteEmployee(${emp.id})">🗑️ حذف</button>
-                            </td>
-                        </tr>
-                    `).join('');
+                    let html = '';
+                    for (let i = 0; i < filtered.length; i++) {
+                        const emp = filtered[i];
+                        html += '<tr>';
+                        html += '<td>' + emp.id + '<\/td>';
+                        html += '<td>' + (emp.fullName || '-') + '<\/td>';
+                        html += '<td>' + (emp.department || '-') + '<\/td>';
+                        html += '<td>' + (emp.position || '-') + '<\/td>';
+                        html += '<td>' + (emp.level || '-') + '<\/td>';
+                        html += '<td>' + (emp.hireDate || '-') + '<\/td>';
+                        html += '<td><span class="status-badge ' + ((emp.status || 'Active') === 'Active' ? 'status-active' : 'status-left') + '">' + ((emp.status || 'Active') === 'Active' ? '✅ نشط' : '❌ مستقيل') + '<\/span><\/td>';
+                        
+                        // أزرار العمليات - تظهر فقط للأدمن
+                        if (isAdmin) {
+                            html += '<td class="action-buttons">';
+                            html += '<button class="edit-btn" onclick="openEditModal(' + emp.id + ')">✏️ تعديل<\/button>';
+                            html += '<button class="delete-btn" onclick="deleteEmployee(' + emp.id + ')">🗑️ حذف<\/button>';
+                            html += '<\/td>';
+                        } else {
+                            html += '<td>-<\/td>';
+                        }
+                        html += '<\/tr>';
+                    }
+                    tableBody.innerHTML = html;
                 }
             }
         }
@@ -816,6 +847,11 @@
 
         // ========== إدارة الموظفين ==========
         async function addEmployee() {
+            if (!isAdmin) {
+                showToast('❌ ليس لديك صلاحية لإضافة موظفين', true);
+                return;
+            }
+            
             const id = document.getElementById('empId').value;
             const fullName = document.getElementById('empName').value;
             const department = document.getElementById('empDept').value;
@@ -850,6 +886,11 @@
         }
 
         function openEditModal(id) {
+            if (!isAdmin) {
+                showToast('❌ ليس لديك صلاحية لتعديل الموظفين', true);
+                return;
+            }
+            
             const emp = employees.find(e => e.id === id);
             if (emp) {
                 currentEditId = id;
@@ -865,6 +906,11 @@
         }
 
         async function saveEdit() {
+            if (!isAdmin) {
+                showToast('❌ ليس لديك صلاحية لتعديل الموظفين', true);
+                return;
+            }
+            
             const emp = employees.find(e => e.id === currentEditId);
             if (emp) {
                 emp.fullName = document.getElementById('editName').value;
@@ -882,6 +928,11 @@
         }
 
         async function deleteEmployee(id) {
+            if (!isAdmin) {
+                showToast('❌ ليس لديك صلاحية لحذف الموظفين', true);
+                return;
+            }
+            
             if (confirm('⚠️ هل أنت متأكد من حذف هذا الموظف؟')) {
                 await deleteEmployeeFromFirebase(id);
                 await updateUI();
@@ -905,6 +956,11 @@
         }
 
         async function importEmployeesExcel(file) {
+            if (!isAdmin) {
+                showToast('❌ ليس لديك صلاحية لاستيراد الموظفين', true);
+                return;
+            }
+            
             if (!file) return;
             const reader = new FileReader();
             reader.onload = async function (e) {
@@ -998,7 +1054,6 @@
         }
 
         function logout() {
-            // مسح الكاش عند تسجيل الخروج
             if (window.CacheManager) {
                 CacheManager.remove(CACHE_KEY);
                 localStorage.removeItem(CACHE_KEY + '_time');
@@ -1013,6 +1068,7 @@
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 console.log("✅ User logged in:", user.email);
+                await checkAdminStatus(user);
                 await updateUI();
             } else {
                 console.log("❌ No user, redirecting to login");
