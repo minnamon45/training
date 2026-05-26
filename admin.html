@@ -60,14 +60,7 @@
         .upload-log { background: #111827; color: #d1fae5; padding: 15px; border-radius: 10px; margin-top: 15px; height: 200px; overflow: auto; font-size: 12px; }
         .upload-log .success { color: #22c55e; }
         .upload-log .error { color: #ef4444; }
-        .stats-badge {
-            display: inline-block;
-            background: #e2e8f0;
-            padding: 0.3rem 0.8rem;
-            border-radius: 1rem;
-            font-size: 0.8rem;
-            margin: 0.2rem;
-        }
+        .stats-badge { display: inline-block; background: #e2e8f0; padding: 0.3rem 0.8rem; border-radius: 1rem; font-size: 0.8rem; margin: 0.2rem; }
         .toast-msg { position: fixed; bottom: 2rem; right: 2rem; background: #2b7a4b; color: white; padding: 0.8rem 1.5rem; border-radius: 2rem; z-index: 1000; animation: slideIn 0.3s ease; }
         .toast-msg.error { background: #e53e3e; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -83,7 +76,7 @@
     <script type="module">
         import { auth, db } from "./firebase.js";
         import { onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         
         let isAdmin = false;
         let currentData = null;
@@ -128,7 +121,6 @@
                     totalViews += data.views || 0;
                     totalDownloads += data.downloads || 0;
                 });
-                
                 const statsContainer = document.getElementById('materialsStats');
                 if (statsContainer) {
                     statsContainer.innerHTML = `
@@ -261,108 +253,33 @@
             container.innerHTML = html;
         }
         
-function renderLinksList() {
-    const container = document.getElementById('linksList');
-    if (!container || !currentData) return;
-    
-    // تجميع جميع الروابط من جميع الأقسام في مصفوفة واحدة
-    let allLinks = [];
-    currentData.sections.forEach(section => {
-        if (section.links && section.links.length > 0) {
-            section.links.forEach(link => {
-                allLinks.push({
-                    ...link,
-                    sectionName: section.name,
-                    sectionIcon: section.icon || '📁',
-                    sectionId: section.id
-                });
+        function renderLinksList() {
+            const container = document.getElementById('linksList');
+            if (!container || !currentData) return;
+            let allLinks = [];
+            currentData.sections.forEach(section => {
+                if (section.links && section.links.length > 0) {
+                    section.links.forEach(link => {
+                        allLinks.push({
+                            ...link,
+                            sectionName: section.name,
+                            sectionIcon: section.icon || '📁',
+                            sectionId: section.id
+                        });
+                    });
+                }
             });
+            if (allLinks.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:2rem; color:#718096;">📭 لا توجد روابط</div>';
+                return;
+            }
+            let html = `<div class="table-wrapper"><table class="links-table"><thead><tr style="background: linear-gradient(135deg, #1e3a5f, #2b7a4b); color: white;"><th>#</th><th>القسم</th><th>العنوان</th><th>الرابط</th><th>النوع</th><th>👁️</th><th>📌</th><th>العمليات</th></tr></thead><tbody>`;
+            allLinks.forEach((link, index) => {
+                html += `<tr><td style="width:40px;">${index+1}<\/td><td><span style="background:#e2e8f0; padding:0.2rem 0.6rem; border-radius:1rem; font-size:0.7rem;">${link.sectionIcon} ${escapeHtml(link.sectionName)}<\/span><\/td><td style="text-align:right;">${escapeHtml(link.title)}<\/td><td style="direction:ltr; font-size:0.7rem;">${link.url ? link.url.substring(0,40)+'...' : '-'}<\/td><td><span style="background:${link.type==='internal'?'#bee3f8':'#fef5e7'}; padding:0.2rem 0.5rem; border-radius:1rem;">${link.type==='internal'?'داخلي':'خارجي'}<\/span><\/td><td>${link.views||0}<\/td><td>${link.pinned?'✅':'❌'}<\/td><td class="action-buttons"><button class="edit-btn" onclick="window.openEditLink(${link.sectionId},${link.id})">✏️<\/button><button class="pin-btn" onclick="window.togglePin(${link.sectionId},${link.id})">${link.pinned?'📌':'📌'}<\/button><button class="delete-btn" onclick="window.deleteLink(${link.sectionId},${link.id})">🗑️<\/button><\/td><\/tr>`;
+            });
+            html += `</tbody></table></div><div style="margin-top:1rem; text-align:center; font-size:0.7rem;">📊 إجمالي الروابط: ${allLinks.length}</div>`;
+            container.innerHTML = html;
         }
-    });
-    
-    if (allLinks.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:2rem; color:#718096;">📭 لا توجد روابط</div>';
-        return;
-    }
-    
-    let html = `
-        <div class="table-wrapper">
-            <table class="links-table" style="width:100%; border-collapse:collapse; border-radius:1rem; overflow:hidden;">
-                <thead>
-                    <tr style="background: linear-gradient(135deg, #1e3a5f, #2b7a4b); color: white;">
-                        <th style="padding: 12px; text-align: center; width: 50px;">#</th>
-                        <th style="padding: 12px; text-align: center;">القسم</th>
-                        <th style="padding: 12px; text-align: center;">العنوان</th>
-                        <th style="padding: 12px; text-align: center;">الرابط</th>
-                        <th style="padding: 12px; text-align: center;">النوع</th>
-                        <th style="padding: 12px; text-align: center;">👁️ مشاهدات</th>
-                        <th style="padding: 12px; text-align: center;">📌 مثبت</th>
-                        <th style="padding: 12px; text-align: center;">العمليات</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-    
-    allLinks.forEach((link, index) => {
-        const rowBg = index % 2 === 0 ? '#ffffff' : '#f8fafc';
-        html += `
-            <tr style="border-bottom: 1px solid #e2e8f0; background: ${rowBg}; transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='${rowBg}'">
-                <td style="padding: 10px; text-align: center; font-weight: bold; color: #1e3a5f;">${index + 1}</td>
-                <td style="padding: 10px; text-align: center;">
-                    <span style="display: inline-flex; align-items: center; gap: 0.5rem; background: #e2e8f0; padding: 0.2rem 0.8rem; border-radius: 2rem; font-size: 0.8rem;">
-                        ${link.sectionIcon} ${escapeHtml(link.sectionName)}
-                    </span>
-                </td>
-                <td style="padding: 10px; text-align: right; font-weight: 500;">${escapeHtml(link.title)}</span></td>
-                <td style="padding: 10px; text-align: left; direction: ltr;">
-                    <a href="${link.url}" target="_blank" style="color: #4299e1; text-decoration: none; font-size: 0.75rem; word-break: break-all;" onclick="event.stopPropagation(); window.open('${link.url}', '_blank'); return false;">
-                        ${link.url ? link.url.substring(0, 50) + (link.url.length > 50 ? '...' : '') : '-'}
-                    </a>
-                </td>
-                <td style="padding: 10px; text-align: center;">
-                    <span style="background: ${link.type === 'internal' ? '#bee3f8' : '#fef5e7'}; color: ${link.type === 'internal' ? '#2b6cb0' : '#c05621'}; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.7rem;">
-                        ${link.type === 'internal' ? 'داخلي' : 'خارجي'}
-                    </span>
-                </td>
-                <td style="padding: 10px; text-align: center;">
-                    <span style="display: inline-flex; align-items: center; gap: 0.3rem; background: #e2e8f0; padding: 0.2rem 0.6rem; border-radius: 1rem;">
-                        👁️ ${link.views || 0}
-                    </span>
-                </td>
-                <td style="padding: 10px; text-align: center;">
-                    ${link.pinned ? 
-                        '<span style="background: #fef5e7; color: #c05621; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.7rem;">📌 مثبت</span>' : 
-                        '<span style="background: #e2e8f0; color: #718096; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.7rem;">غير مثبت</span>'
-                    }
-                </td>
-                <td style="padding: 10px; text-align: center;">
-                    <div class="action-buttons" style="display: flex; flex-direction: column; gap: 0.3rem; justify-content: center; align-items: center;">
-                        <button class="edit-btn" onclick="window.openEditLink(${link.sectionId}, ${link.id})" style="background: #4299e1; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 1rem; cursor: pointer; font-size: 0.7rem; width: 50px;">
-                            ✏️ تعديل
-                        </button>
-                        <button class="pin-btn" onclick="window.togglePin(${link.sectionId}, ${link.id})" style="background: #ed8936; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 1rem; cursor: pointer; font-size: 0.7rem; width: 50px;">
-                            ${link.pinned ? '📌 إلغاء' : '📌 تثبيت'}
-                        </button>
-                        <button class="delete-btn" onclick="window.deleteLink(${link.sectionId}, ${link.id})" style="background: #e53e3e; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 1rem; cursor: pointer; font-size: 0.7rem; width: 50px;">
-                            🗑️ حذف
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    });
-    
-    html += `
-                </tbody>
-            </table>
-        </div>
-        <div style="margin-top: 1rem; padding: 0.5rem; background: #e2e8f0; border-radius: 0.5rem; text-align: center; font-size: 0.7rem; color: #4a5568;">
-            📊 إجمالي الروابط: ${allLinks.length}
-        </div>
-    `;
-    
-    container.innerHTML = html;
-}
         
         async function addSection() {
             const name = document.getElementById('sectionName')?.value;
@@ -494,34 +411,20 @@ function renderLinksList() {
             document.getElementById('materialModal').style.display = 'none';
         }
         
-function renderMaterialsList() {
-    const container = document.getElementById('materialsList');
-    if (!container) return;
-    
-    if (trainingMaterials.length === 0) {
-        container.innerHTML = '<div style="text-align:center; padding:2rem;">📭 لا توجد مواد تدريبية</div>';
-        return;
-    }
-    
-    let html = '<div class="table-wrapper"><table class="materials-table"><thead><tr><th>#</th><th>العنوان</th><th>التصنيف</th><th>النوع</th><th>الرابط</th><th>👁️ مشاهدات</th><th>📥 تحميلات</th><th>العمليات</th></tr></thead><tbody>';
-    trainingMaterials.forEach((m, i) => {
-        html += `<tr>
-            <td style="width:40px;">${i+1}</td>
-            <td style="text-align:right;">${escapeHtml(m.title)}</span></td>
-            <td>${escapeHtml(m.category || '-')}</td>
-            <td><span class="material-type-badge">${m.type || 'pdf'}</span></td>
-            <td style="direction:ltr; font-size:0.7rem;">${m.fileUrl ? m.fileUrl.substring(0, 40) + '...' : '-'}</td>
-            <td><span style="background:#bee3f8; padding:0.2rem 0.6rem; border-radius:1rem;">${m.views || 0}</span></td>
-            <td><span style="background:#c6f6d5; padding:0.2rem 0.6rem; border-radius:1rem;">${m.downloads || 0}</span></td>
-            <td class="action-buttons">
-                <button class="edit-btn" onclick='window.openEditMaterialModal(${JSON.stringify(m).replace(/'/g, "&#39;")})'>✏️ تعديل</button>
-                <button class="delete-btn" onclick="window.deleteMaterial('${m.id}')">🗑️ حذف</button>
-            </span>
-        </tr>`;
-    });
-    html += '</tbody>}</div>';
-    container.innerHTML = html;
-}
+        function renderMaterialsList() {
+            const container = document.getElementById('materialsList');
+            if (!container) return;
+            if (trainingMaterials.length === 0) {
+                container.innerHTML = '<div style="text-align:center; padding:2rem;">📭 لا توجد مواد تدريبية</div>';
+                return;
+            }
+            let html = '<div class="table-wrapper"><table class="materials-table"><thead><tr><th>#</th><th>العنوان</th><th>التصنيف</th><th>النوع</th><th>الرابط</th><th>👁️ مشاهدات</th><th>📥 تحميلات</th><th>العمليات</th></tr></thead><tbody>';
+            trainingMaterials.forEach((m, i) => {
+                html += `<tr><td style="width:40px;">${i+1}</td><td style="text-align:right;">${escapeHtml(m.title)}</span></td><td>${escapeHtml(m.category || '-')}</td><td><span class="material-type-badge">${m.type || 'pdf'}</span></td><td style="direction:ltr; font-size:0.7rem;">${m.fileUrl ? m.fileUrl.substring(0,40)+'...' : '-'}</td><td style="background:#bee3f8; padding:0.2rem 0.5rem; border-radius:1rem;">${m.views || 0}</span></td><td style="background:#c6f6d5; padding:0.2rem 0.5rem; border-radius:1rem;">${m.downloads || 0}</span></td><td class="action-buttons"><button class="edit-btn" onclick='window.openEditMaterialModal(${JSON.stringify(m).replace(/'/g, "&#39;")})'>✏️ تعديل</button><button class="delete-btn" onclick="window.deleteMaterial('${m.id}')">🗑️ حذف</button></span></tr>`;
+            });
+            html += '</tbody>}</div>';
+            container.innerHTML = html;
+        }
         
         // ========== استيراد/تصدير JSON ==========
         async function exportAllToJSON() {
@@ -529,12 +432,7 @@ function renderMaterialsList() {
             const linksSnap = await getDocs(collection(db, "links"));
             const usersSnap = await getDocs(collection(db, "users"));
             const materialsSnap = await getDocs(collection(db, "training_materials"));
-            const data = { 
-                sections: sectionsSnap.docs.map(d => d.data()), 
-                links: linksSnap.docs.map(d => d.data()), 
-                users: usersSnap.docs.map(d => ({ uid: d.id, ...d.data() })),
-                materials: materialsSnap.docs.map(d => d.data())
-            };
+            const data = { sections: sectionsSnap.docs.map(d => d.data()), links: linksSnap.docs.map(d => d.data()), users: usersSnap.docs.map(d => ({ uid: d.id, ...d.data() })), materials: materialsSnap.docs.map(d => d.data()) };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `backup_${new Date().toISOString().slice(0,19)}.json`; a.click(); URL.revokeObjectURL(a.href);
             showToast('📥 تم تصدير النسخة الاحتياطية');
@@ -561,238 +459,61 @@ function renderMaterialsList() {
         }
         
         // ========== دوال رفع Excel ==========
-        let totalOperations = 0;
-        let completedOperations = 0;
-        
-        function updateUploadProgress() {
-            const percent = totalOperations > 0 ? Math.floor((completedOperations / totalOperations) * 100) : 0;
-            const progressBar = document.getElementById("uploadProgressBar");
-            if (progressBar) {
-                progressBar.style.width = percent + "%";
-                progressBar.innerHTML = percent + "%";
-            }
-            const doneSpan = document.getElementById("uploadDoneCount");
-            const totalSpan = document.getElementById("uploadTotalCount");
-            if (doneSpan) doneSpan.innerText = completedOperations;
-            if (totalSpan) totalSpan.innerText = totalOperations;
-        }
-        
-        function addUploadLog(message, type = "") {
-            const logBox = document.getElementById("uploadLog");
-            if (logBox) {
-                const colorClass = type === "success" ? "success" : (type === "error" ? "error" : "");
-                logBox.innerHTML += `<div class="${colorClass}">${new Date().toLocaleTimeString()} - ${message}</div>`;
-                logBox.scrollTop = logBox.scrollHeight;
-            }
-        }
-        
-        function setUploadStatus(text) {
-            const statusSpan = document.getElementById("uploadStatus");
-            if (statusSpan) statusSpan.innerText = text;
-        }
-        
-        function readWorkbook(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    resolve(workbook);
-                };
-                reader.onerror = reject;
-                reader.readAsArrayBuffer(file);
-            });
-        }
-        
-        function sheetToJson(workbook, sheetName) {
-            const sheet = workbook.Sheets[sheetName];
-            if (!sheet) return [];
-            return XLSX.utils.sheet_to_json(sheet);
-        }
-        
-        function convertExcelDate(excelDate) {
-            if (!excelDate) return "";
-            if (typeof excelDate === 'number') {
-                const date = XLSX.SSF.parse_date_code(excelDate);
-                return `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`;
-            }
-            return excelDate;
-        }
+        let totalOperations = 0, completedOperations = 0;
+        function updateUploadProgress() { const percent = totalOperations > 0 ? Math.floor((completedOperations / totalOperations) * 100) : 0; const progressBar = document.getElementById("uploadProgressBar"); if (progressBar) { progressBar.style.width = percent + "%"; progressBar.innerHTML = percent + "%"; } const doneSpan = document.getElementById("uploadDoneCount"); const totalSpan = document.getElementById("uploadTotalCount"); if (doneSpan) doneSpan.innerText = completedOperations; if (totalSpan) totalSpan.innerText = totalOperations; }
+        function addUploadLog(message, type = "") { const logBox = document.getElementById("uploadLog"); if (logBox) { const colorClass = type === "success" ? "success" : (type === "error" ? "error" : ""); logBox.innerHTML += `<div class="${colorClass}">${new Date().toLocaleTimeString()} - ${message}</div>`; logBox.scrollTop = logBox.scrollHeight; } }
+        function setUploadStatus(text) { const statusSpan = document.getElementById("uploadStatus"); if (statusSpan) statusSpan.innerText = text; }
+        function readWorkbook(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = (e) => { const data = new Uint8Array(e.target.result); const workbook = XLSX.read(data, { type: 'array' }); resolve(workbook); }; reader.onerror = reject; reader.readAsArrayBuffer(file); }); }
+        function sheetToJson(workbook, sheetName) { const sheet = workbook.Sheets[sheetName]; if (!sheet) return []; return XLSX.utils.sheet_to_json(sheet); }
+        function convertExcelDate(excelDate) { if (!excelDate) return ""; if (typeof excelDate === 'number') { const date = XLSX.SSF.parse_date_code(excelDate); return `${date.y}-${String(date.m).padStart(2, '0')}-${String(date.d).padStart(2, '0')}`; } return excelDate; }
         
         async function uploadEmployees(data) {
-            setUploadStatus("رفع الموظفين...");
-            addUploadLog(`📥 بدء رفع ${data.length} موظف`);
+            setUploadStatus("رفع الموظفين..."); addUploadLog(`📥 بدء رفع ${data.length} موظف`);
             for (let i = 0; i < data.length; i++) {
-                const row = data[i];
-                const docId = String(row["Employee ID"] || row["employee_id"] || row["id"] || i).trim();
-                const employeeData = {
-                    id: parseInt(docId) || docId,
-                    fullName: row["Full Name"] || row["full_name"] || row["name"] || "",
-                    department: row["Dep"] || row["department"] || "",
-                    position: row["Position"] || row["position"] || "",
-                    level: row["Level"] || row["level"] || "",
-                    hireDate: convertExcelDate(row["Hire Date"] || row["hire_date"]),
-                    status: row["Status"] || row["status"] || "Active"
-                };
+                const row = data[i]; const docId = String(row["Employee ID"] || row["employee_id"] || row["id"] || i).trim();
+                const employeeData = { id: parseInt(docId) || docId, fullName: row["Full Name"] || row["full_name"] || row["name"] || "", department: row["Dep"] || row["department"] || "", position: row["Position"] || row["position"] || "", level: row["Level"] || row["level"] || "", hireDate: convertExcelDate(row["Hire Date"] || row["hire_date"]), status: row["Status"] || row["status"] || "Active" };
                 await setDoc(doc(db, "employees", docId), employeeData);
-                completedOperations++;
-                updateUploadProgress();
+                completedOperations++; updateUploadProgress();
                 if ((i + 1) % 10 === 0) addUploadLog(`📊 تم رفع ${i + 1}/${data.length} موظف`);
             }
             addUploadLog(`✅ تم رفع ${data.length} موظف بنجاح`, "success");
         }
         
         async function uploadTrainingData(collectionPrefix, workbook) {
-            const courses = sheetToJson(workbook, "Courses");
-            const sessions = sheetToJson(workbook, "Sessions");
-            const enrollments = sheetToJson(workbook, "Enrollments");
+            const courses = sheetToJson(workbook, "Courses"); const sessions = sheetToJson(workbook, "Sessions"); const enrollments = sheetToJson(workbook, "Enrollments");
             addUploadLog(`📚 ${collectionPrefix}: ${courses.length} كورس, ${sessions.length} جلسة, ${enrollments.length} تسجيل`);
-            
             setUploadStatus(`رفع ${collectionPrefix} - الكورسات`);
-            for (let i = 0; i < courses.length; i++) {
-                const course = courses[i];
-                const docId = String(course.course_code || i).trim().toLowerCase();
-                await setDoc(doc(db, `${collectionPrefix}_courses`, docId), {
-                    course_code: course.course_code,
-                    course_name: course.course_name,
-                    category: course.category || "",
-                    duration_hours: parseFloat(course.duration_hours) || 0,
-                    description: course.description || ""
-                });
-                completedOperations++;
-                updateUploadProgress();
-            }
-            
+            for (let i = 0; i < courses.length; i++) { const course = courses[i]; const docId = String(course.course_code || i).trim().toLowerCase(); await setDoc(doc(db, `${collectionPrefix}_courses`, docId), { course_code: course.course_code, course_name: course.course_name, category: course.category || "", duration_hours: parseFloat(course.duration_hours) || 0, description: course.description || "" }); completedOperations++; updateUploadProgress(); }
             setUploadStatus(`رفع ${collectionPrefix} - الجلسات`);
-            for (let i = 0; i < sessions.length; i++) {
-                const session = sessions[i];
-                const docId = String(session.session_code || i).trim().toLowerCase();
-                await setDoc(doc(db, `${collectionPrefix}_sessions`, docId), {
-                    session_code: session.session_code,
-                    course_code: session.course_code,
-                    session_date: convertExcelDate(session.session_date),
-                    trainer_name: session.trainer_name || "",
-                    start_time: session.start_time || "",
-                    end_time: session.end_time || "",
-                    location: session.location || ""
-                });
-                completedOperations++;
-                updateUploadProgress();
-            }
-            
+            for (let i = 0; i < sessions.length; i++) { const session = sessions[i]; const docId = String(session.session_code || i).trim().toLowerCase(); await setDoc(doc(db, `${collectionPrefix}_sessions`, docId), { session_code: session.session_code, course_code: session.course_code, session_date: convertExcelDate(session.session_date), trainer_name: session.trainer_name || "", start_time: session.start_time || "", end_time: session.end_time || "", location: session.location || "" }); completedOperations++; updateUploadProgress(); }
             setUploadStatus(`رفع ${collectionPrefix} - التسجيلات`);
-            for (let i = 0; i < enrollments.length; i++) {
-                const enrollment = enrollments[i];
-                const empId = String(enrollment.employee_id || i).trim();
-                const sessionCode = String(enrollment.session_code || "").trim();
-                const docId = `${empId}_${sessionCode}`;
-                await setDoc(doc(db, `${collectionPrefix}_enrollments`, docId), {
-                    employee_id: enrollment.employee_id,
-                    session_code: enrollment.session_code,
-                    enrollment_status: enrollment.enrollment_status || "Completed",
-                    score: enrollment.score ? parseFloat(enrollment.score) : null,
-                    completion_date: convertExcelDate(enrollment.completion_date)
-                });
-                completedOperations++;
-                updateUploadProgress();
-            }
+            for (let i = 0; i < enrollments.length; i++) { const enrollment = enrollments[i]; const empId = String(enrollment.employee_id || i).trim(); const sessionCode = String(enrollment.session_code || "").trim(); const docId = `${empId}_${sessionCode}`; await setDoc(doc(db, `${collectionPrefix}_enrollments`, docId), { employee_id: enrollment.employee_id, session_code: enrollment.session_code, enrollment_status: enrollment.enrollment_status || "Completed", score: enrollment.score ? parseFloat(enrollment.score) : null, completion_date: convertExcelDate(enrollment.completion_date) }); completedOperations++; updateUploadProgress(); }
             addUploadLog(`✅ تم رفع ${collectionPrefix} بنجاح`, "success");
         }
         
         window.startUpload = async () => {
-            const employeesFile = document.getElementById("employeesFile")?.files[0];
-            const offjobFile = document.getElementById("offjobFile")?.files[0];
-            const onjobFile = document.getElementById("onjobFile")?.files[0];
-            
-            if (!employeesFile && !offjobFile && !onjobFile) {
-                showToast("❌ الرجاء اختيار ملف واحد على الأقل", true);
-                return;
-            }
-            
-            completedOperations = 0;
-            totalOperations = 0;
-            
-            if (employeesFile) {
-                const empWorkbook = await readWorkbook(employeesFile);
-                const empData = sheetToJson(empWorkbook, "Sheet1");
-                totalOperations += empData.length;
-            }
-            if (offjobFile) {
-                const offWorkbook = await readWorkbook(offjobFile);
-                const courses = sheetToJson(offWorkbook, "Courses");
-                const sessions = sheetToJson(offWorkbook, "Sessions");
-                const enrollments = sheetToJson(offWorkbook, "Enrollments");
-                totalOperations += courses.length + sessions.length + enrollments.length;
-            }
-            if (onjobFile) {
-                const onWorkbook = await readWorkbook(onjobFile);
-                const courses = sheetToJson(onWorkbook, "Courses");
-                const sessions = sheetToJson(onWorkbook, "Sessions");
-                const enrollments = sheetToJson(onWorkbook, "Enrollments");
-                totalOperations += courses.length + sessions.length + enrollments.length;
-            }
-            
-            const logBox = document.getElementById("uploadLog");
-            if (logBox) logBox.innerHTML = "";
-            updateUploadProgress();
-            setUploadStatus("بدء رفع البيانات...");
-            addUploadLog("🚀 بدء عملية رفع البيانات إلى Firebase");
-            
+            const employeesFile = document.getElementById("employeesFile")?.files[0]; const offjobFile = document.getElementById("offjobFile")?.files[0]; const onjobFile = document.getElementById("onjobFile")?.files[0];
+            if (!employeesFile && !offjobFile && !onjobFile) { showToast("❌ الرجاء اختيار ملف واحد على الأقل", true); return; }
+            completedOperations = 0; totalOperations = 0;
+            if (employeesFile) { const empWorkbook = await readWorkbook(employeesFile); const empData = sheetToJson(empWorkbook, "Sheet1"); totalOperations += empData.length; }
+            if (offjobFile) { const offWorkbook = await readWorkbook(offjobFile); const courses = sheetToJson(offWorkbook, "Courses"); const sessions = sheetToJson(offWorkbook, "Sessions"); const enrollments = sheetToJson(offWorkbook, "Enrollments"); totalOperations += courses.length + sessions.length + enrollments.length; }
+            if (onjobFile) { const onWorkbook = await readWorkbook(onjobFile); const courses = sheetToJson(onWorkbook, "Courses"); const sessions = sheetToJson(onWorkbook, "Sessions"); const enrollments = sheetToJson(onWorkbook, "Enrollments"); totalOperations += courses.length + sessions.length + enrollments.length; }
+            const logBox = document.getElementById("uploadLog"); if (logBox) logBox.innerHTML = ""; updateUploadProgress(); setUploadStatus("بدء رفع البيانات..."); addUploadLog("🚀 بدء عملية رفع البيانات إلى Firebase");
             try {
-                if (employeesFile) {
-                    addUploadLog("📄 قراءة ملف الموظفين...");
-                    const employeesWorkbook = await readWorkbook(employeesFile);
-                    const employeesData = sheetToJson(employeesWorkbook, "Sheet1");
-                    if (employeesData.length === 0) {
-                        addUploadLog("⚠️ لم يتم العثور على بيانات في Sheet1", "error");
-                    } else {
-                        await uploadEmployees(employeesData);
-                    }
-                }
-                
-                if (offjobFile) {
-                    addUploadLog("📄 قراءة ملف Off Job...");
-                    const offjobWorkbook = await readWorkbook(offjobFile);
-                    await uploadTrainingData("offjob", offjobWorkbook);
-                }
-                
-                if (onjobFile) {
-                    addUploadLog("📄 قراءة ملف On Job...");
-                    const onjobWorkbook = await readWorkbook(onjobFile);
-                    await uploadTrainingData("onjob", onjobWorkbook);
-                }
-                
-                setUploadStatus("اكتمل الرفع بنجاح ✅");
-                addUploadLog("🎉 تم رفع جميع البيانات بنجاح إلى Firebase!", "success");
-                showToast("✅ تم رفع البيانات بنجاح");
-                
-                if (window.CacheManager) {
-                    CacheManager.remove(CACHE_KEYS.SECTIONS);
-                    CacheManager.remove(CACHE_KEYS.LINKS);
-                }
-                
-                await loadDataFromFirebase(true);
-                renderSectionsList();
-                renderLinksList();
-                
-            } catch (error) {
-                console.error(error);
-                setUploadStatus("فشل الرفع ❌");
-                addUploadLog(`❌ خطأ: ${error.message}`, "error");
-                showToast("❌ فشل رفع البيانات", true);
-            }
+                if (employeesFile) { addUploadLog("📄 قراءة ملف الموظفين..."); const employeesWorkbook = await readWorkbook(employeesFile); const employeesData = sheetToJson(employeesWorkbook, "Sheet1"); if (employeesData.length === 0) { addUploadLog("⚠️ لم يتم العثور على بيانات في Sheet1", "error"); } else { await uploadEmployees(employeesData); } }
+                if (offjobFile) { addUploadLog("📄 قراءة ملف Off Job..."); const offjobWorkbook = await readWorkbook(offjobFile); await uploadTrainingData("offjob", offjobWorkbook); }
+                if (onjobFile) { addUploadLog("📄 قراءة ملف On Job..."); const onjobWorkbook = await readWorkbook(onjobFile); await uploadTrainingData("onjob", onjobWorkbook); }
+                setUploadStatus("اكتمل الرفع بنجاح ✅"); addUploadLog("🎉 تم رفع جميع البيانات بنجاح إلى Firebase!", "success"); showToast("✅ تم رفع البيانات بنجاح");
+                if (window.CacheManager) { CacheManager.remove(CACHE_KEYS.SECTIONS); CacheManager.remove(CACHE_KEYS.LINKS); }
+                await loadDataFromFirebase(true); renderSectionsList(); renderLinksList();
+            } catch (error) { console.error(error); setUploadStatus("فشل الرفع ❌"); addUploadLog(`❌ خطأ: ${error.message}`, "error"); showToast("❌ فشل رفع البيانات", true); }
         };
         
         async function refreshAdminData() { showToast("🔄 جاري تحديث البيانات..."); if(window.CacheManager){ CacheManager.remove(CACHE_KEYS.SECTIONS); CacheManager.remove(CACHE_KEYS.LINKS); CacheManager.remove(CACHE_KEYS.MATERIALS); } await loadDataFromFirebase(true); await loadTrainingMaterials(true); await loadMaterialsStats(); renderSectionsList(); renderLinksList(); await fetchAllUsers(); showToast("✅ تم تحديث البيانات"); }
         
         function logout() { signOut(auth).then(() => window.location.href = 'login.html'); }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-        function switchTab(tab) { 
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); 
-            document.getElementById(tab + 'Tab').classList.add('active'); 
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); 
-            if (event && event.target) event.target.classList.add('active');
-        }
+        function switchTab(tab) { document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active')); document.getElementById(tab + 'Tab').classList.add('active'); document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); if (event && event.target) event.target.classList.add('active'); }
         
         async function loadAdminPage() {
             await loadDataFromFirebase(false);
@@ -800,44 +521,25 @@ function renderMaterialsList() {
             await fetchAllUsers();
             const stats = await loadMaterialsStats();
             const sectionsOptions = currentData?.sections.map(s => `<option value="${s.id}">${s.icon || '📁'} ${s.name}</option>`).join('');
-            
             document.getElementById('app').innerHTML = `
                 <div class="navbar"><div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div><div class="nav-links"><a href="index.html" class="home">🏠 الرئيسية</a><a href="#" onclick="window.logout()" class="logout">🚪 تسجيل خروج</a></div></div>
                 <div class="container">
-                    <div class="tabs">
-                        <button class="tab-btn active" onclick="window.switchTab('sections')">📂 الأقسام والروابط</button>
-                        <button class="tab-btn" onclick="window.switchTab('materials')">📚 المواد التدريبية</button>
-                        <button class="tab-btn" onclick="window.switchTab('users')">👥 إدارة المستخدمين</button>
-                        <button class="tab-btn" onclick="window.switchTab('data')">💾 استيراد/تصدير</button>
-                    </div>
-                    
+                    <div class="tabs"><button class="tab-btn active" onclick="window.switchTab('sections')">📂 الأقسام والروابط</button><button class="tab-btn" onclick="window.switchTab('materials')">📚 المواد التدريبية</button><button class="tab-btn" onclick="window.switchTab('users')">👥 إدارة المستخدمين</button><button class="tab-btn" onclick="window.switchTab('data')">💾 استيراد/تصدير</button></div>
                     <div id="sectionsTab" class="tab-content active">
                         <div class="admin-card"><h3>➕ إضافة قسم جديد</h3><div id="sectionMsg" class="msg"></div><input type="text" id="sectionName" placeholder="اسم القسم"><input type="text" id="sectionIcon" placeholder="أيقونة القسم (📁)"><input type="text" id="sectionDesc" placeholder="وصف القسم"><button onclick="window.addSection()">إضافة قسم</button></div>
                         <div class="admin-card"><h3>📋 قائمة الأقسام</h3><div id="sectionsList"></div></div>
                         <div class="admin-card"><h3>🔗 إضافة رابط جديد</h3><div id="linkMsg" class="msg"></div><select id="linkSection">${sectionsOptions}</select><input type="text" id="linkTitle" placeholder="عنوان الرابط"><input type="url" id="linkUrl" placeholder="الرابط"><select id="linkType"><option value="internal">رابط داخلي</option><option value="external">رابط خارجي</option></select><button onclick="window.addLink()">إضافة رابط</button></div>
                         <div class="admin-card"><h3>📋 الروابط حسب الأقسام</h3><div id="linksList"></div></div>
                     </div>
-                    
                     <div id="materialsTab" class="tab-content">
-                        <div class="admin-card">
-                            <h3>📊 إحصائيات المواد التدريبية</h3>
-                            <div id="materialsStats">
-                                <div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem;">
-                                    <span class="stats-badge">📚 إجمالي المواد: ${stats.totalMaterials}</span>
-                                    <span class="stats-badge">👁️ إجمالي المشاهدات: ${stats.totalViews}</span>
-                                    <span class="stats-badge">📥 إجمالي التحميلات: ${stats.totalDownloads}</span>
-                                </div>
-                            </div>
-                        </div>
+                        <div class="admin-card"><h3>📊 إحصائيات المواد التدريبية</h3><div id="materialsStats"><div style="display: flex; gap: 0.8rem; flex-wrap: wrap; margin-top: 1rem;"><span class="stats-badge">📚 إجمالي المواد: ${stats.totalMaterials}</span><span class="stats-badge">👁️ إجمالي المشاهدات: ${stats.totalViews}</span><span class="stats-badge">📥 إجمالي التحميلات: ${stats.totalDownloads}</span></div></div></div>
                         <div class="admin-card"><h3>➕ إضافة مادة تدريبية جديدة</h3><button onclick="window.openAddMaterialModal()" style="background:#2b7a4b;">➕ إضافة مادة</button></div>
                         <div class="admin-card"><h3>📋 قائمة المواد التدريبية</h3><div id="materialsList"></div></div>
                     </div>
-                    
                     <div id="usersTab" class="tab-content">
                         <div class="admin-card"><h3>➕ إضافة مستخدم جديد</h3><div id="userMsg" class="msg"></div><input type="email" id="newUserEmail" placeholder="البريد الإلكتروني *"><input type="password" id="newUserPassword" placeholder="كلمة المرور * (6 أحرف على الأقل)"><select id="newUserRole"><option value="user">👤 مستخدم عادي</option><option value="admin">👑 أدمن</option></select><button onclick="window.addNewUser()">➕ إنشاء مستخدم</button></div>
                         <div class="admin-card"><h3>📋 قائمة المستخدمين</h3><div id="usersList"></div></div>
                     </div>
-                    
                     <div id="dataTab" class="tab-content">
                         <div class="admin-card" style="background:#fef5e7;"><h3>📁 إدارة البيانات (JSON)</h3><div class="backup-buttons"><button onclick="window.exportAllToJSON()" style="background:#4299e1;">📥 تصدير JSON</button><button onclick="document.getElementById('jsonImportInput').click()" style="background:#9f7aea;">📤 استيراد JSON</button><input type="file" id="jsonImportInput" accept=".json" style="display:none" onchange="window.importBackupJSON(this.files[0])"><button class="refresh-btn" onclick="window.refreshAdminData()">🔄 تحديث البيانات</button></div></div>
                         <div class="admin-card" style="background:#e8f0fe;"><h3>📥 استيراد البيانات من Excel إلى Firebase</h3><div class="import-grid"><div class="import-card"><h4>👥 بيانات الموظفين</h4><input type="file" id="employeesFile" accept=".xlsx, .xls"></div><div class="import-card"><h4>📘 تدريبات Off Job</h4><input type="file" id="offjobFile" accept=".xlsx, .xls"></div><div class="import-card"><h4>📗 تدريبات On Job</h4><input type="file" id="onjobFile" accept=".xlsx, .xls"></div></div><button onclick="window.startUpload()" style="background:#2b7a4b; width:100%;">🚀 بدء رفع البيانات</button>
@@ -846,15 +548,12 @@ function renderMaterialsList() {
                         <div class="upload-log" id="uploadLog"></div></div>
                     </div>
                 </div>
-                
                 <div id="editSectionModal" class="modal"><div class="modal-content"><h3>✏️ تعديل القسم</h3><input type="text" id="editSectionName" placeholder="اسم القسم"><input type="text" id="editSectionIcon" placeholder="الأيقونة"><input type="text" id="editSectionDesc" placeholder="الوصف"><div class="modal-buttons"><button class="save-btn" onclick="window.saveSectionEdit()">💾 حفظ</button><button class="cancel-btn" onclick="window.closeModal('editSectionModal')">❌ إلغاء</button></div></div></div>
                 <div id="editLinkModal" class="modal"><div class="modal-content"><h3>✏️ تعديل الرابط</h3><input type="text" id="editLinkTitle" placeholder="عنوان الرابط"><input type="url" id="editLinkUrl" placeholder="الرابط"><select id="editLinkType"><option value="internal">رابط داخلي</option><option value="external">رابط خارجي</option></select><div class="modal-buttons"><button class="save-btn" onclick="window.saveLinkEdit()">💾 حفظ</button><button class="cancel-btn" onclick="window.closeModal('editLinkModal')">❌ إلغاء</button></div></div></div>
-                <div id="materialModal" class="modal"><div class="modal-content"><h3>📚 إضافة / تعديل مادة تدريبية</h3><input type="hidden" id="materialId"><input type="text" id="materialTitle" placeholder="عنوان المادة *"><textarea id="materialDesc" placeholder="وصف المادة" rows="3"></textarea><input type="text" id="materialCategory" placeholder="التصنيف (مثال: أمن وسلامة، مهارات قيادية)"><select id="materialType"><option value="pdf">📄 PDF</option><option value="video">🎥 فيديو</option><option value="ppt">📊 PowerPoint</option><option value="doc">📝 مستند Word</option><option value="excel">📈 Excel</option><option value="image">🖼️ صورة</option><option value="link">🔗 رابط خارجي</option><option value="other">📁 أخرى</option></select><input type="url" id="materialFileUrl" placeholder="رابط الملف أو الفيديو *"><div class="modal-buttons"><button class="save-btn" onclick="window.saveMaterialForm()">💾 حفظ</button><button class="cancel-btn" onclick="window.closeModal('materialModal')">❌ إلغاء</button></div></div></div>
-                
+                <div id="materialModal" class="modal"><div class="modal-content"><h3>📚 إضافة / تعديل مادة تدريبية</h3><input type="hidden" id="materialId"><input type="text" id="materialTitle" placeholder="عنوان المادة *"><textarea id="materialDesc" placeholder="وصف المادة" rows="3"></textarea><input type="text" id="materialCategory" placeholder="التصنيف"><select id="materialType"><option value="pdf">📄 PDF</option><option value="video">🎥 فيديو</option><option value="ppt">📊 PowerPoint</option><option value="doc">📝 مستند Word</option><option value="excel">📈 Excel</option><option value="image">🖼️ صورة</option><option value="link">🔗 رابط خارجي</option><option value="other">📁 أخرى</option></select><input type="url" id="materialFileUrl" placeholder="رابط الملف أو الفيديو *"><div class="modal-buttons"><button class="save-btn" onclick="window.saveMaterialForm()">💾 حفظ</button><button class="cancel-btn" onclick="window.closeModal('materialModal')">❌ إلغاء</button></div></div></div>
                 <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير - جميع الحقوق محفوظة</p></div>
             `;
             renderSectionsList(); renderLinksList(); renderUsersList(); renderMaterialsList();
-            
             window.addSection = addSection; window.addLink = addLink; window.logout = logout; window.closeModal = closeModal; 
             window.switchTab = switchTab; window.exportAllToJSON = exportAllToJSON; window.refreshAdminData = refreshAdminData; 
             window.addNewUser = addNewUser; window.deleteUserAccount = deleteUserAccount; window.importBackupJSON = importBackupJSON;
@@ -868,7 +567,6 @@ function renderMaterialsList() {
             if (!adminStatus) { showToast("❌ غير مصرح بالدخول - هذا القسم للأدمن فقط", true); setTimeout(() => { window.location.href = 'index.html'; }, 1500); return; }
             await loadAdminPage();
         });
-        
     </script>
 </body>
 </html>
