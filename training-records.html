@@ -414,10 +414,10 @@
         
         // ========== مفاتيح التخزين المحلي ==========
         const STORAGE_KEYS = {
-            EMPLOYEES: 'off_employees_v3',
-            COURSES: 'off_courses_v3',
-            SESSIONS: 'off_sessions_v3',
-            LAST_UPDATE: 'off_last_update_v3'
+            EMPLOYEES: 'off_employees_v4',
+            COURSES: 'off_courses_v4',
+            SESSIONS: 'off_sessions_v4',
+            LAST_UPDATE: 'off_last_update_v4'
         };
         
         function saveToLocalStorage(key, data) {
@@ -597,13 +597,14 @@
             document.getElementById('batchEmployeeIds').value = '';
         }
         
-function filterCourses() {
-    if (!searchTerm) return courses;  // إذا لا يوجد بحث، اعرض كل الكورسات
-    return courses.filter(c => 
-        c.course_code?.toLowerCase().includes(searchTerm) ||  // بحث في كود الكورس
-        c.course_name?.toLowerCase().includes(searchTerm)      // بحث في اسم الكورس
-    );
-}
+        function filterCourses() {
+            if (!searchTerm) return courses;
+            const term = searchTerm.toLowerCase();
+            return courses.filter(c => 
+                (c.course_code && c.course_code.toLowerCase().includes(term)) || 
+                (c.course_name && c.course_name.toLowerCase().includes(term))
+            );
+        }
         
         function showCourseSessions(courseCode, courseName) {
             console.log('🔍 عرض الجلسات للكورس:', courseCode);
@@ -655,7 +656,7 @@ function filterCourses() {
         
         function renderCoursesGrid() {
             const filteredCourses = filterCourses();
-            if (filteredCourses.length === 0) return `<div class="empty-msg">📭 لا توجد كورسات ${searchTerm ? 'مطابقة للبحث' : ''}</div>`;
+            if (filteredCourses.length === 0) return `<div class="empty-msg">📭 لا توجد كورسات ${searchTerm ? 'مطابقة للبحث "' + escapeHtml(searchTerm) + '"' : ''}</div>`;
             let html = `<div class="courses-grid">`;
             filteredCourses.forEach(course => {
                 const sessionsCount = sessions.filter(s => {
@@ -742,9 +743,26 @@ function filterCourses() {
         
         window.addCourse = () => window.openCourseModal();
         window.addSession = () => window.openSessionModal();
-        window.searchData = () => { const input = document.getElementById('searchInput'); if (input) { searchTerm = input.value.toLowerCase().trim(); renderPage(); } };
-        window.handleSearchKeypress = (event) => { if (event.key === 'Enter') window.searchData(); };
-        window.clearSearch = () => { const input = document.getElementById('searchInput'); if (input) { input.value = ''; searchTerm = ''; renderPage(); } };
+        window.searchData = () => { 
+            const input = document.getElementById('searchInput'); 
+            if (input) { 
+                searchTerm = input.value.toLowerCase().trim(); 
+                console.log('🔍 بحث عن:', searchTerm);
+                renderPage(); 
+            } 
+        };
+        window.handleSearchKeypress = (event) => { 
+            if (event.key === 'Enter') window.searchData(); 
+        };
+        window.clearSearch = () => { 
+            const input = document.getElementById('searchInput'); 
+            if (input) { 
+                input.value = ''; 
+                searchTerm = ''; 
+                console.log('🧹 إلغاء البحث');
+                renderPage(); 
+            } 
+        };
         window.showCourseSessions = showCourseSessions;
         window.forceRefreshData = forceRefreshData;
         window.deleteItem = deleteItem;
@@ -753,7 +771,8 @@ function filterCourses() {
         window.batchAddEnrollments = batchAddEnrollments;
         
         function renderPage() {
-            const totalCourses = courses.length;
+            const filteredCourses = filterCourses();  // المفتاح: استخدام الكورسات المفلترة
+            const totalCourses = filteredCourses.length;
             const totalSessions = sessions.length;
             
             const html = `
