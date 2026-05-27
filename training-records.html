@@ -110,6 +110,14 @@
             margin-top: 0;
             font-size: 0.8rem;
         }
+        .action-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .action-buttons button {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
         
         .courses-grid {
             display: grid;
@@ -259,17 +267,17 @@
             border-radius: 1rem;
             padding: 1.2rem;
             width: 90%;
-            max-width: 800px;
+            max-width: 600px;
             max-height: 90vh;
             overflow-y: auto;
         }
         .modal-buttons { display: flex; gap: 0.8rem; margin-top: 1rem; }
         .modal-buttons button { flex: 1; margin: 0; }
-        .form-group { margin-bottom: 0.5rem; }
-        .form-group label { display: block; font-size: 0.7rem; color: #4a5568; margin-bottom: 0.2rem; }
+        .form-group { margin-bottom: 0.8rem; }
+        .form-group label { display: block; font-size: 0.75rem; color: #4a5568; margin-bottom: 0.3rem; font-weight: bold; }
         input, select, textarea {
             width: 100%;
-            padding: 0.5rem;
+            padding: 0.6rem;
             margin: 0.2rem 0;
             border: 2px solid #e2e8f0;
             border-radius: 0.8rem;
@@ -353,6 +361,16 @@
             border-radius: 1rem;
         }
         
+        .time-input-group {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        .time-input-group .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
         .footer { text-align: center; padding: 1rem; color: #718096; font-size: 0.7rem; margin-top: 1rem; }
         .toast-msg {
             position: fixed;
@@ -399,6 +417,8 @@
             .quick-enroll-form { flex-direction: column; }
             .quick-enroll-form .form-group { width: 100%; }
             .session-details { grid-template-columns: 1fr; }
+            .action-buttons { width: 100%; }
+            .action-buttons button { flex: 1; }
         }
     </style>
 </head>
@@ -422,14 +442,14 @@
         
         // ========== مفاتيح التخزين المحلي ==========
         const STORAGE_KEYS = {
-            EMPLOYEES: 'app_employees_v3',
-            OFFJOB_COURSES: 'app_offjob_courses_v3',
-            OFFJOB_SESSIONS: 'app_offjob_sessions_v3',
-            OFFJOB_ENROLLMENTS: 'app_offjob_enrollments_v3',
-            ONJOB_COURSES: 'app_onjob_courses_v3',
-            ONJOB_SESSIONS: 'app_onjob_sessions_v3',
-            ONJOB_ENROLLMENTS: 'app_onjob_enrollments_v3',
-            LAST_UPDATE: 'app_last_update_v3'
+            EMPLOYEES: 'app_employees_v4',
+            OFFJOB_COURSES: 'app_offjob_courses_v4',
+            OFFJOB_SESSIONS: 'app_offjob_sessions_v4',
+            OFFJOB_ENROLLMENTS: 'app_offjob_enrollments_v4',
+            ONJOB_COURSES: 'app_onjob_courses_v4',
+            ONJOB_SESSIONS: 'app_onjob_sessions_v4',
+            ONJOB_ENROLLMENTS: 'app_onjob_enrollments_v4',
+            LAST_UPDATE: 'app_last_update_v4'
         };
         
         function saveToLocalStorage(key, data) {
@@ -469,7 +489,6 @@
                     &nbsp;|&nbsp; 
                     <button class="refresh-btn" onclick="window.forceRefreshData()">🔄 تحديث يدوي من Firebase</button>
                     <br>
-                    <small>✅ يتم عرض البيانات من التخزين المحلي - لا توجد قراءات من قاعدة البيانات</small>
                 `;
             } else {
                 cacheInfo.innerHTML = `
@@ -794,7 +813,7 @@
                                 <button onclick="window.showCourseSessions('${escapeHtml(course.course_code)}', '${escapeHtml(course.course_name)}')" style="background:#4299e1;">
                                     📋 عرض الجلسات (${sessionsCount})
                                 </button>
-                                <button onclick='window.openModal("${activeTab === 'offjob' ? 'offjob_course' : 'onjob_course'}", ${JSON.stringify(course).replace(/'/g, "&#39;")})' style="background:#ed8936;">
+                                <button onclick='window.openCourseModal(${JSON.stringify(course).replace(/'/g, "&#39;")})' style="background:#ed8936;">
                                     ✏️ تعديل
                                 </button>
                                 <button onclick='window.deleteItem("${activeTab === 'offjob' ? 'offjob_course' : 'onjob_course'}", "${course.id}")' style="background:#e53e3e;">
@@ -810,7 +829,91 @@
             return gridHtml;
         }
         
-        window.addCourse = () => window.openModal(activeTab === 'offjob' ? 'offjob_course' : 'onjob_course');
+        // دوال فتح المودال
+        window.openCourseModal = (item = null) => {
+            const modal = document.getElementById('courseModal');
+            const title = document.getElementById('courseModalTitle');
+            
+            title.innerText = item ? '✏️ تعديل كورس' : '➕ إضافة كورس جديد';
+            document.getElementById('courseCode').value = item?.course_code || '';
+            document.getElementById('courseName').value = item?.course_name || '';
+            document.getElementById('courseCategory').value = item?.category || '';
+            document.getElementById('courseHours').value = item?.duration_hours || '';
+            document.getElementById('courseId').value = item?.id || '';
+            document.getElementById('courseModalType').value = item ? 'edit' : 'add';
+            
+            modal.style.display = 'flex';
+        };
+        
+        window.openSessionModal = (item = null) => {
+            const modal = document.getElementById('sessionModal');
+            const title = document.getElementById('sessionModalTitle');
+            const coursesList = activeTab === 'offjob' ? offJobCourses : onJobCourses;
+            
+            title.innerText = item ? '✏️ تعديل جلسة' : '➕ إضافة جلسة جديدة';
+            document.getElementById('sessionCode').value = item?.session_code || '';
+            document.getElementById('sessionCourseCode').value = item?.course_code || '';
+            document.getElementById('sessionDate').value = formatDate(item?.session_date) || '';
+            document.getElementById('sessionStartTime').value = formatTime(item?.start_time) || '';
+            document.getElementById('sessionEndTime').value = formatTime(item?.end_time) || '';
+            document.getElementById('sessionTrainer').value = item?.trainer_name || '';
+            document.getElementById('sessionId').value = item?.id || '';
+            document.getElementById('sessionModalType').value = item ? 'edit' : 'add';
+            
+            // تعبئة قائمة الكورسات في select
+            const courseSelect = document.getElementById('sessionCourseCode');
+            if (courseSelect) {
+                const currentValue = courseSelect.value;
+                courseSelect.innerHTML = '<option value="">اختر الكورس</option>' + 
+                    coursesList.map(c => `<option value="${escapeHtml(c.course_code)}">${escapeHtml(c.course_code)} - ${escapeHtml(c.course_name)}</option>`).join('');
+                if (currentValue) courseSelect.value = currentValue;
+            }
+            
+            modal.style.display = 'flex';
+        };
+        
+        window.saveCourse = async () => {
+            const type = activeTab === 'offjob' ? 'offjob_course' : 'onjob_course';
+            const data = {
+                id: document.getElementById('courseId').value,
+                course_code: document.getElementById('courseCode').value,
+                course_name: document.getElementById('courseName').value,
+                category: document.getElementById('courseCategory').value,
+                duration_hours: parseFloat(document.getElementById('courseHours').value) || 0
+            };
+            
+            if (!data.course_code || !data.course_name) {
+                showToast('❌ الرجاء إدخال كود واسم الكورس', true);
+                return;
+            }
+            
+            await saveItem(type, data);
+            document.getElementById('courseModal').style.display = 'none';
+        };
+        
+        window.saveSession = async () => {
+            const type = activeTab === 'offjob' ? 'offjob_session' : 'onjob_session';
+            const data = {
+                id: document.getElementById('sessionId').value,
+                session_code: document.getElementById('sessionCode').value,
+                course_code: document.getElementById('sessionCourseCode').value,
+                session_date: document.getElementById('sessionDate').value,
+                start_time: document.getElementById('sessionStartTime').value,
+                end_time: document.getElementById('sessionEndTime').value,
+                trainer_name: document.getElementById('sessionTrainer').value
+            };
+            
+            if (!data.session_code || !data.course_code) {
+                showToast('❌ الرجاء إدخال كود الجلسة وكود الكورس', true);
+                return;
+            }
+            
+            await saveItem(type, data);
+            document.getElementById('sessionModal').style.display = 'none';
+        };
+        
+        window.addCourse = () => window.openCourseModal();
+        window.addSession = () => window.openSessionModal();
         window.searchData = () => {
             const input = document.getElementById('searchInput');
             if (input) {
@@ -832,54 +935,9 @@
         window.showCourseSessions = showCourseSessions;
         window.forceRefreshData = forceRefreshData;
         window.deleteItem = deleteItem;
-        window.openModal = openModal;
-        window.saveModalItem = saveModalItem;
         window.closeModal = (id) => document.getElementById(id).style.display = 'none';
         window.quickAddEnrollment = quickAddEnrollment;
         window.batchAddEnrollments = batchAddEnrollments;
-        
-        function openModal(type, item = null) {
-            const modal = document.getElementById('genericModal');
-            const title = document.getElementById('modalTitle');
-            const modalType = document.getElementById('modalType');
-            
-            modalType.value = type;
-            
-            if (type.includes('course')) {
-                title.innerText = item ? '✏️ تعديل كورس' : '➕ إضافة كورس جديد';
-                document.getElementById('courseCode').value = item?.course_code || '';
-                document.getElementById('courseName').value = item?.course_name || '';
-                document.getElementById('courseCategory').value = item?.category || '';
-                document.getElementById('courseHours').value = item?.duration_hours || '';
-                document.getElementById('courseId').value = item?.id || '';
-                document.getElementById('courseFields').style.display = 'block';
-                document.getElementById('sessionFields').style.display = 'none';
-                document.getElementById('enrollmentFields').style.display = 'none';
-            }
-            modal.style.display = 'flex';
-        }
-        
-        async function saveModalItem() {
-            const type = document.getElementById('modalType').value;
-            let data = {};
-            
-            if (type.includes('course')) {
-                data = {
-                    id: document.getElementById('courseId').value,
-                    course_code: document.getElementById('courseCode').value,
-                    course_name: document.getElementById('courseName').value,
-                    category: document.getElementById('courseCategory').value,
-                    duration_hours: parseFloat(document.getElementById('courseHours').value) || 0
-                };
-                if (!data.course_code || !data.course_name) {
-                    showToast('❌ الرجاء إدخال كود واسم الكورس', true);
-                    return;
-                }
-            }
-            
-            await saveItem(type, data);
-            document.getElementById('genericModal').style.display = 'none';
-        }
         
         function renderOffJob() {
             const totalCourses = offJobCourses.length;
@@ -965,7 +1023,10 @@
                         <button onclick="window.searchData()">بحث</button>
                         ${searchTerm ? '<button onclick="window.clearSearch()" style="background:#718096;">✖️ إلغاء</button>' : ''}
                     </div>
-                    <button onclick="window.addCourse()" style="background:#2b7a4b;">➕ إضافة كورس جديد</button>
+                    <div class="action-buttons">
+                        <button onclick="window.addCourse()" style="background:#2b7a4b;">📚 إضافة كورس</button>
+                        <button onclick="window.addSession()" style="background:#4299e1;">🎯 إضافة جلسة</button>
+                    </div>
                 </div>
                 
                 ${renderCoursesGrid()}
@@ -1057,7 +1118,10 @@
                         <button onclick="window.searchData()">بحث</button>
                         ${searchTerm ? '<button onclick="window.clearSearch()" style="background:#718096;">✖️ إلغاء</button>' : ''}
                     </div>
-                    <button onclick="window.addCourse()" style="background:#2b7a4b;">➕ إضافة كورس جديد</button>
+                    <div class="action-buttons">
+                        <button onclick="window.addCourse()" style="background:#2b7a4b;">📚 إضافة كورس</button>
+                        <button onclick="window.addSession()" style="background:#4299e1;">🎯 إضافة جلسة</button>
+                    </div>
                 </div>
                 
                 ${renderCoursesGrid()}
@@ -1161,25 +1225,71 @@
                 </div>
                 
                 <!-- مودال إضافة/تعديل كورس -->
-                <div id="genericModal" class="modal">
+                <div id="courseModal" class="modal">
                     <div class="modal-content">
-                        <h3 id="modalTitle">إضافة كورس</h3>
-                        <input type="hidden" id="modalType">
+                        <h3 id="courseModalTitle">إضافة كورس</h3>
+                        <input type="hidden" id="courseModalType">
                         <input type="hidden" id="courseId">
-                        
-                        <div id="courseFields">
-                            <div class="form-group"><label>كود الكورس *</label><input type="text" id="courseCode" placeholder="كود الكورس"></div>
-                            <div class="form-group"><label>اسم الكورس *</label><input type="text" id="courseName" placeholder="اسم الكورس"></div>
-                            <div class="form-group"><label>التصنيف</label><input type="text" id="courseCategory" placeholder="التصنيف"></div>
-                            <div class="form-group"><label>عدد الساعات</label><input type="number" id="courseHours" step="0.5" placeholder="عدد الساعات"></div>
+                        <div class="form-group">
+                            <label>كود الكورس *</label>
+                            <input type="text" id="courseCode" placeholder="مثال: 101">
                         </div>
-                        
-                        <div id="sessionFields" style="display:none;"></div>
-                        <div id="enrollmentFields" style="display:none;"></div>
-                        
+                        <div class="form-group">
+                            <label>اسم الكورس *</label>
+                            <input type="text" id="courseName" placeholder="اسم الكورس">
+                        </div>
+                        <div class="form-group">
+                            <label>التصنيف</label>
+                            <input type="text" id="courseCategory" placeholder="مثال: ">
+                        </div>
+                        <div class="form-group">
+                            <label>عدد الساعات</label>
+                            <input type="number" id="courseHours" step="0.5" placeholder="0">
+                        </div>
                         <div class="modal-buttons">
-                            <button class="save-btn" onclick="window.saveModalItem()">💾 حفظ</button>
-                            <button class="cancel-btn" onclick="window.closeModal('genericModal')">❌ إلغاء</button>
+                            <button class="save-btn" onclick="window.saveCourse()">💾 حفظ</button>
+                            <button class="cancel-btn" onclick="window.closeModal('courseModal')">❌ إلغاء</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- مودال إضافة/تعديل جلسة -->
+                <div id="sessionModal" class="modal">
+                    <div class="modal-content">
+                        <h3 id="sessionModalTitle">إضافة جلسة</h3>
+                        <input type="hidden" id="sessionModalType">
+                        <input type="hidden" id="sessionId">
+                        <div class="form-group">
+                            <label>كود الجلسة *</label>
+                            <input type="text" id="sessionCode" placeholder="مثال: S001">
+                        </div>
+                        <div class="form-group">
+                            <label>كود الكورس *</label>
+                            <select id="sessionCourseCode">
+                                <option value="">اختر الكورس</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>التاريخ</label>
+                            <input type="date" id="sessionDate">
+                        </div>
+                        <div class="time-input-group">
+                            <div class="form-group">
+                                <label>وقت البداية</label>
+                                <input type="time" id="sessionStartTime">
+                            </div>
+                            <div class="form-group">
+                                <label>وقت النهاية</label>
+                                <input type="time" id="sessionEndTime">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>اسم المدرب</label>
+                            <input type="text" id="sessionTrainer" placeholder="اسم المدرب">
+                        </div>
+                        <div class="modal-buttons">
+                            <button class="save-btn" onclick="window.saveSession()">💾 حفظ</button>
+                            <button class="cancel-btn" onclick="window.closeModal('sessionModal')">❌ إلغاء</button>
                         </div>
                     </div>
                 </div>
@@ -1195,7 +1305,7 @@
                     </div>
                 </div>
                 
-                <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير - وضع القراءة من الكاش المحلي</p></div>
+                <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير </p></div>
             `;
             
             renderActiveTab();
