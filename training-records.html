@@ -254,7 +254,7 @@
             border: 2px solid #e2e8f0;
             border-radius: 0.8rem;
             font-size: 0.85rem;
-        }
+        }   
         button {
             background: #2b7a4b;
             color: white;
@@ -412,30 +412,55 @@
         let employeesList = [];
         let searchTerm = "";
         
-        // ========== مفاتيح التخزين المحلي ==========
+        // ========== مفاتيح التخزين المحلي - متوافقة مع البيانات الموجودة ==========
         const STORAGE_KEYS = {
-            EMPLOYEES: 'off_employees_v4',
-            COURSES: 'off_courses_v4',
-            SESSIONS: 'off_sessions_v4',
-            LAST_UPDATE: 'off_last_update_v4'
+            EMPLOYEES: 'offjob_employees_v1',
+            COURSES: 'offjob_courses_v1',
+            SESSIONS: 'offjob_sessions_v1',
+            LAST_UPDATE: 'offjob_last_update_v1'
         };
         
+        // ========== دوال التخزين ==========
         function saveToLocalStorage(key, data) {
-            try { localStorage.setItem(key, JSON.stringify(data)); } catch(e) {}
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+                console.log(`💾 تم حفظ ${key}: ${Array.isArray(data) ? data.length : 'object'}`);
+            } catch(e) {
+                console.error(`❌ فشل حفظ ${key}:`, e);
+            }
         }
         
         function loadFromLocalStorage(key) {
-            try { const data = localStorage.getItem(key); return data ? JSON.parse(data) : null; } catch(e) { return null; }
+            try {
+                const data = localStorage.getItem(key);
+                if (!data) return null;
+                const parsed = JSON.parse(data);
+                console.log(`📖 قراءة ${key}: ${Array.isArray(parsed) ? parsed.length + ' عناصر' : 'object'}`);
+                return parsed;
+            } catch(e) {
+                console.error(`❌ فشل قراءة ${key}:`, e);
+                return null;
+            }
         }
         
         function hasValidCache() {
-            const lastUpdate = localStorage.getItem(STORAGE_KEYS.LAST_UPDATE);
-            if (!lastUpdate) return false;
-            const cacheAge = Date.now() - parseInt(lastUpdate);
-            const maxAge = 24 * 60 * 60 * 1000;
-            const requiredKeys = [STORAGE_KEYS.EMPLOYEES, STORAGE_KEYS.COURSES, STORAGE_KEYS.SESSIONS];
-            const allDataExist = requiredKeys.every(key => localStorage.getItem(key) !== null);
-            return allDataExist && cacheAge < maxAge;
+            try {
+                const coursesData = loadFromLocalStorage(STORAGE_KEYS.COURSES);
+                const sessionsData = loadFromLocalStorage(STORAGE_KEYS.SESSIONS);
+                
+                const hasCourses = coursesData && Array.isArray(coursesData) && coursesData.length > 0;
+                const hasSessions = sessionsData && Array.isArray(sessionsData);
+                
+                if (hasCourses && hasSessions) {
+                    console.log('✅ جميع البيانات موجودة في الكاش');
+                    return true;
+                }
+                console.log('⚠️ البيانات غير موجودة في الكاش');
+                return false;
+            } catch(e) {
+                console.error('خطأ في التحقق من الكاش:', e);
+                return false;
+            }
         }
         
         function updateCacheInfo() {
@@ -454,7 +479,10 @@
         async function loadEmployees(forceRefresh = false) {
             if (!forceRefresh) {
                 const cached = loadFromLocalStorage(STORAGE_KEYS.EMPLOYEES);
-                if (cached) { employeesList = cached; return; }
+                if (cached) { 
+                    employeesList = cached; 
+                    return; 
+                }
             }
             const snapshot = await getDocs(collection(db, "employees"));
             employeesList = [];
@@ -469,13 +497,14 @@
             if (!forceRefresh) {
                 const cachedCourses = loadFromLocalStorage(STORAGE_KEYS.COURSES);
                 const cachedSessions = loadFromLocalStorage(STORAGE_KEYS.SESSIONS);
-                if (cachedCourses && cachedSessions) {
+                if (cachedCourses && cachedSessions && cachedCourses.length > 0) {
                     courses = cachedCourses;
                     sessions = cachedSessions;
                     console.log('✅ تحميل من الكاش:', { coursesCount: courses.length, sessionsCount: sessions.length });
                     return;
                 }
             }
+            
             console.log('📡 تحميل من Firebase...');
             const [coursesSnap, sessionsSnap] = await Promise.all([
                 getDocs(collection(db, "offjob_courses")),
@@ -597,49 +626,43 @@
             document.getElementById('batchEmployeeIds').value = '';
         }
         
-        function filterCourses() {
-            if (!searchTerm) return courses;
+        function getFilteredCourses() {
+            if (!searchTerm || searchTerm === '') {
+                console.log('📋 عرض جميع الكورسات (' + courses.length + ')');
+                return courses;
+            }
             const term = searchTerm.toLowerCase();
-            return courses.filter(c => 
-                (c.course_code && c.course_code.toLowerCase().includes(term)) || 
-                (c.course_name && c.course_name.toLowerCase().includes(term))
-            );
+            const filtered = courses.filter(c => {
+                const courseCode = c.course_code ? String(c.course_code).toLowerCase() : '';
+                const courseName = c.course_name ? String(c.course_name).toLowerCase() : '';
+                return courseCode.includes(term) || courseName.includes(term);
+            });
+            console.log('🔍 نتيجة البحث عن "' + searchTerm + '": ' + filtered.length + ' كورس');
+            return filtered;
         }
         
         function showCourseSessions(courseCode, courseName) {
             console.log('🔍 عرض الجلسات للكورس:', courseCode);
-            console.log('📋 جميع الجلسات المتاحة:', sessions.map(s => ({ code: s.session_code, course: s.course_code })));
             
             const relatedSessions = sessions.filter(s => {
-                const sessionCourse = s.course_code?.toString().trim();
-                const targetCourse = courseCode?.toString().trim();
+                const sessionCourse = s.course_code ? String(s.course_code).trim() : '';
+                const targetCourse = courseCode ? String(courseCode).trim() : '';
                 return sessionCourse === targetCourse;
             });
             
             console.log('✅ الجلسات المرتبطة:', relatedSessions.length);
             
             const modal = document.getElementById('sessionsModal');
-            document.getElementById('sessionsModalTitle').innerHTML = `📚 جلسات كورس: ${escapeHtml(courseCode)} - ${escapeHtml(courseName)}`;
+            document.getElementById('sessionsModalTitle').innerHTML = `📚 جلسات كورس: ${escapeHtml(String(courseCode))} - ${escapeHtml(courseName)}`;
             
             if (relatedSessions.length === 0) {
-                let debugInfo = '';
-                if (sessions.length > 0) {
-                    const availableCourses = [...new Set(sessions.map(s => s.course_code))];
-                    debugInfo = `<div class="debug-info">
-                        <strong>⚠️ معلومات للمساعدة:</strong><br>
-                        📌 يوجد ${sessions.length} جلسة(ات) في النظام<br>
-                        📌 أكواد الكورسات الموجودة في الجلسات: ${availableCourses.join(', ')}<br>
-                        📌 الكورس المطلوب: ${escapeHtml(courseCode)}<br>
-                        💡 تأكد من تطابق كود الكورس في الجلسات
-                    </div>`;
-                }
-                document.getElementById('sessionsModalContent').innerHTML = `<div class="no-sessions">📭 لا توجد جلسات مسجلة لهذا الكورس حتى الآن${debugInfo}</div>`;
+                document.getElementById('sessionsModalContent').innerHTML = `<div class="no-sessions">📭 لا توجد جلسات مسجلة لهذا الكورس حتى الآن</div>`;
             } else {
                 let html = `<div class="sessions-list">`;
                 relatedSessions.forEach(session => {
                     html += `<div class="session-card">
                         <div class="session-header">
-                            <span class="session-code">🎯 ${escapeHtml(session.session_code)}</span>
+                            <span class="session-code">🎯 ${escapeHtml(String(session.session_code))}</span>
                         </div>
                         <div class="session-details">
                             <div class="detail-item"><strong>📅 التاريخ:</strong> ${formatDate(session.session_date) || 'غير محدد'}</div>
@@ -655,18 +678,24 @@
         }
         
         function renderCoursesGrid() {
-            const filteredCourses = filterCourses();
-            if (filteredCourses.length === 0) return `<div class="empty-msg">📭 لا توجد كورسات ${searchTerm ? 'مطابقة للبحث "' + escapeHtml(searchTerm) + '"' : ''}</div>`;
+            const filteredCourses = getFilteredCourses();
+            if (filteredCourses.length === 0) {
+                return `<div class="empty-msg">📭 لا توجد كورسات ${searchTerm ? 'مطابقة للبحث "' + escapeHtml(searchTerm) + '"' : ''}</div>`;
+            }
             let html = `<div class="courses-grid">`;
             filteredCourses.forEach(course => {
                 const sessionsCount = sessions.filter(s => {
-                    const sessionCourse = s.course_code?.toString().trim();
-                    const targetCourse = course.course_code?.toString().trim();
+                    const sessionCourse = s.course_code ? String(s.course_code).trim() : '';
+                    const targetCourse = course.course_code ? String(course.course_code).trim() : '';
                     return sessionCourse === targetCourse;
                 }).length;
+                
+                const safeCode = String(course.course_code).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const safeName = String(course.course_name).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                
                 html += `<div class="course-card">
                     <div class="course-header">
-                        <span class="course-code">📚 ${escapeHtml(course.course_code)}</span>
+                        <span class="course-code">📚 ${escapeHtml(String(course.course_code))}</span>
                         <span class="course-code">🎯 ${sessionsCount} جلسة</span>
                     </div>
                     <div class="course-body">
@@ -676,7 +705,7 @@
                             <span>⏱️ ${course.duration_hours || 0} ساعة</span>
                         </div>
                         <div class="course-actions">
-                            <button onclick="window.showCourseSessions('${escapeHtml(course.course_code)}', '${escapeHtml(course.course_name)}')" style="background:#4299e1;">📋 عرض الجلسات (${sessionsCount})</button>
+                            <button class="view-sessions-btn" data-code="${escapeHtml(safeCode)}" data-name="${escapeHtml(safeName)}" style="background:#4299e1;">📋 عرض الجلسات (${sessionsCount})</button>
                             <button onclick='window.openCourseModal(${JSON.stringify(course).replace(/'/g, "&#39;")})' style="background:#ed8936;">✏️ تعديل</button>
                             <button onclick='window.deleteItem("course", "${course.id}")' style="background:#e53e3e;">🗑️ حذف</button>
                         </div>
@@ -708,7 +737,7 @@
             const courseSelect = document.getElementById('sessionCourseCode');
             if (courseSelect) {
                 const currentValue = item?.course_code || '';
-                courseSelect.innerHTML = '<option value="">اختر الكورس</option>' + courses.map(c => `<option value="${escapeHtml(c.course_code)}" ${currentValue === c.course_code ? 'selected' : ''}>${escapeHtml(c.course_code)} - ${escapeHtml(c.course_name)}</option>`).join('');
+                courseSelect.innerHTML = '<option value="">اختر الكورس</option>' + courses.map(c => `<option value="${escapeHtml(String(c.course_code))}" ${currentValue === String(c.course_code) ? 'selected' : ''}>${escapeHtml(String(c.course_code))} - ${escapeHtml(c.course_name)}</option>`).join('');
             }
             document.getElementById('sessionModal').style.display = 'flex';
         };
@@ -743,26 +772,37 @@
         
         window.addCourse = () => window.openCourseModal();
         window.addSession = () => window.openSessionModal();
+        
         window.searchData = () => { 
             const input = document.getElementById('searchInput'); 
             if (input) { 
-                searchTerm = input.value.toLowerCase().trim(); 
-                console.log('🔍 بحث عن:', searchTerm);
+                searchTerm = input.value.trim(); 
+                console.log('🔍 بحث عن: "' + searchTerm + '"');
                 renderPage(); 
+                if (searchTerm) {
+                    showToast(`🔍 جاري البحث عن "${searchTerm}"...`);
+                }
             } 
         };
+        
         window.handleSearchKeypress = (event) => { 
-            if (event.key === 'Enter') window.searchData(); 
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                window.searchData(); 
+            }
         };
+        
         window.clearSearch = () => { 
             const input = document.getElementById('searchInput'); 
             if (input) { 
                 input.value = ''; 
                 searchTerm = ''; 
-                console.log('🧹 إلغاء البحث');
+                console.log('🧹 إلغاء البحث - عرض جميع الكورسات');
                 renderPage(); 
+                showToast('📚 تم إلغاء البحث وعرض جميع الكورسات');
             } 
         };
+        
         window.showCourseSessions = showCourseSessions;
         window.forceRefreshData = forceRefreshData;
         window.deleteItem = deleteItem;
@@ -770,8 +810,22 @@
         window.quickAddEnrollment = quickAddEnrollment;
         window.batchAddEnrollments = batchAddEnrollments;
         
+        function attachSessionButtonsHandlers() {
+            document.querySelectorAll('.view-sessions-btn').forEach(btn => {
+                btn.removeEventListener('click', window.sessionClickHandler);
+                btn.addEventListener('click', window.sessionClickHandler);
+            });
+        }
+        
+        window.sessionClickHandler = (e) => {
+            const btn = e.currentTarget;
+            const code = btn.getAttribute('data-code');
+            const name = btn.getAttribute('data-name');
+            window.showCourseSessions(code, name);
+        };
+        
         function renderPage() {
-            const filteredCourses = filterCourses();  // المفتاح: استخدام الكورسات المفلترة
+            const filteredCourses = getFilteredCourses();
             const totalCourses = filteredCourses.length;
             const totalSessions = sessions.length;
             
@@ -788,14 +842,14 @@
                             <label>📝 كود الجلسة</label>
                             <input type="text" id="quickSessionCode" placeholder="مثال: S001" list="sessionsList">
                             <datalist id="sessionsList">
-                                ${sessions.map(s => `<option value="${escapeHtml(s.session_code)}">${escapeHtml(s.session_code)}</option>`).join('')}
+                                ${sessions.map(s => `<option value="${escapeHtml(String(s.session_code))}">${escapeHtml(String(s.session_code))}</option>`).join('')}
                             </datalist>
                         </div>
                         <div class="form-group">
                             <label>👤 كود الموظف</label>
                             <input type="text" id="quickEmployeeId" placeholder="مثال: 123" list="employeesList">
                             <datalist id="employeesList">
-                                ${employeesList.map(emp => `<option value="${emp.id}">${emp.id} - ${emp.fullName || ''}</option>`).join('')}
+                                ${employeesList.map(emp => `<option value="${escapeHtml(emp.id)}">${escapeHtml(emp.id)} - ${escapeHtml(emp.fullName || '')}</option>`).join('')}
                             </datalist>
                         </div>
                         <div class="form-group">
@@ -821,7 +875,7 @@
                             <label>📝 كود الجلسة</label>
                             <select id="batchSessionCode">
                                 <option value="">اختر الجلسة</option>
-                                ${sessions.map(s => `<option value="${escapeHtml(s.session_code)}">${escapeHtml(s.session_code)}</option>`).join('')}
+                                ${sessions.map(s => `<option value="${escapeHtml(String(s.session_code))}">${escapeHtml(String(s.session_code))}</option>`).join('')}
                             </select>
                         </div>
                         <div class="form-group">
@@ -855,13 +909,45 @@
                 ${renderCoursesGrid()}
             `;
             document.getElementById('content').innerHTML = html;
+            attachSessionButtonsHandlers();
             updateCacheInfo();
         }
         
-        function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-        function formatDate(d) { if (!d) return ''; if (typeof d === 'number') { const date = new Date((d - 25569) * 86400000); return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; } if (typeof d === 'string' && d.match(/^\d{4}-\d{2}-\d{2}/)) return d.split('T')[0]; return d; }
-        function formatTime(t) { if (!t) return ''; if (typeof t === 'number') { const totalSeconds = Math.round(t * 86400); const hours = Math.floor(totalSeconds / 3600); const minutes = Math.floor((totalSeconds % 3600) / 60); return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`; } return t; }
-        function showToast(msg, isError = false) { const toast = document.createElement('div'); toast.className = 'toast-msg' + (isError ? ' error' : ''); toast.textContent = msg; document.body.appendChild(toast); setTimeout(() => toast.remove(), 3000); }
+        function escapeHtml(text) { 
+            if (!text) return ''; 
+            const div = document.createElement('div'); 
+            div.textContent = text; 
+            return div.innerHTML; 
+        }
+        
+        function formatDate(d) { 
+            if (!d) return ''; 
+            if (typeof d === 'number') { 
+                const date = new Date((d - 25569) * 86400000); 
+                return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; 
+            } 
+            if (typeof d === 'string' && d.match(/^\d{4}-\d{2}-\d{2}/)) return d.split('T')[0]; 
+            return d; 
+        }
+        
+        function formatTime(t) { 
+            if (!t) return ''; 
+            if (typeof t === 'number') { 
+                const totalSeconds = Math.round(t * 86400); 
+                const hours = Math.floor(totalSeconds / 3600); 
+                const minutes = Math.floor((totalSeconds % 3600) / 60); 
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`; 
+            } 
+            return t; 
+        }
+        
+        function showToast(msg, isError = false) { 
+            const toast = document.createElement('div'); 
+            toast.className = 'toast-msg' + (isError ? ' error' : ''); 
+            toast.textContent = msg; 
+            document.body.appendChild(toast); 
+            setTimeout(() => toast.remove(), 3000); 
+        }
         
         async function checkAdminStatus(user) {
             try {
