@@ -245,11 +245,11 @@
         .modal-buttons { display: flex; gap: 0.8rem; margin-top: 1rem; }
         .modal-buttons button { flex: 1; margin: 0; }
         .form-group { margin-bottom: 0.8rem; }
-        .form-group label { display: block; font-size: 0.75rem; color: #4a5568; margin-bottom: 0.3rem; font-weight: bold; }
+        .form-group label { display: block; font-size: 0.75rem; color: #ffffff; margin-bottom: 0.3rem; font-weight: bold; }
         input, select, textarea {
             width: 100%;
             padding: 0.6rem;
-            border: 2px solid #e2e8f0;
+            border: 2px solid #ffffff;
             border-radius: 0.8rem;
             font-size: 0.85rem;
         }
@@ -798,7 +798,6 @@
                     <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير - <span style="color:#4299e1;">📘 Off Job</span></h2></div>
                     <div class="nav-links">
                         <a href="index.html" class="home">🏠 الرئيسية</a>
-                        <a href="onjob.html" style="background:#48bb78; color:white;">📗 On Job</a>
                         ${isAdmin ? '<a href="admin.html" class="admin">⚙️ لوحة التحكم</a>' : ''}
                         <button onclick="logout()" class="logout">🚪 تسجيل خروج</button>
                     </div>
@@ -814,7 +813,7 @@
                 
                 <div id="sessionsModal" class="modal"><div class="modal-content"><h3 id="sessionsModalTitle">جلسات الكورس</h3><div id="sessionsModalContent"></div><div class="modal-buttons"><button onclick="window.closeModal('sessionsModal')">❌ إغلاق</button></div></div></div>
                 
-                <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير - Off Job - قراءة من الكاش المحلي</p></div>
+                <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير </p></div>
             `;
             renderPage();
             window.logout = logout;
