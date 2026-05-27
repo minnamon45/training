@@ -35,15 +35,6 @@
         .nav-links .home { background: #2b7a4b; color: white; }
         .nav-links .logout { background: #e53e3e; color: white; }
         .nav-links .admin { background: #9f7aea; color: white; }
-        .refresh-btn {
-            background: #4299e1;
-            color: white;
-            border: none;
-            padding: 0.3rem 0.8rem;
-            border-radius: 1rem;
-            cursor: pointer;
-            font-size: 0.7rem;
-        }
         
         .container { max-width: 1400px; margin: 1rem auto; padding: 0 1rem; }
         
@@ -268,14 +259,14 @@
             border-radius: 1rem;
             padding: 1.2rem;
             width: 90%;
-            max-width: 500px;
+            max-width: 800px;
             max-height: 90vh;
             overflow-y: auto;
         }
         .modal-buttons { display: flex; gap: 0.8rem; margin-top: 1rem; }
         .modal-buttons button { flex: 1; margin: 0; }
         .form-group { margin-bottom: 0.5rem; }
-        .form-group label { display: block; font-size: 0.7rem; color: #ffffff; margin-bottom: 0.2rem; }
+        .form-group label { display: block; font-size: 0.7rem; color: #4a5568; margin-bottom: 0.2rem; }
         input, select, textarea {
             width: 100%;
             padding: 0.5rem;
@@ -296,6 +287,72 @@
             font-size: 0.85rem;
         }
         button:hover { transform: translateY(-2px); opacity: 0.9; }
+        
+        .sessions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+        .session-card {
+            background: #f7fafc;
+            border-radius: 1rem;
+            padding: 0.8rem;
+            border-right: 4px solid #2b7a4b;
+            transition: 0.2s;
+        }
+        .session-card:hover {
+            background: #e2e8f0;
+            transform: translateX(-3px);
+        }
+        .session-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #cbd5e0;
+        }
+        .session-code {
+            background: #2b7a4b;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .session-stats {
+            background: #4299e1;
+            color: white;
+            padding: 0.3rem 0.8rem;
+            border-radius: 2rem;
+            font-size: 0.7rem;
+        }
+        .session-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0.5rem;
+            font-size: 0.75rem;
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            color: #4a5568;
+        }
+        .detail-item strong {
+            color: #1e3a5f;
+            min-width: 60px;
+        }
+        .no-sessions {
+            text-align: center;
+            padding: 2rem;
+            color: #718096;
+            background: #f7fafc;
+            border-radius: 1rem;
+        }
         
         .time-input-group {
             display: flex;
@@ -329,6 +386,33 @@
             color: #718096;
             text-align: center;
             margin-bottom: 1rem;
+            background: #e2e8f0;
+            padding: 0.3rem;
+            border-radius: 1rem;
+        }
+        
+        .btn-view-sessions {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 0.3rem 0.7rem;
+            border-radius: 1.5rem;
+            cursor: pointer;
+            font-size: 0.7rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            transition: 0.2s;
+        }
+        .btn-view-sessions:hover {
+            background: #3182ce;
+            transform: translateY(-1px);
+        }
+        
+        .refresh-btn {
+            background: #4299e1;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.75rem;
         }
         
         @media (max-width: 768px) {
@@ -339,6 +423,7 @@
             .item-info { flex-direction: column; align-items: flex-start; }
             .quick-enroll-form { flex-direction: column; }
             .quick-enroll-form .form-group { width: 100%; }
+            .session-details { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -360,102 +445,100 @@
         
         let searchTerm = "";
         
-        // ========== مفاتيح الكاش ==========
-        const CACHE_KEYS = {
-            EMPLOYEES: 'top_employees_v1',
-            OFFJOB_COURSES: 'top_offjob_courses_v1',
-            OFFJOB_SESSIONS: 'top_offjob_sessions_v1',
-            OFFJOB_ENROLLMENTS: 'top_offjob_enrollments_v1',
-            ONJOB_COURSES: 'top_onjob_courses_v1',
-            ONJOB_SESSIONS: 'top_onjob_sessions_v1',
-            ONJOB_ENROLLMENTS: 'top_onjob_enrollments_v1'
+        // ========== مفاتيح الكاش (استخدام LocalStorage مباشرة) ==========
+        const STORAGE_KEYS = {
+            EMPLOYEES: 'app_employees_v2',
+            OFFJOB_COURSES: 'app_offjob_courses_v2',
+            OFFJOB_SESSIONS: 'app_offjob_sessions_v2',
+            OFFJOB_ENROLLMENTS: 'app_offjob_enrollments_v2',
+            ONJOB_COURSES: 'app_onjob_courses_v2',
+            ONJOB_SESSIONS: 'app_onjob_sessions_v2',
+            ONJOB_ENROLLMENTS: 'app_onjob_enrollments_v2',
+            LAST_UPDATE: 'app_last_update'
         };
         
-        function showToast(msg, isError = false) {
-            const toast = document.createElement('div');
-            toast.className = 'toast-msg' + (isError ? ' error' : '');
-            toast.textContent = msg;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
-        
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        
-        function formatDate(dateValue) {
-            if (!dateValue) return '';
-            if (typeof dateValue === 'number') {
-                const date = new Date((dateValue - 25569) * 86400000);
-                return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+        // حفظ البيانات في localStorage
+        function saveToLocalStorage(key, data) {
+            try {
+                localStorage.setItem(key, JSON.stringify(data));
+            } catch(e) {
+                console.warn('فشل حفظ البيانات في localStorage:', e);
             }
-            if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}/)) return dateValue.split('T')[0];
-            return dateValue;
         }
         
-        function formatTime(timeValue) {
-            if (!timeValue) return '';
-            if (typeof timeValue === 'number') {
-                const totalSeconds = Math.round(timeValue * 86400);
-                const hours = Math.floor(totalSeconds / 3600);
-                const minutes = Math.floor((totalSeconds % 3600) / 60);
-                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        // قراءة البيانات من localStorage
+        function loadFromLocalStorage(key) {
+            try {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : null;
+            } catch(e) {
+                console.warn('فشل قراءة البيانات من localStorage:', e);
+                return null;
             }
-            return timeValue;
         }
         
+        // التحقق من وجود بيانات في الكاش
+        function hasValidCache() {
+            const lastUpdate = localStorage.getItem(STORAGE_KEYS.LAST_UPDATE);
+            if (!lastUpdate) return false;
+            
+            // البيانات صالحة لمدة 24 ساعة
+            const cacheAge = Date.now() - parseInt(lastUpdate);
+            const maxAge = 24 * 60 * 60 * 1000; // 24 ساعة
+            
+            // التحقق من وجود جميع البيانات
+            const requiredKeys = [
+                STORAGE_KEYS.EMPLOYEES,
+                STORAGE_KEYS.OFFJOB_COURSES,
+                STORAGE_KEYS.OFFJOB_SESSIONS,
+                STORAGE_KEYS.OFFJOB_ENROLLMENTS,
+                STORAGE_KEYS.ONJOB_COURSES,
+                STORAGE_KEYS.ONJOB_SESSIONS,
+                STORAGE_KEYS.ONJOB_ENROLLMENTS
+            ];
+            
+            const allDataExist = requiredKeys.every(key => localStorage.getItem(key) !== null);
+            return allDataExist && cacheAge < maxAge;
+        }
+        
+        // عرض معلومات الكاش
         function updateCacheInfo() {
             const cacheInfo = document.getElementById('cacheInfo');
             if (!cacheInfo) return;
             
-            if (window.CacheManager) {
-                const cachedEmployees = CacheManager.get(CACHE_KEYS.EMPLOYEES);
-                const cachedOffCourses = CacheManager.get(CACHE_KEYS.OFFJOB_COURSES);
-                const cachedOffSessions = CacheManager.get(CACHE_KEYS.OFFJOB_SESSIONS);
-                const cachedOffEnrollments = CacheManager.get(CACHE_KEYS.OFFJOB_ENROLLMENTS);
-                
-                if (cachedEmployees && cachedOffCourses && cachedOffSessions && cachedOffEnrollments) {
-                    const cacheTime = localStorage.getItem(CACHE_KEYS.EMPLOYEES + '_time');
-                    if (cacheTime) {
-                        const date = new Date(parseInt(cacheTime));
-                        cacheInfo.innerHTML = `📦 البيانات من الكاش - آخر تحديث: ${date.toLocaleString('ar-EG')} &nbsp;|&nbsp; <a href="#" onclick="refreshAllData(); return false;" style="color:#4299e1;">🔄 تحديث يدوي</a>`;
-                    } else {
-                        cacheInfo.innerHTML = `📦 البيانات من الكاش &nbsp;|&nbsp; <a href="#" onclick="refreshAllData(); return false;" style="color:#4299e1;">🔄 تحديث يدوي</a>`;
-                    }
-                } else {
-                    cacheInfo.innerHTML = `☁️ البيانات من Firebase (تم التحديث الآن)`;
-                }
+            const lastUpdate = localStorage.getItem(STORAGE_KEYS.LAST_UPDATE);
+            const hasCache = hasValidCache();
+            
+            if (hasCache && lastUpdate) {
+                const date = new Date(parseInt(lastUpdate));
+                cacheInfo.innerHTML = `
+                    📦 <strong>وضع القراءة فقط من الكاش المحلي</strong> - آخر تحديث: ${date.toLocaleString('ar-EG')} 
+                    &nbsp;|&nbsp; 
+                    <button class="refresh-btn" onclick="window.forceRefreshData()">🔄 تحديث يدوي من Firebase</button>
+                    <br>
+                    <small style="font-size: 0.6rem;">✅ يتم عرض البيانات من التخزين المحلي - لا توجد قراءات من قاعدة البيانات</small>
+                `;
+            } else {
+                cacheInfo.innerHTML = `
+                    &nbsp;|&nbsp;
+                    <button class="refresh-btn" onclick="window.forceRefreshData()">🔄 تحديث يدوي</button>
+                `;
             }
         }
         
-        async function refreshAllData() {
-            showToast("🔄 جاري تحديث البيانات...");
-            if (window.CacheManager) {
-                for (const key in CACHE_KEYS) {
-                    CacheManager.remove(CACHE_KEYS[key]);
-                    localStorage.removeItem(CACHE_KEYS[key] + '_time');
-                }
-            }
-            await loadEmployees(true);
-            await loadOffJobData(true);
-            await loadOnJobData(true);
-            renderActiveTab();
-            showToast("✅ تم تحديث البيانات بنجاح");
-        }
-        
-        // ========== تحميل البيانات مع الكاش ==========
+        // ========== تحميل البيانات (مع أولوية للكاش) ==========
         async function loadEmployees(forceRefresh = false) {
-            if (!forceRefresh && window.CacheManager) {
-                const cached = CacheManager.get(CACHE_KEYS.EMPLOYEES);
+            // إذا لم يكن forced، حاول القراءة من localStorage أولاً
+            if (!forceRefresh) {
+                const cached = loadFromLocalStorage(STORAGE_KEYS.EMPLOYEES);
                 if (cached) {
                     employeesList = cached;
                     return employeesList;
                 }
             }
             
+            // قراءة من Firebase (فقط عند forceRefresh أو عدم وجود كاش)
+            console.log('📡 جاري تحميل الموظفين من Firebase...');
             const snapshot = await getDocs(collection(db, "employees"));
             employeesList = [];
             snapshot.forEach(doc => {
@@ -463,18 +546,16 @@
                 if (emp.status !== 'Left') employeesList.push(emp);
             });
             
-            if (window.CacheManager) {
-                CacheManager.set(CACHE_KEYS.EMPLOYEES, employeesList);
-                localStorage.setItem(CACHE_KEYS.EMPLOYEES + '_time', Date.now().toString());
-            }
+            // حفظ في localStorage
+            saveToLocalStorage(STORAGE_KEYS.EMPLOYEES, employeesList);
             return employeesList;
         }
         
         async function loadOffJobData(forceRefresh = false) {
-            if (!forceRefresh && window.CacheManager) {
-                const cachedCourses = CacheManager.get(CACHE_KEYS.OFFJOB_COURSES);
-                const cachedSessions = CacheManager.get(CACHE_KEYS.OFFJOB_SESSIONS);
-                const cachedEnrollments = CacheManager.get(CACHE_KEYS.OFFJOB_ENROLLMENTS);
+            if (!forceRefresh) {
+                const cachedCourses = loadFromLocalStorage(STORAGE_KEYS.OFFJOB_COURSES);
+                const cachedSessions = loadFromLocalStorage(STORAGE_KEYS.OFFJOB_SESSIONS);
+                const cachedEnrollments = loadFromLocalStorage(STORAGE_KEYS.OFFJOB_ENROLLMENTS);
                 if (cachedCourses && cachedSessions && cachedEnrollments) {
                     offJobCourses = cachedCourses;
                     offJobSessions = cachedSessions;
@@ -483,6 +564,7 @@
                 }
             }
             
+            console.log('📡 جاري تحميل بيانات OffJob من Firebase...');
             const [coursesSnap, sessionsSnap, enrollmentsSnap] = await Promise.all([
                 getDocs(collection(db, "offjob_courses")),
                 getDocs(collection(db, "offjob_sessions")),
@@ -492,19 +574,16 @@
             offJobSessions = sessionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
             offJobEnrollments = enrollmentsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
             
-            if (window.CacheManager) {
-                CacheManager.set(CACHE_KEYS.OFFJOB_COURSES, offJobCourses);
-                CacheManager.set(CACHE_KEYS.OFFJOB_SESSIONS, offJobSessions);
-                CacheManager.set(CACHE_KEYS.OFFJOB_ENROLLMENTS, offJobEnrollments);
-                localStorage.setItem(CACHE_KEYS.OFFJOB_COURSES + '_time', Date.now().toString());
-            }
+            saveToLocalStorage(STORAGE_KEYS.OFFJOB_COURSES, offJobCourses);
+            saveToLocalStorage(STORAGE_KEYS.OFFJOB_SESSIONS, offJobSessions);
+            saveToLocalStorage(STORAGE_KEYS.OFFJOB_ENROLLMENTS, offJobEnrollments);
         }
         
         async function loadOnJobData(forceRefresh = false) {
-            if (!forceRefresh && window.CacheManager) {
-                const cachedCourses = CacheManager.get(CACHE_KEYS.ONJOB_COURSES);
-                const cachedSessions = CacheManager.get(CACHE_KEYS.ONJOB_SESSIONS);
-                const cachedEnrollments = CacheManager.get(CACHE_KEYS.ONJOB_ENROLLMENTS);
+            if (!forceRefresh) {
+                const cachedCourses = loadFromLocalStorage(STORAGE_KEYS.ONJOB_COURSES);
+                const cachedSessions = loadFromLocalStorage(STORAGE_KEYS.ONJOB_SESSIONS);
+                const cachedEnrollments = loadFromLocalStorage(STORAGE_KEYS.ONJOB_ENROLLMENTS);
                 if (cachedCourses && cachedSessions && cachedEnrollments) {
                     onJobCourses = cachedCourses;
                     onJobSessions = cachedSessions;
@@ -513,6 +592,7 @@
                 }
             }
             
+            console.log('📡 جاري تحميل بيانات OnJob من Firebase...');
             const [coursesSnap, sessionsSnap, enrollmentsSnap] = await Promise.all([
                 getDocs(collection(db, "onjob_courses")),
                 getDocs(collection(db, "onjob_sessions")),
@@ -522,12 +602,65 @@
             onJobSessions = sessionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
             onJobEnrollments = enrollmentsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
             
-            if (window.CacheManager) {
-                CacheManager.set(CACHE_KEYS.ONJOB_COURSES, onJobCourses);
-                CacheManager.set(CACHE_KEYS.ONJOB_SESSIONS, onJobSessions);
-                CacheManager.set(CACHE_KEYS.ONJOB_ENROLLMENTS, onJobEnrollments);
-                localStorage.setItem(CACHE_KEYS.ONJOB_COURSES + '_time', Date.now().toString());
+            saveToLocalStorage(STORAGE_KEYS.ONJOB_COURSES, onJobCourses);
+            saveToLocalStorage(STORAGE_KEYS.ONJOB_SESSIONS, onJobSessions);
+            saveToLocalStorage(STORAGE_KEYS.ONJOB_ENROLLMENTS, onJobEnrollments);
+        }
+        
+        // تحديث شامل من Firebase (يُستخدم فقط عند الضغط على زر التحديث)
+        async function forceRefreshData() {
+            showToast("🔄 جاري تحديث جميع البيانات من Firebase...");
+            
+            // حذف الكاش القديم
+            Object.values(STORAGE_KEYS).forEach(key => {
+                localStorage.removeItem(key);
+            });
+            
+            // إعادة التحميل من Firebase
+            await loadEmployees(true);
+            await loadOffJobData(true);
+            await loadOnJobData(true);
+            
+            // تحديث وقت آخر تحديث
+            localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, Date.now().toString());
+            
+            renderActiveTab();
+            showToast("✅ تم تحديث البيانات بنجاح من Firebase");
+        }
+        
+        // بعد أي عملية تعديل (إضافة/تعديل/حذف)، نقوم بتحديث الكاش فقط للبيانات المتغيرة
+        async function refreshAfterMutation(type) {
+            if (type.startsWith('offjob')) {
+                if (type === 'offjob_course') {
+                    const snapshot = await getDocs(collection(db, "offjob_courses"));
+                    offJobCourses = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    saveToLocalStorage(STORAGE_KEYS.OFFJOB_COURSES, offJobCourses);
+                } else if (type === 'offjob_session') {
+                    const snapshot = await getDocs(collection(db, "offjob_sessions"));
+                    offJobSessions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    saveToLocalStorage(STORAGE_KEYS.OFFJOB_SESSIONS, offJobSessions);
+                } else if (type === 'offjob_enrollment') {
+                    const snapshot = await getDocs(collection(db, "offjob_enrollments"));
+                    offJobEnrollments = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    saveToLocalStorage(STORAGE_KEYS.OFFJOB_ENROLLMENTS, offJobEnrollments);
+                }
+            } else {
+                if (type === 'onjob_course') {
+                    const snapshot = await getDocs(collection(db, "onjob_courses"));
+                    onJobCourses = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    saveToLocalStorage(STORAGE_KEYS.ONJOB_COURSES, onJobCourses);
+                } else if (type === 'onjob_session') {
+                    const snapshot = await getDocs(collection(db, "onjob_sessions"));
+                    onJobSessions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    saveToLocalStorage(STORAGE_KEYS.ONJOB_SESSIONS, onJobSessions);
+                } else if (type === 'onjob_enrollment') {
+                    const snapshot = await getDocs(collection(db, "onjob_enrollments"));
+                    onJobEnrollments = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                    saveToLocalStorage(STORAGE_KEYS.ONJOB_ENROLLMENTS, onJobEnrollments);
+                }
             }
+            // تحديث وقت آخر تعديل
+            localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, Date.now().toString());
         }
         
         async function checkAdminStatus(user) {
@@ -569,8 +702,8 @@
                 document.getElementById('quickEmployeeId').value = '';
                 document.getElementById('quickScore').value = '';
                 
-                if (activeTab === 'offjob') await loadOffJobData(true);
-                else await loadOnJobData(true);
+                // تحديث الكاش فقط للبيانات المتغيرة
+                await refreshAfterMutation(activeTab === 'offjob' ? 'offjob_enrollment' : 'onjob_enrollment');
                 renderActiveTab();
                 
             } catch (error) {
@@ -624,8 +757,7 @@
             
             document.getElementById('batchEmployeeIds').value = '';
             
-            if (activeTab === 'offjob') await loadOffJobData(true);
-            else await loadOnJobData(true);
+            await refreshAfterMutation(activeTab === 'offjob' ? 'offjob_enrollment' : 'onjob_enrollment');
             renderActiveTab();
         }
         
@@ -643,8 +775,9 @@
             }
             
             await setDoc(doc(db, collectionName, docId), { ...data, id: docId });
-            if (type.startsWith('offjob')) await loadOffJobData(true);
-            else await loadOnJobData(true);
+            
+            // تحديث الكاش بعد الحفظ
+            await refreshAfterMutation(type);
             renderActiveTab();
             showToast('✅ تم الحفظ بنجاح');
         }
@@ -661,8 +794,8 @@
                 case 'onjob_enrollment': collectionName = "onjob_enrollments"; break;
             }
             await deleteDoc(doc(db, collectionName, id));
-            if (type.startsWith('offjob')) await loadOffJobData(true);
-            else await loadOnJobData(true);
+            
+            await refreshAfterMutation(type);
             renderActiveTab();
             showToast('🗑️ تم الحذف');
         }
@@ -692,7 +825,68 @@
             );
         }
         
+        // عرض الجلسات المرتبطة بكورس معين
+        function showCourseSessions(courseCode, courseName) {
+            const sessionsList = activeTab === 'offjob' ? offJobSessions : onJobSessions;
+            const enrollmentsList = activeTab === 'offjob' ? offJobEnrollments : onJobEnrollments;
+            
+            const relatedSessions = sessionsList.filter(s => {
+                const sessionCourseCode = s.course_code?.toString().trim();
+                const targetCourseCode = courseCode?.toString().trim();
+                return sessionCourseCode === targetCourseCode;
+            });
+            
+            const modal = document.getElementById('sessionsModal');
+            const title = document.getElementById('sessionsModalTitle');
+            const content = document.getElementById('sessionsModalContent');
+            
+            title.innerHTML = `📚 جلسات كورس: ${escapeHtml(courseCode)} - ${escapeHtml(courseName)}`;
+            
+            if (relatedSessions.length === 0) {
+                content.innerHTML = `<div class="no-sessions">📭 لا توجد جلسات مسجلة لهذا الكورس حتى الآن</div>`;
+            } else {
+                let sessionsHtml = `
+                    <div style="margin-bottom: 1rem; background: linear-gradient(135deg, #1e3a5f, #2b7a4b); padding: 0.6rem; border-radius: 1rem; text-align: center; color: white;">
+                        <strong>📊 إجمالي عدد الجلسات: ${relatedSessions.length}</strong>
+                    </div>
+                    <div class="sessions-list">
+                `;
+                
+                relatedSessions.forEach(session => {
+                    const enrollmentsCount = enrollmentsList.filter(e => e.session_code === session.session_code).length;
+                    const completedCount = enrollmentsList.filter(e => e.session_code === session.session_code && e.enrollment_status === 'Completed').length;
+                    
+                    sessionsHtml += `
+                        <div class="session-card">
+                            <div class="session-header">
+                                <span class="session-code">🎯 ${escapeHtml(session.session_code)}</span>
+                                <span class="session-stats">👥 ${enrollmentsCount} متدرب | ✅ ${completedCount} مكتمل</span>
+                            </div>
+                            <div class="session-details">
+                                <div class="detail-item"><strong>📅 التاريخ:</strong> ${formatDate(session.session_date) || 'غير محدد'}</div>
+                                <div class="detail-item"><strong>🕐 الوقت:</strong> ${formatTime(session.start_time) || '-'} - ${formatTime(session.end_time) || '-'}</div>
+                                <div class="detail-item"><strong>👨‍🏫 المدرب:</strong> ${escapeHtml(session.trainer_name) || 'غير محدد'}</div>
+                                <div class="detail-item"><strong>📚 الكورس:</strong> ${escapeHtml(session.course_code)}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                sessionsHtml += `</div>`;
+                content.innerHTML = sessionsHtml;
+            }
+            
+            modal.style.display = 'flex';
+        }
+        
         function renderCourseItem(course, index, type) {
+            const sessionsList = activeTab === 'offjob' ? offJobSessions : onJobSessions;
+            const sessionsCount = sessionsList.filter(s => {
+                const sessionCourseCode = s.course_code?.toString().trim();
+                const targetCourseCode = course.course_code?.toString().trim();
+                return sessionCourseCode === targetCourseCode;
+            }).length;
+            
             return `
                 <div class="item-card">
                     <div class="item-info">
@@ -701,9 +895,13 @@
                         <span>📖 ${escapeHtml(course.course_name)}</span>
                         <span class="item-badge">${escapeHtml(course.category || 'عام')}</span>
                         <span class="item-badge">⏱️ ${course.duration_hours || 0} ساعة</span>
+                        <span class="item-badge" style="background:#4299e120; color:#4299e1;">🎯 ${sessionsCount} جلسة</span>
                     </div>
                     <div class="item-actions">
-                        <button onclick='window.openModal("${type}", ${JSON.stringify(course).replace(/'/g, "&#39;")})' style="background:#4299e1;">✏️</button>
+                        <button class="btn-view-sessions" onclick="window.showCourseSessions('${escapeHtml(course.course_code)}', '${escapeHtml(course.course_name)}')" title="عرض الجلسات">
+                            📋 عرض الجلسات (${sessionsCount})
+                        </button>
+                        <button onclick='window.openModal("${type}", ${JSON.stringify(course).replace(/'/g, "&#39;")})' style="background:#ed8936;">✏️</button>
                         <button onclick='window.deleteItem("${type}", "${course.id}")' style="background:#e53e3e;">🗑️</button>
                     </div>
                 </div>
@@ -783,7 +981,6 @@
         window.addCourse = () => window.openModal(activeTab === 'offjob' ? 'offjob_course' : 'onjob_course');
         window.addSession = () => window.openModal(activeTab === 'offjob' ? 'offjob_session' : 'onjob_session');
         window.addEnrollment = () => window.openModal(activeTab === 'offjob' ? 'offjob_enrollment' : 'onjob_enrollment');
-        
         window.searchData = () => {
             const input = document.getElementById('searchInput');
             if (input) {
@@ -791,11 +988,9 @@
                 renderActiveTab();
             }
         };
-        
         window.handleSearchKeypress = (event) => {
             if (event.key === 'Enter') window.searchData();
         };
-        
         window.clearSearch = () => {
             const input = document.getElementById('searchInput');
             if (input) {
@@ -804,6 +999,8 @@
                 renderActiveTab();
             }
         };
+        window.showCourseSessions = showCourseSessions;
+        window.forceRefreshData = forceRefreshData;
         
         function renderOffJob() {
             const filteredCourses = filterCourses(offJobCourses);
@@ -886,7 +1083,7 @@
                 
                 <div class="action-bar">
                     <div class="search-box">
-                        <input type="text" id="searchInput" placeholder="🔍 بحث..." value="${escapeHtml(searchTerm)}" onkeypress="window.handleSearchKeypress(event)">
+                        <input type="text" id="searchInput" placeholder="🔍 بحث في الكورسات والجلسات..." value="${escapeHtml(searchTerm)}" onkeypress="window.handleSearchKeypress(event)">
                         <button onclick="window.searchData()">بحث</button>
                         ${searchTerm ? '<button onclick="window.clearSearch()" style="background:#718096;">✖️ إلغاء</button>' : ''}
                     </div>
@@ -983,7 +1180,7 @@
                 
                 <div class="action-bar">
                     <div class="search-box">
-                        <input type="text" id="searchInput" placeholder="🔍 بحث..." value="${escapeHtml(searchTerm)}" onkeypress="window.handleSearchKeypress(event)">
+                        <input type="text" id="searchInput" placeholder="🔍 بحث في الكورسات والجلسات..." value="${escapeHtml(searchTerm)}" onkeypress="window.handleSearchKeypress(event)">
                         <button onclick="window.searchData()">بحث</button>
                         ${searchTerm ? '<button onclick="window.clearSearch()" style="background:#718096;">✖️ إلغاء</button>' : ''}
                     </div>
@@ -1095,7 +1292,6 @@
         window.batchAddEnrollments = batchAddEnrollments;
         window.deleteItem = deleteItem;
         window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-        window.refreshAllData = refreshAllData;
         
         function switchTab(tab) {
             activeTab = tab;
@@ -1109,8 +1305,65 @@
         
         function logout() { signOut(auth).then(() => window.location.href = 'login.html'); }
         
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        function formatDate(dateValue) {
+            if (!dateValue) return '';
+            if (typeof dateValue === 'number') {
+                const date = new Date((dateValue - 25569) * 86400000);
+                return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+            }
+            if (typeof dateValue === 'string' && dateValue.match(/^\d{4}-\d{2}-\d{2}/)) return dateValue.split('T')[0];
+            return dateValue;
+        }
+        
+        function formatTime(timeValue) {
+            if (!timeValue) return '';
+            if (typeof timeValue === 'number') {
+                const totalSeconds = Math.round(timeValue * 86400);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            }
+            return timeValue;
+        }
+        
+        function showToast(msg, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-msg' + (isError ? ' error' : '');
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
         async function loadPage() {
-            await Promise.all([loadEmployees(false), loadOffJobData(false), loadOnJobData(false)]);
+            // التحقق من وجود كاش صالح
+            const hasCache = hasValidCache();
+            
+            if (hasCache) {
+                console.log('✅ استخدام البيانات من الكاش المحلي');
+                // تحميل من localStorage فقط
+                employeesList = loadFromLocalStorage(STORAGE_KEYS.EMPLOYEES) || [];
+                offJobCourses = loadFromLocalStorage(STORAGE_KEYS.OFFJOB_COURSES) || [];
+                offJobSessions = loadFromLocalStorage(STORAGE_KEYS.OFFJOB_SESSIONS) || [];
+                offJobEnrollments = loadFromLocalStorage(STORAGE_KEYS.OFFJOB_ENROLLMENTS) || [];
+                onJobCourses = loadFromLocalStorage(STORAGE_KEYS.ONJOB_COURSES) || [];
+                onJobSessions = loadFromLocalStorage(STORAGE_KEYS.ONJOB_SESSIONS) || [];
+                onJobEnrollments = loadFromLocalStorage(STORAGE_KEYS.ONJOB_ENROLLMENTS) || [];
+            } else {
+                console.log('📡 تحميل البيانات من Firebase (أول مرة أو انتهت صلاحية الكاش)');
+                await Promise.all([
+                    loadEmployees(true),
+                    loadOffJobData(true),
+                    loadOnJobData(true)
+                ]);
+                localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, Date.now().toString());
+            }
             
             document.getElementById('app').innerHTML = `
                 <div class="navbar">
@@ -1131,6 +1384,7 @@
                     <div id="onjobContent" class="tab-content"></div>
                 </div>
                 
+                <!-- مودال إضافة/تعديل البيانات -->
                 <div id="genericModal" class="modal">
                     <div class="modal-content">
                         <h3 id="modalTitle">إضافة</h3>
@@ -1171,7 +1425,18 @@
                     </div>
                 </div>
                 
-                <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير</p></div>
+                <!-- مودال عرض جلسات الكورس -->
+                <div id="sessionsModal" class="modal">
+                    <div class="modal-content">
+                        <h3 id="sessionsModalTitle">جلسات الكورس</h3>
+                        <div id="sessionsModalContent"></div>
+                        <div class="modal-buttons">
+                            <button class="cancel-btn" onclick="window.closeModal('sessionsModal')">❌ إغلاق</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير - وضع القراءة من الكاش المحلي</p></div>
             `;
             
             renderActiveTab();
