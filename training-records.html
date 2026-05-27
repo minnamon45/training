@@ -39,7 +39,7 @@
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
@@ -325,6 +325,16 @@
             background: #f7fafc;
             border-radius: 1rem;
         }
+        .debug-info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            font-size: 0.7rem;
+            color: #856404;
+            text-align: right;
+        }
         
         .time-input-group {
             display: flex;
@@ -398,17 +408,16 @@
         let currentUser = null;
         let isAdmin = false;
         
-        let courses = [], sessions = [], enrollments = [];
+        let courses = [], sessions = [];
         let employeesList = [];
         let searchTerm = "";
         
         // ========== مفاتيح التخزين المحلي ==========
         const STORAGE_KEYS = {
-            EMPLOYEES: 'off_employees_v2',
-            COURSES: 'off_courses_v2',
-            SESSIONS: 'off_sessions_v2',
-            ENROLLMENTS: 'off_enrollments_v2',
-            LAST_UPDATE: 'off_last_update_v2'
+            EMPLOYEES: 'off_employees_v3',
+            COURSES: 'off_courses_v3',
+            SESSIONS: 'off_sessions_v3',
+            LAST_UPDATE: 'off_last_update_v3'
         };
         
         function saveToLocalStorage(key, data) {
@@ -474,7 +483,7 @@
             ]);
             courses = coursesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
             sessions = sessionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-            console.log('✅ تحميل من Firebase:', { coursesCount: courses.length, sessionsCount: sessions.length, sessions: sessions });
+            console.log('✅ تحميل من Firebase:', { coursesCount: courses.length, sessionsCount: sessions.length });
             saveToLocalStorage(STORAGE_KEYS.COURSES, courses);
             saveToLocalStorage(STORAGE_KEYS.SESSIONS, sessions);
         }
@@ -524,6 +533,70 @@
             showToast('🗑️ تم الحذف');
         }
         
+        // ========== تسجيل الموظفين في الجلسات ==========
+        async function quickAddEnrollment() {
+            const sessionCode = document.getElementById('quickSessionCode')?.value;
+            const employeeId = document.getElementById('quickEmployeeId')?.value;
+            const status = document.getElementById('quickStatus')?.value;
+            const score = document.getElementById('quickScore')?.value;
+            
+            if (!sessionCode || !employeeId) { 
+                showToast('❌ الرجاء إدخال كود الجلسة وكود الموظف', true); 
+                return; 
+            }
+            
+            const docId = `${employeeId}_${sessionCode}`;
+            try {
+                await setDoc(doc(db, "offjob_enrollments", docId), {
+                    employee_id: employeeId, 
+                    session_code: sessionCode, 
+                    enrollment_status: status, 
+                    score: score ? parseFloat(score) : null, 
+                    id: docId
+                });
+                showToast(`✅ تم تسجيل الموظف ${employeeId} بنجاح`);
+                document.getElementById('quickEmployeeId').value = '';
+                document.getElementById('quickScore').value = '';
+            } catch (error) { 
+                showToast('❌ فشل التسجيل', true); 
+            }
+        }
+        
+        async function batchAddEnrollments() {
+            const sessionCode = document.getElementById('batchSessionCode')?.value;
+            const employeeIdsText = document.getElementById('batchEmployeeIds')?.value;
+            const status = document.getElementById('batchStatus')?.value;
+            
+            if (!sessionCode) { 
+                showToast('❌ الرجاء إدخال كود الجلسة', true); 
+                return; 
+            }
+            if (!employeeIdsText.trim()) { 
+                showToast('❌ الرجاء إدخال أكواد الموظفين', true); 
+                return; 
+            }
+            
+            const employeeIds = employeeIdsText.split(/\n|,|،/).map(id => id.trim()).filter(id => id);
+            let successCount = 0;
+            
+            for (const empId of employeeIds) {
+                if (!empId) continue;
+                const docId = `${empId}_${sessionCode}`;
+                try {
+                    await setDoc(doc(db, "offjob_enrollments", docId), {
+                        employee_id: empId, 
+                        session_code: sessionCode, 
+                        enrollment_status: status, 
+                        score: null, 
+                        id: docId
+                    });
+                    successCount++;
+                } catch (error) {}
+            }
+            showToast(`✅ تم تسجيل ${successCount} موظف بنجاح`);
+            document.getElementById('batchEmployeeIds').value = '';
+        }
+        
         function filterCourses() {
             if (!searchTerm) return courses;
             return courses.filter(c => c.course_code?.toLowerCase().includes(searchTerm) || c.course_name?.toLowerCase().includes(searchTerm));
@@ -533,7 +606,6 @@
             console.log('🔍 عرض الجلسات للكورس:', courseCode);
             console.log('📋 جميع الجلسات المتاحة:', sessions.map(s => ({ code: s.session_code, course: s.course_code })));
             
-            // مقارنة دقيقة مع إزالة المسافات
             const relatedSessions = sessions.filter(s => {
                 const sessionCourse = s.course_code?.toString().trim();
                 const targetCourse = courseCode?.toString().trim();
@@ -549,7 +621,7 @@
                 let debugInfo = '';
                 if (sessions.length > 0) {
                     const availableCourses = [...new Set(sessions.map(s => s.course_code))];
-                    debugInfo = `<div class="debug-info" style="background:#fff3cd; padding:0.5rem; margin-top:0.5rem; border-radius:0.5rem; font-size:0.7rem;">
+                    debugInfo = `<div class="debug-info">
                         <strong>⚠️ معلومات للمساعدة:</strong><br>
                         📌 يوجد ${sessions.length} جلسة(ات) في النظام<br>
                         📌 أكواد الكورسات الموجودة في الجلسات: ${availableCourses.join(', ')}<br>
@@ -674,6 +746,8 @@
         window.forceRefreshData = forceRefreshData;
         window.deleteItem = deleteItem;
         window.closeModal = (id) => document.getElementById(id).style.display = 'none';
+        window.quickAddEnrollment = quickAddEnrollment;
+        window.batchAddEnrollments = batchAddEnrollments;
         
         function renderPage() {
             const totalCourses = courses.length;
@@ -683,6 +757,65 @@
                 <div class="stats-grid">
                     <div class="stat-card"><div class="stat-number">${totalCourses}</div><div class="stat-label">📚 الكورسات</div></div>
                     <div class="stat-card"><div class="stat-number">${totalSessions}</div><div class="stat-label">🎯 الجلسات</div></div>
+                </div>
+                
+                <div class="quick-enroll-card">
+                    <h3>⚡ تسجيل سريع لمتدرب</h3>
+                    <div class="quick-enroll-form">
+                        <div class="form-group">
+                            <label>📝 كود الجلسة</label>
+                            <input type="text" id="quickSessionCode" placeholder="مثال: S001" list="sessionsList">
+                            <datalist id="sessionsList">
+                                ${sessions.map(s => `<option value="${escapeHtml(s.session_code)}">${escapeHtml(s.session_code)}</option>`).join('')}
+                            </datalist>
+                        </div>
+                        <div class="form-group">
+                            <label>👤 كود الموظف</label>
+                            <input type="text" id="quickEmployeeId" placeholder="مثال: 123" list="employeesList">
+                            <datalist id="employeesList">
+                                ${employeesList.map(emp => `<option value="${emp.id}">${emp.id} - ${emp.fullName || ''}</option>`).join('')}
+                            </datalist>
+                        </div>
+                        <div class="form-group">
+                            <label>📌 الحالة</label>
+                            <select id="quickStatus">
+                                <option value="Completed">✅ مكتمل</option>
+                                <option value="Pending">⏳ قيد الانتظار</option>
+                                <option value="Failed">❌ راسب</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>⭐ الدرجة (اختياري)</label>
+                            <input type="number" id="quickScore" step="0.1" placeholder="0-100">
+                        </div>
+                        <button onclick="window.quickAddEnrollment()">➕ تسجيل</button>
+                    </div>
+                </div>
+                
+                <div class="quick-enroll-card">
+                    <h3>📋 تسجيل متعدد (دفعة واحدة)</h3>
+                    <div class="quick-enroll-form">
+                        <div class="form-group">
+                            <label>📝 كود الجلسة</label>
+                            <select id="batchSessionCode">
+                                <option value="">اختر الجلسة</option>
+                                ${sessions.map(s => `<option value="${escapeHtml(s.session_code)}">${escapeHtml(s.session_code)}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>📌 الحالة</label>
+                            <select id="batchStatus">
+                                <option value="Completed">✅ مكتمل</option>
+                                <option value="Pending">⏳ قيد الانتظار</option>
+                                <option value="Failed">❌ راسب</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="batch-input-area">
+                        <label>📝 أكواد الموظفين (كل كود في سطر أو مفصول بفاصلة)</label>
+                        <textarea id="batchEmployeeIds" rows="3" placeholder="مثال:&#10;123&#10;456&#10;789"></textarea>
+                        <button onclick="window.batchAddEnrollments()">📥 تسجيل الجميع</button>
+                    </div>
                 </div>
                 
                 <div class="action-bar">
