@@ -514,34 +514,33 @@
     <div id="app">⏳ جاري التحميل...</div>
 
     <script>
-        // ========== Firebase Configuration ==========
-        const firebaseConfig = {
-            apiKey: "AIzaSyA_P5crHXs4XvZVl73n6ikNodLTpsw25mk",
-            authDomain: "training-2a75b.firebaseapp.com",
-            projectId: "training-2a75b",
-            storageBucket: "training-2a75b.firebasestorage.app",
-            messagingSenderId: "849904887764",
-            appId: "1:849904887764:web:b012d60c77b1851c169841"
-        };
-// 1. التأكد من إنشاء التطبيق
+// ========== Firebase Configuration ==========
+const firebaseConfig = {
+    apiKey: "AIzaSyA_P5crHXs4XvZVl73n6ikNodLTpsw25mk",
+    authDomain: "training-2a75b.firebaseapp.com",
+    projectId: "training-2a75b",
+    storageBucket: "training-2a75b.firebasestorage.app",
+    messagingSenderId: "849904887764",
+    appId: "1:849904887764:web:b012d60c77b1851c169841"
+};
+
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-// 2. تعريف الـ db (تأكد أن السطر ده قبل الـ settings)
-const db = firebase.firestore();
+const auth = firebase.auth();
+const db = firebase.firestore(); // تعريف الـ db مرة واحدة هنا
 
-// 3. ضبط إعدادات الكاش غير المحدود
+// تفعيل الكاش الأصلي تحت الـ db مباشرة وبدون تكرار تعريفه
 db.settings({ cacheSizeBytes: firebase.firestore.CACHE_SIZE_BYTES_UNLIMITED });
 
-// 4. تفعيل ميزة حفظ البيانات Offline
 db.enablePersistence()
     .then(() => {
         console.log("✅ تم تفعيل الكاش الأصلي بنجاح (Offline Persistence Enabled)");
     })
     .catch((err) => {
         if (err.code == 'failed-precondition') {
-            console.warn("⚠️ الكاش فشل لأنك فتحت الموقع في أكثر من علامة تبويب (Tab)");
+            console.warn("⚠️ الكاش فشل لأنك فتحت الموقع في أكثر من علامة تبويب (Tab) في نفس الوقت");
         } else if (err.code == 'unimplemented') {
             console.error("❌ المتصفح الحالي لا يدعم ميزة الكاش الأصلي");
         }
