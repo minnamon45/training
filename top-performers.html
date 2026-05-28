@@ -1139,18 +1139,21 @@ db.enablePersistence()
                     }
                 }
             },
-            scales: { 
-                y: { 
-                    beginAtZero: true, 
-                    title: { display: true, text: 'العدد', font: { weight: 'bold', size: 11 } },
-                    ticks: { stepSize: 1, font: { size: 10 } }
-                },
-                x: { 
-                    ticks: { font: { size: 10 } },
-                    grid: { offset: true }
+scales: { 
+            y: { 
+                beginAtZero: true, 
+                title: { display: true, text: 'العدد', font: { weight: 'bold', size: 11 } },
+                ticks: { 
+                    autoSkip: true,      // تخطي التيكس تلقائياً لو الأرقام كبرت
+                    maxTicksLimit: 10,   // أقصى عدد خطوط تترسم على المحور الرأسي هو 10
+                    font: { size: 10 } 
                 }
+            },
+            x: { 
+                ticks: { font: { size: 10 } },
+                grid: { offset: true }
             }
-        };
+        }
 
         const chartOptionsWithLabelsHours = {
             ...chartOptionsWithLabels,
