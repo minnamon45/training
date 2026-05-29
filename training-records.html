@@ -33,7 +33,6 @@
         }
         .nav-links .home { background: #2b7a4b; color: white; }
         .nav-links .logout { background: #e53e3e; color: white; }
-        .nav-links .admin { background: #9f7aea; color: white; }
         
         .container { max-width: 1200px; margin: 1rem auto; padding: 0 1rem; }
         
@@ -154,37 +153,38 @@
             font-size: 0.7rem;
         }
         
-        .quick-enroll-card {
+        /* كروت التسجيل */
+        .enrollment-card {
             background: linear-gradient(135deg, #1e3a5f, #2b7a4b);
             border-radius: 1rem;
             padding: 1rem;
             margin-bottom: 1.5rem;
             color: white;
         }
-        .quick-enroll-card h3 {
+        .enrollment-card h3 {
             font-size: 0.9rem;
             margin-bottom: 0.8rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
-        .quick-enroll-form {
+        .enrollment-form {
             display: flex;
             flex-wrap: wrap;
             gap: 0.8rem;
             align-items: flex-end;
         }
-        .quick-enroll-form .form-group {
+        .enrollment-form .form-group {
             flex: 1;
             min-width: 150px;
         }
-        .quick-enroll-form .form-group label {
+        .enrollment-form .form-group label {
             font-size: 0.7rem;
             opacity: 0.8;
             display: block;
             margin-bottom: 0.2rem;
         }
-        .quick-enroll-form input, .quick-enroll-form select {
+        .enrollment-form input, .enrollment-form select {
             width: 100%;
             padding: 0.5rem;
             border: none;
@@ -193,13 +193,13 @@
             background: white;
             color: #1a202c;
         }
-        .quick-enroll-form button {
+        .enrollment-form button {
             margin: 0;
             padding: 0.5rem 1rem;
             background: #ed8936;
             min-width: 100px;
         }
-        .quick-enroll-form button:hover { background: #dd6b20; }
+        .enrollment-form button:hover { background: #dd6b20; }
         .batch-input-area {
             background: rgba(255,255,255,0.15);
             border-radius: 0.8rem;
@@ -219,6 +219,55 @@
             background: #4299e1;
             margin-top: 0.5rem;
         }
+        
+        .delete-enroll-card {
+            background: linear-gradient(135deg, #7b341e, #e53e3e);
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+        .delete-enroll-card h3 {
+            font-size: 0.9rem;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .delete-enroll-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            align-items: flex-end;
+        }
+        .delete-enroll-form .form-group {
+            flex: 1;
+            min-width: 180px;
+        }
+        .delete-enroll-form .form-group label {
+            font-size: 0.7rem;
+            opacity: 0.8;
+            display: block;
+            margin-bottom: 0.2rem;
+        }
+        .delete-enroll-form input {
+            width: 100%;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 0.8rem;
+            font-size: 0.8rem;
+            background: white;
+            color: #1a202c;
+        }
+        .delete-enroll-form button {
+            margin: 0;
+            padding: 0.5rem 1rem;
+            background: #ffd700;
+            color: #7b341e;
+            min-width: 100px;
+            font-weight: bold;
+        }
+        .delete-enroll-form button:hover { background: #ffc107; }
         
         .empty-msg { text-align: center; padding: 2rem; color: #718096; }
         
@@ -240,7 +289,7 @@
             border-radius: 1rem;
             padding: 1.2rem;
             width: 90%;
-            max-width: 600px;
+            max-width: 500px;
             max-height: 90vh;
             overflow-y: auto;
         }
@@ -279,20 +328,14 @@
             border-radius: 1rem;
             padding: 0.8rem;
             border-right: 4px solid #2b7a4b;
-            transition: 0.2s;
-        }
-        .session-card:hover {
-            background: #e2e8f0;
-        }
-        .session-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 0.5rem;
-            margin-bottom: 0.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #cbd5e0;
+        }
+        .session-info {
+            flex: 1;
         }
         .session-code {
             background: #2b7a4b;
@@ -301,49 +344,35 @@
             border-radius: 2rem;
             font-size: 0.75rem;
             font-weight: bold;
+            display: inline-block;
+            margin-bottom: 0.5rem;
         }
-        .session-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 0.5rem;
-            font-size: 0.75rem;
-        }
-        .detail-item {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
+        .session-date {
+            font-size: 0.8rem;
             color: #4a5568;
+            display: block;
         }
-        .detail-item strong {
-            color: #1e3a5f;
-            min-width: 60px;
+        .session-time {
+            font-size: 0.7rem;
+            color: #718096;
+            display: block;
+            margin-top: 0.2rem;
         }
+        .session-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .session-actions button {
+            padding: 0.3rem 0.8rem;
+            font-size: 0.7rem;
+        }
+        
         .no-sessions {
             text-align: center;
             padding: 2rem;
             color: #718096;
             background: #f7fafc;
             border-radius: 1rem;
-        }
-        .debug-info {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            border-radius: 0.5rem;
-            padding: 0.5rem;
-            margin-top: 0.5rem;
-            font-size: 0.7rem;
-            color: #856404;
-            text-align: right;
-        }
-        
-        .time-input-group {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
-        .time-input-group .form-group {
-            flex: 1;
-            margin-bottom: 0;
         }
         
         .footer { text-align: center; padding: 1rem; color: #718096; font-size: 0.7rem; margin-top: 1rem; }
@@ -363,6 +392,7 @@
             margin: 0 auto;
         }
         .toast-msg.error { background: #e53e3e; }
+        .toast-msg.warning { background: #ed8936; }
         
         .cache-info {
             font-size: 0.7rem;
@@ -389,11 +419,12 @@
             .search-box { max-width: none; width: 100%; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .courses-grid { grid-template-columns: 1fr; }
-            .quick-enroll-form { flex-direction: column; }
-            .quick-enroll-form .form-group { width: 100%; }
-            .session-details { grid-template-columns: 1fr; }
+            .enrollment-form, .delete-enroll-form { flex-direction: column; }
+            .enrollment-form .form-group, .delete-enroll-form .form-group { width: 100%; }
             .action-buttons { width: 100%; }
             .action-buttons button { flex: 1; }
+            .session-card { flex-direction: column; text-align: center; }
+            .session-actions { justify-content: center; }
         }
     </style>
 </head>
@@ -403,16 +434,17 @@
     <script type="module">
         import { auth, db } from "./firebase.js";
         import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { collection, getDocs, doc, setDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { collection, getDocs, doc, setDoc, deleteDoc, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
         
         let currentUser = null;
-        let isAdmin = false;
         
-        let courses = [], sessions = [];
+        // بيانات التطبيق
+        let courses = [];
+        let sessions = [];
         let employeesList = [];
+        let enrollments = [];
         let searchTerm = "";
         
-        // ========== مفاتيح التخزين المحلي - متوافقة مع البيانات الموجودة ==========
         const STORAGE_KEYS = {
             EMPLOYEES: 'offjob_employees_v1',
             COURSES: 'offjob_courses_v1',
@@ -420,13 +452,78 @@
             LAST_UPDATE: 'offjob_last_update_v1'
         };
         
-        // ========== دوال التخزين ==========
+        // ========== دوال التحقق من التسجيل المسبق ==========
+        
+        /**
+         * التحقق من وجود تسجيل مسبق لنفس الموظف في نفس الجلسة
+         * @param {string} sessionCode - كود الجلسة
+         * @param {string} employeeId - كود الموظف
+         * @returns {Promise<boolean>} - true إذا كان موجود، false إذا غير موجود
+         */
+        async function checkExistingEnrollment(sessionCode, employeeId) {
+            try {
+                // التحقق أولاً من البيانات المحملة في الذاكرة
+                const existingInMemory = enrollments.find(e => 
+                    e.session_code === sessionCode && e.employeeId === employeeId
+                );
+                
+                if (existingInMemory) {
+                    console.log(`⚠️ تم العثور على تسجيل مسبق في الذاكرة: ${employeeId} في الجلسة ${sessionCode}`);
+                    return true;
+                }
+                
+                // التحقق من Firebase للتأكد
+                const q = query(
+                    collection(db, "offjob_enrollments"),
+                    where("session_code", "==", sessionCode),
+                    where("employeeId", "==", employeeId)
+                );
+                
+                const querySnapshot = await getDocs(q);
+                const exists = !querySnapshot.empty;
+                
+                if (exists) {
+                    console.log(`⚠️ تم العثور على تسجيل مسبق في Firebase: ${employeeId} في الجلسة ${sessionCode}`);
+                    // إضافة التسجيل الموجود إلى مصفوفة enrollments للتحديث
+                    querySnapshot.forEach(doc => {
+                        enrollments.push({ id: doc.id, ...doc.data() });
+                    });
+                }
+                
+                return exists;
+            } catch (error) {
+                console.error("خطأ في التحقق من التسجيل المسبق:", error);
+                return false;
+            }
+        }
+        
+        /**
+         * التحقق من مجموعة من الموظفين للتسجيل في جلسة معينة
+         * @param {string} sessionCode - كود الجلسة
+         * @param {string[]} employeeIds - قائمة أكواد الموظفين
+         * @returns {Promise<{existing: Array, new: Array}>} - قائمة الموظفين المسجلين مسبقاً والجدد
+         */
+        async function checkMultipleEnrollments(sessionCode, employeeIds) {
+            const existingEmployees = [];
+            const newEmployees = [];
+            
+            for (const empId of employeeIds) {
+                const exists = await checkExistingEnrollment(sessionCode, empId);
+                if (exists) {
+                    existingEmployees.push(empId);
+                } else {
+                    newEmployees.push(empId);
+                }
+            }
+            
+            return { existing: existingEmployees, new: newEmployees };
+        }
+        
         function saveToLocalStorage(key, data) {
             try {
                 localStorage.setItem(key, JSON.stringify(data));
-                console.log(`💾 تم حفظ ${key}: ${Array.isArray(data) ? data.length : 'object'}`);
             } catch(e) {
-                console.error(`❌ فشل حفظ ${key}:`, e);
+                console.error(`فشل حفظ ${key}:`, e);
             }
         }
         
@@ -435,214 +532,296 @@
                 const data = localStorage.getItem(key);
                 if (!data) return null;
                 const parsed = JSON.parse(data);
-                console.log(`📖 قراءة ${key}: ${Array.isArray(parsed) ? parsed.length + ' عناصر' : 'object'}`);
-                return parsed;
+                if (Array.isArray(parsed)) return parsed;
+                return [];
             } catch(e) {
-                console.error(`❌ فشل قراءة ${key}:`, e);
-                return null;
-            }
-        }
-        
-        function hasValidCache() {
-            try {
-                const coursesData = loadFromLocalStorage(STORAGE_KEYS.COURSES);
-                const sessionsData = loadFromLocalStorage(STORAGE_KEYS.SESSIONS);
-                
-                const hasCourses = coursesData && Array.isArray(coursesData) && coursesData.length > 0;
-                const hasSessions = sessionsData && Array.isArray(sessionsData);
-                
-                if (hasCourses && hasSessions) {
-                    console.log('✅ جميع البيانات موجودة في الكاش');
-                    return true;
-                }
-                console.log('⚠️ البيانات غير موجودة في الكاش');
-                return false;
-            } catch(e) {
-                console.error('خطأ في التحقق من الكاش:', e);
-                return false;
+                return [];
             }
         }
         
         function updateCacheInfo() {
             const cacheInfo = document.getElementById('cacheInfo');
             if (!cacheInfo) return;
-            const hasCache = hasValidCache();
             const lastUpdate = localStorage.getItem(STORAGE_KEYS.LAST_UPDATE);
-            if (hasCache && lastUpdate) {
+            if (lastUpdate) {
                 const date = new Date(parseInt(lastUpdate));
-                cacheInfo.innerHTML = `📦 <strong>Off Job - قراءة من الكاش</strong> - آخر تحديث: ${date.toLocaleString('ar-EG')} &nbsp;|&nbsp; <button class="refresh-btn" onclick="window.forceRefreshData()">🔄 تحديث يدوي</button>`;
+                cacheInfo.innerHTML = `📦 آخر تحديث: ${date.toLocaleString('ar-EG')} &nbsp;|&nbsp; <button class="refresh-btn" onclick="window.forceRefreshData()">🔄 تحديث من Firebase</button>`;
             } else {
-                cacheInfo.innerHTML = `☁️ <strong>Off Job - تحميل من Firebase</strong> &nbsp;|&nbsp; <button class="refresh-btn" onclick="window.forceRefreshData()">🔄 تحديث يدوي</button>`;
+                cacheInfo.innerHTML = `<button class="refresh-btn" onclick="window.forceRefreshData()">🔄 تحميل البيانات من Firebase</button>`;
             }
         }
         
-        async function loadEmployees(forceRefresh = false) {
-            if (!forceRefresh) {
-                const cached = loadFromLocalStorage(STORAGE_KEYS.EMPLOYEES);
-                if (cached) { 
-                    employeesList = cached; 
-                    return; 
-                }
-            }
-            const snapshot = await getDocs(collection(db, "employees"));
-            employeesList = [];
-            snapshot.forEach(doc => {
-                const emp = { id: doc.id, ...doc.data() };
-                if (emp.status !== 'Left') employeesList.push(emp);
-            });
-            saveToLocalStorage(STORAGE_KEYS.EMPLOYEES, employeesList);
-        }
-        
-        async function loadData(forceRefresh = false) {
-            if (!forceRefresh) {
-                const cachedCourses = loadFromLocalStorage(STORAGE_KEYS.COURSES);
-                const cachedSessions = loadFromLocalStorage(STORAGE_KEYS.SESSIONS);
-                if (cachedCourses && cachedSessions && cachedCourses.length > 0) {
-                    courses = cachedCourses;
-                    sessions = cachedSessions;
-                    console.log('✅ تحميل من الكاش:', { coursesCount: courses.length, sessionsCount: sessions.length });
-                    return;
-                }
-            }
+        window.forceRefreshData = async () => {
+            showToast("🔄 جاري تحديث البيانات...");
             
-            console.log('📡 تحميل من Firebase...');
-            const [coursesSnap, sessionsSnap] = await Promise.all([
-                getDocs(collection(db, "offjob_courses")),
-                getDocs(collection(db, "offjob_sessions"))
-            ]);
-            courses = coursesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-            sessions = sessionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-            console.log('✅ تحميل من Firebase:', { coursesCount: courses.length, sessionsCount: sessions.length });
-            saveToLocalStorage(STORAGE_KEYS.COURSES, courses);
-            saveToLocalStorage(STORAGE_KEYS.SESSIONS, sessions);
-        }
-        
-        async function forceRefreshData() {
-            showToast("🔄 جاري تحديث البيانات من Firebase...");
-            Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
-            await loadEmployees(true);
-            await loadData(true);
-            localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, Date.now().toString());
-            renderPage();
-            showToast("✅ تم تحديث البيانات بنجاح");
-        }
-        
-        async function refreshAfterMutation(type) {
-            if (type === 'course') {
-                const snapshot = await getDocs(collection(db, "offjob_courses"));
-                courses = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                saveToLocalStorage(STORAGE_KEYS.COURSES, courses);
-            } else if (type === 'session') {
-                const snapshot = await getDocs(collection(db, "offjob_sessions"));
-                sessions = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                saveToLocalStorage(STORAGE_KEYS.SESSIONS, sessions);
-            }
-            localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, Date.now().toString());
-        }
-        
-        async function saveItem(type, data) {
-            let collectionName = "";
-            let docId = data.id || Date.now().toString();
-            if (type === 'course') collectionName = "offjob_courses";
-            else if (type === 'session') collectionName = "offjob_sessions";
-            await setDoc(doc(db, collectionName, docId), { ...data, id: docId });
-            await refreshAfterMutation(type);
-            renderPage();
-            showToast('✅ تم الحفظ بنجاح');
-        }
-        
-        async function deleteItem(type, id) {
-            if (!confirm('⚠️ هل أنت متأكد من الحذف؟')) return;
-            let collectionName = "";
-            if (type === 'course') collectionName = "offjob_courses";
-            else if (type === 'session') collectionName = "offjob_sessions";
-            await deleteDoc(doc(db, collectionName, id));
-            await refreshAfterMutation(type);
-            renderPage();
-            showToast('🗑️ تم الحذف');
-        }
-        
-        // ========== تسجيل الموظفين في الجلسات ==========
-        async function quickAddEnrollment() {
-            const sessionCode = document.getElementById('quickSessionCode')?.value;
-            const employeeId = document.getElementById('quickEmployeeId')?.value;
-            const status = document.getElementById('quickStatus')?.value;
-            const score = document.getElementById('quickScore')?.value;
-            
-            if (!sessionCode || !employeeId) { 
-                showToast('❌ الرجاء إدخال كود الجلسة وكود الموظف', true); 
-                return; 
-            }
-            
-            const docId = `${employeeId}_${sessionCode}`;
             try {
-                await setDoc(doc(db, "offjob_enrollments", docId), {
-                    employee_id: employeeId, 
-                    session_code: sessionCode, 
-                    enrollment_status: status, 
-                    score: score ? parseFloat(score) : null, 
-                    id: docId
+                const [coursesSnap, sessionsSnap, employeesSnap, enrollmentsSnap] = await Promise.all([
+                    getDocs(collection(db, "offjob_courses")),
+                    getDocs(collection(db, "offjob_sessions")),
+                    getDocs(collection(db, "employees")),
+                    getDocs(collection(db, "offjob_enrollments"))
+                ]);
+                
+                courses = coursesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                sessions = sessionsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+                
+                employeesList = [];
+                employeesSnap.forEach(doc => {
+                    const emp = { id: doc.id, ...doc.data() };
+                    if (emp.status !== 'Left') employeesList.push(emp);
                 });
-                showToast(`✅ تم تسجيل الموظف ${employeeId} بنجاح`);
+                
+                enrollments = [];
+                enrollmentsSnap.forEach(doc => {
+                    enrollments.push({ id: doc.id, ...doc.data() });
+                });
+                
+                saveToLocalStorage(STORAGE_KEYS.COURSES, courses);
+                saveToLocalStorage(STORAGE_KEYS.SESSIONS, sessions);
+                saveToLocalStorage(STORAGE_KEYS.EMPLOYEES, employeesList);
+                localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, Date.now().toString());
+                
+                showToast("✅ تم تحديث البيانات بنجاح");
+                renderPage();
+                
+            } catch (error) {
+                console.error("خطأ:", error);
+                showToast("❌ فشل تحديث البيانات", true);
+            }
+        };
+        
+        function loadDataFromLocalStorage() {
+            const cachedCourses = loadFromLocalStorage(STORAGE_KEYS.COURSES);
+            const cachedSessions = loadFromLocalStorage(STORAGE_KEYS.SESSIONS);
+            const cachedEmployees = loadFromLocalStorage(STORAGE_KEYS.EMPLOYEES);
+            
+            courses = Array.isArray(cachedCourses) ? cachedCourses : [];
+            sessions = Array.isArray(cachedSessions) ? cachedSessions : [];
+            employeesList = Array.isArray(cachedEmployees) ? cachedEmployees : [];
+            enrollments = [];
+            
+            console.log(`📦 تحميل من localStorage: ${courses.length} كورس, ${sessions.length} جلسة, ${employeesList.length} موظف`);
+        }
+        
+        async function loadEnrollmentsIfNeeded() {
+            if (enrollments.length > 0) return;
+            try {
+                const snapshot = await getDocs(collection(db, "offjob_enrollments"));
+                enrollments = [];
+                snapshot.forEach(doc => {
+                    enrollments.push({ id: doc.id, ...doc.data() });
+                });
+            } catch (error) {
+                console.error("خطأ في تحميل التسجيلات:", error);
+            }
+        }
+        
+        // ========== دوال الكورسات ==========
+        async function saveCourse(data) {
+            const docId = data.id || Date.now().toString();
+            await setDoc(doc(db, "offjob_courses", docId), { ...data, id: docId });
+            
+            const existingIndex = courses.findIndex(c => c.id === docId);
+            if (existingIndex >= 0) {
+                courses[existingIndex] = { ...data, id: docId };
+            } else {
+                courses.push({ ...data, id: docId });
+            }
+            saveToLocalStorage(STORAGE_KEYS.COURSES, courses);
+            renderPage();
+            showToast('✅ تم حفظ الكورس بنجاح');
+        }
+        
+        async function deleteCourse(id) {
+            if (!confirm('⚠️ هل أنت متأكد من حذف هذا الكورس؟')) return;
+            await deleteDoc(doc(db, "offjob_courses", id));
+            courses = courses.filter(c => c.id !== id);
+            saveToLocalStorage(STORAGE_KEYS.COURSES, courses);
+            renderPage();
+            showToast('🗑️ تم حذف الكورس');
+        }
+        
+        // ========== دوال الجلسات ==========
+        async function saveSession(data) {
+            const docId = data.id || Date.now().toString();
+            await setDoc(doc(db, "offjob_sessions", docId), { ...data, id: docId });
+            
+            const existingIndex = sessions.findIndex(s => s.id === docId);
+            if (existingIndex >= 0) {
+                sessions[existingIndex] = { ...data, id: docId };
+            } else {
+                sessions.push({ ...data, id: docId });
+            }
+            saveToLocalStorage(STORAGE_KEYS.SESSIONS, sessions);
+            renderPage();
+            showToast('✅ تم حفظ الجلسة بنجاح');
+        }
+        
+        async function deleteSession(id) {
+            if (!confirm('⚠️ هل أنت متأكد من حذف هذه الجلسة؟')) return;
+            await deleteDoc(doc(db, "offjob_sessions", id));
+            sessions = sessions.filter(s => s.id !== id);
+            saveToLocalStorage(STORAGE_KEYS.SESSIONS, sessions);
+            renderPage();
+            showToast('🗑️ تم حذف الجلسة');
+        }
+        
+        // ========== دوال التسجيل مع التحقق من التكرار ==========
+        
+        window.quickAddEnrollment = async () => {
+            if (!currentUser) {
+                showToast('⚠️ يرجى تسجيل الدخول أولاً', true);
+                return;
+            }
+            
+            const sessionCode = document.getElementById('quickSessionCode').value.trim();
+            const empId = document.getElementById('quickEmployeeId').value.trim();
+            const status = document.getElementById('quickStatus').value;
+
+            if (!sessionCode || !empId) { 
+                showToast('⚠️ يرجى إدخال كود الجلسة وكود الموظف', true); 
+                return; 
+            }
+            
+            await loadEnrollmentsIfNeeded();
+            
+            // ✅ التحقق من عدم وجود تسجيل مسبق
+            const exists = await checkExistingEnrollment(sessionCode, empId);
+            
+            if (exists) {
+                showToast(`⚠️ الموظف ${empId} مسجل بالفعل في هذه الجلسة! لا يمكن التسجيل مرتين`, true);
                 document.getElementById('quickEmployeeId').value = '';
-                document.getElementById('quickScore').value = '';
-            } catch (error) { 
-                showToast('❌ فشل التسجيل', true); 
+                return;
             }
-        }
+
+            try {
+                document.getElementById('quickEmployeeId').value = '';
+                const newEnrollment = { 
+                    employeeId: empId, 
+                    session_code: sessionCode, 
+                    status: status, 
+                    timestamp: Date.now() 
+                };
+                
+                const docRef = await addDoc(collection(db, "offjob_enrollments"), newEnrollment);
+                enrollments.push({ id: docRef.id, ...newEnrollment });
+                showToast(`✅ تم تسجيل الموظف ${empId} بنجاح`);
+            } catch (e) {
+                console.error("خطأ:", e);
+                showToast('❌ فشل تسجيل الموظف', true);
+            }
+        };
         
-        async function batchAddEnrollments() {
-            const sessionCode = document.getElementById('batchSessionCode')?.value;
-            const employeeIdsText = document.getElementById('batchEmployeeIds')?.value;
-            const status = document.getElementById('batchStatus')?.value;
-            
-            if (!sessionCode) { 
-                showToast('❌ الرجاء إدخال كود الجلسة', true); 
-                return; 
-            }
-            if (!employeeIdsText.trim()) { 
-                showToast('❌ الرجاء إدخال أكواد الموظفين', true); 
-                return; 
+        window.batchAddEnrollments = async () => {
+            if (!currentUser) {
+                showToast('⚠️ يرجى تسجيل الدخول أولاً', true);
+                return;
             }
             
-            const employeeIds = employeeIdsText.split(/\n|,|،/).map(id => id.trim()).filter(id => id);
+            const sessionCode = document.getElementById('batchSessionCode').value;
+            const status = document.getElementById('batchStatus').value;
+            const rawInput = document.getElementById('batchEmployeeIds').value;
+
+            if (!sessionCode) { showToast('⚠️ يرجى اختيار الجلسة أولاً', true); return; }
+            
+            const employeeIds = rawInput.split(/[\n,]+/).map(id => id.trim()).filter(id => id.length > 0);
+            if (employeeIds.length === 0) { showToast('⚠️ يرجى إدخال أكواد الموظفين', true); return; }
+
+            showToast(`⏳ جاري التحقق من تسجيلات ${employeeIds.length} موظف...`);
+            
+            await loadEnrollmentsIfNeeded();
+            
+            // ✅ التحقق من الموظفين المسجلين مسبقاً
+            const { existing, new: newEmployees } = await checkMultipleEnrollments(sessionCode, employeeIds);
+            
+            if (existing.length > 0) {
+                showToast(`⚠️ تم استبعاد ${existing.length} موظف مسجل مسبقاً: ${existing.join(', ')}`, true);
+            }
+            
+            if (newEmployees.length === 0) {
+                showToast('⚠️ جميع الموظفين مسجلين مسبقاً في هذه الجلسة!', true);
+                return;
+            }
+            
+            showToast(`⏳ جاري تسجيل ${newEmployees.length} موظف جديد...`);
+            
             let successCount = 0;
+            let failCount = 0;
             
-            for (const empId of employeeIds) {
-                if (!empId) continue;
-                const docId = `${empId}_${sessionCode}`;
-                try {
-                    await setDoc(doc(db, "offjob_enrollments", docId), {
-                        employee_id: empId, 
-                        session_code: sessionCode, 
-                        enrollment_status: status, 
-                        score: null, 
-                        id: docId
-                    });
-                    successCount++;
-                } catch (error) {}
+            try {
+                for (const empId of newEmployees) {
+                    try {
+                        const newEnrollment = {
+                            employeeId: empId,
+                            session_code: sessionCode,
+                            status: status,
+                            timestamp: Date.now()
+                        };
+                        
+                        const docRef = await addDoc(collection(db, "offjob_enrollments"), newEnrollment);
+                        enrollments.push({ id: docRef.id, ...newEnrollment });
+                        successCount++;
+                    } catch (err) {
+                        console.error(`فشل تسجيل ${empId}:`, err);
+                        failCount++;
+                    }
+                }
+                
+                document.getElementById('batchEmployeeIds').value = '';
+                
+                let message = `✅ تم تسجيل ${successCount} موظف بنجاح!`;
+                if (failCount > 0) message += ` ❌ فشل تسجيل ${failCount} موظف`;
+                if (existing.length > 0) message += ` ⚠️ تم استبعاد ${existing.length} مسجل مسبقاً`;
+                showToast(message);
+                
+            } catch (error) {
+                console.error("خطأ:", error);
+                showToast('❌ حدث خطأ أثناء التسجيل الجماعي', true);
             }
-            showToast(`✅ تم تسجيل ${successCount} موظف بنجاح`);
-            document.getElementById('batchEmployeeIds').value = '';
-        }
+        };
         
-        function getFilteredCourses() {
-            if (!searchTerm || searchTerm === '') {
-                console.log('📋 عرض جميع الكورسات (' + courses.length + ')');
-                return courses;
+        window.deleteEnrollmentByCode = async () => {
+            if (!currentUser) {
+                showToast('⚠️ يرجى تسجيل الدخول أولاً', true);
+                return;
             }
-            const term = searchTerm.toLowerCase();
-            const filtered = courses.filter(c => {
-                const courseCode = c.course_code ? String(c.course_code).toLowerCase() : '';
-                const courseName = c.course_name ? String(c.course_name).toLowerCase() : '';
-                return courseCode.includes(term) || courseName.includes(term);
-            });
-            console.log('🔍 نتيجة البحث عن "' + searchTerm + '": ' + filtered.length + ' كورس');
-            return filtered;
-        }
+            
+            const sessionCode = document.getElementById('deleteSessionCode').value.trim();
+            const employeeId = document.getElementById('deleteEmployeeId').value.trim();
+            
+            if (!sessionCode || !employeeId) {
+                showToast('⚠️ الرجاء إدخال كود الجلسة وكود الموظف', true);
+                return;
+            }
+            
+            await loadEnrollmentsIfNeeded();
+            
+            const enrollmentToDelete = enrollments.find(e => 
+                e.session_code === sessionCode && e.employeeId === employeeId
+            );
+            
+            if (!enrollmentToDelete) {
+                showToast('❌ لم يتم العثور على تسجيل بهذه البيانات', true);
+                return;
+            }
+            
+            if (!confirm(`⚠️ هل أنت متأكد من إلغاء تسجيل الموظف ${employeeId} من الجلسة ${sessionCode}؟`)) return;
+            
+            try {
+                await deleteDoc(doc(db, "offjob_enrollments", enrollmentToDelete.id));
+                enrollments = enrollments.filter(e => e.id !== enrollmentToDelete.id);
+                document.getElementById('deleteSessionCode').value = '';
+                document.getElementById('deleteEmployeeId').value = '';
+                showToast('✅ تم إلغاء تسجيل الموظف بنجاح');
+            } catch (error) {
+                console.error("خطأ:", error);
+                showToast('❌ فشل في إتمام عملية الحذف', true);
+            }
+        };
         
+        // ========== عرض الجلسات ==========
         function showCourseSessions(courseCode, courseName) {
-            console.log('🔍 عرض الجلسات للكورس:', courseCode);
+            if (!Array.isArray(sessions)) sessions = [];
             
             const relatedSessions = sessions.filter(s => {
                 const sessionCourse = s.course_code ? String(s.course_code).trim() : '';
@@ -650,38 +829,70 @@
                 return sessionCourse === targetCourse;
             });
             
-            console.log('✅ الجلسات المرتبطة:', relatedSessions.length);
+            // ترتيب الجلسات من الأحدث للأقدم
+            relatedSessions.sort((a, b) => {
+                const dateA = a.session_date ? new Date(a.session_date) : 0;
+                const dateB = b.session_date ? new Date(b.session_date) : 0;
+                return dateB - dateA;
+            });
+            
+            let sessionsHtml = '';
+            
+            if (relatedSessions.length === 0) {
+                sessionsHtml = `<div class="no-sessions">📭 لا توجد جلسات مسجلة لهذا الكورس حتى الآن</div>`;
+            } else {
+                sessionsHtml = `<div class="sessions-list">`;
+                relatedSessions.forEach(session => {
+                    const formattedDate = formatDate(session.session_date);
+                    let timeText = '';
+                    if (session.start_time && session.end_time) {
+                        const startFormatted = formatTime(session.start_time);
+                        const endFormatted = formatTime(session.end_time);
+                        if (startFormatted && endFormatted) {
+                            timeText = `🕐 ${startFormatted} - ${endFormatted}`;
+                        }
+                    }
+                    
+                    sessionsHtml += `
+                        <div class="session-card">
+                            <div class="session-info">
+                                <span class="session-code">🎯 ${escapeHtml(String(session.session_code))}</span>
+                                <span class="session-date">📅 ${formattedDate}</span>
+                                ${timeText ? `<span class="session-time">${timeText}</span>` : ''}
+                            </div>
+                            <div class="session-actions">
+                                <button onclick='window.deleteSession("${session.id}")' style="background:#e53e3e;">🗑️ حذف</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                sessionsHtml += `</div>`;
+            }
             
             const modal = document.getElementById('sessionsModal');
             document.getElementById('sessionsModalTitle').innerHTML = `📚 جلسات كورس: ${escapeHtml(String(courseCode))} - ${escapeHtml(courseName)}`;
-            
-            if (relatedSessions.length === 0) {
-                document.getElementById('sessionsModalContent').innerHTML = `<div class="no-sessions">📭 لا توجد جلسات مسجلة لهذا الكورس حتى الآن</div>`;
-            } else {
-                let html = `<div class="sessions-list">`;
-                relatedSessions.forEach(session => {
-                    html += `<div class="session-card">
-                        <div class="session-header">
-                            <span class="session-code">🎯 ${escapeHtml(String(session.session_code))}</span>
-                        </div>
-                        <div class="session-details">
-                            <div class="detail-item"><strong>📅 التاريخ:</strong> ${formatDate(session.session_date) || 'غير محدد'}</div>
-                            <div class="detail-item"><strong>🕐 الوقت:</strong> ${formatTime(session.start_time) || '-'} - ${formatTime(session.end_time) || '-'}</div>
-                            <div class="detail-item"><strong>👨‍🏫 المدرب:</strong> ${escapeHtml(session.trainer_name) || 'غير محدد'}</div>
-                        </div>
-                    </div>`;
-                });
-                html += `</div>`;
-                document.getElementById('sessionsModalContent').innerHTML = html;
-            }
+            document.getElementById('sessionsModalContent').innerHTML = sessionsHtml;
             modal.style.display = 'flex';
+        }
+        
+        function getFilteredCourses() {
+            if (!Array.isArray(courses)) courses = [];
+            if (!searchTerm || searchTerm === '') return courses;
+            const term = searchTerm.toLowerCase();
+            return courses.filter(c => {
+                const courseCode = c.course_code ? String(c.course_code).toLowerCase() : '';
+                const courseName = c.course_name ? String(c.course_name).toLowerCase() : '';
+                return courseCode.includes(term) || courseName.includes(term);
+            });
         }
         
         function renderCoursesGrid() {
             const filteredCourses = getFilteredCourses();
-            if (filteredCourses.length === 0) {
+            
+            if (!filteredCourses || filteredCourses.length === 0) {
                 return `<div class="empty-msg">📭 لا توجد كورسات ${searchTerm ? 'مطابقة للبحث "' + escapeHtml(searchTerm) + '"' : ''}</div>`;
             }
+            
             let html = `<div class="courses-grid">`;
             filteredCourses.forEach(course => {
                 const sessionsCount = sessions.filter(s => {
@@ -702,12 +913,12 @@
                         <div class="course-name">${escapeHtml(course.course_name)}</div>
                         <div class="course-details">
                             <span>📂 ${escapeHtml(course.category || 'عام')}</span>
-                            <span>⏱️ ${course.duration_hours || 0} ساعة</span>
+                            ${course.duration_hours ? `<span>⏱️ ${course.duration_hours} ساعة</span>` : ''}
                         </div>
                         <div class="course-actions">
                             <button class="view-sessions-btn" data-code="${escapeHtml(safeCode)}" data-name="${escapeHtml(safeName)}" style="background:#4299e1;">📋 عرض الجلسات (${sessionsCount})</button>
                             <button onclick='window.openCourseModal(${JSON.stringify(course).replace(/'/g, "&#39;")})' style="background:#ed8936;">✏️ تعديل</button>
-                            <button onclick='window.deleteItem("course", "${course.id}")' style="background:#e53e3e;">🗑️ حذف</button>
+                            <button onclick='window.deleteCourse("${course.id}")' style="background:#e53e3e;">🗑️ حذف</button>
                         </div>
                     </div>
                 </div>`;
@@ -721,7 +932,7 @@
             document.getElementById('courseCode').value = item?.course_code || '';
             document.getElementById('courseName').value = item?.course_name || '';
             document.getElementById('courseCategory').value = item?.category || '';
-            document.getElementById('courseHours').value = item?.duration_hours || '';
+            document.getElementById('courseDuration').value = item?.duration_hours || '';
             document.getElementById('courseId').value = item?.id || '';
             document.getElementById('courseModal').style.display = 'flex';
         };
@@ -729,11 +940,18 @@
         window.openSessionModal = (item = null) => {
             document.getElementById('sessionModalTitle').innerText = item ? '✏️ تعديل جلسة' : '➕ إضافة جلسة جديدة';
             document.getElementById('sessionCode').value = item?.session_code || '';
-            document.getElementById('sessionDate').value = formatDate(item?.session_date) || '';
-            document.getElementById('sessionStartTime').value = formatTime(item?.start_time) || '';
-            document.getElementById('sessionEndTime').value = formatTime(item?.end_time) || '';
-            document.getElementById('sessionTrainer').value = item?.trainer_name || '';
+            document.getElementById('sessionCourseCode').value = item?.course_code || '';
+            
+            let formattedDate = '';
+            if (item?.session_date) {
+                formattedDate = formatDateForInput(item.session_date);
+            }
+            document.getElementById('sessionDate').value = formattedDate;
+            
+            document.getElementById('sessionStartTime').value = formatTimeForInput(item?.start_time);
+            document.getElementById('sessionEndTime').value = formatTimeForInput(item?.end_time);
             document.getElementById('sessionId').value = item?.id || '';
+            
             const courseSelect = document.getElementById('sessionCourseCode');
             if (courseSelect) {
                 const currentValue = item?.course_code || '';
@@ -748,10 +966,10 @@
                 course_code: document.getElementById('courseCode').value,
                 course_name: document.getElementById('courseName').value,
                 category: document.getElementById('courseCategory').value,
-                duration_hours: parseFloat(document.getElementById('courseHours').value) || 0
+                duration_hours: parseFloat(document.getElementById('courseDuration').value) || 0
             };
             if (!data.course_code || !data.course_name) { showToast('❌ الرجاء إدخال كود واسم الكورس', true); return; }
-            await saveItem('course', data);
+            await saveCourse(data);
             document.getElementById('courseModal').style.display = 'none';
         };
         
@@ -762,14 +980,15 @@
                 course_code: document.getElementById('sessionCourseCode').value,
                 session_date: document.getElementById('sessionDate').value,
                 start_time: document.getElementById('sessionStartTime').value,
-                end_time: document.getElementById('sessionEndTime').value,
-                trainer_name: document.getElementById('sessionTrainer').value
+                end_time: document.getElementById('sessionEndTime').value
             };
             if (!data.session_code || !data.course_code) { showToast('❌ الرجاء إدخال كود الجلسة وكود الكورس', true); return; }
-            await saveItem('session', data);
+            await saveSession(data);
             document.getElementById('sessionModal').style.display = 'none';
         };
         
+        window.deleteCourse = deleteCourse;
+        window.deleteSession = deleteSession;
         window.addCourse = () => window.openCourseModal();
         window.addSession = () => window.openSessionModal();
         
@@ -777,11 +996,8 @@
             const input = document.getElementById('searchInput'); 
             if (input) { 
                 searchTerm = input.value.trim(); 
-                console.log('🔍 بحث عن: "' + searchTerm + '"');
                 renderPage(); 
-                if (searchTerm) {
-                    showToast(`🔍 جاري البحث عن "${searchTerm}"...`);
-                }
+                if (searchTerm) showToast(`🔍 جاري البحث عن "${searchTerm}"...`);
             } 
         };
         
@@ -797,18 +1013,13 @@
             if (input) { 
                 input.value = ''; 
                 searchTerm = ''; 
-                console.log('🧹 إلغاء البحث - عرض جميع الكورسات');
                 renderPage(); 
                 showToast('📚 تم إلغاء البحث وعرض جميع الكورسات');
             } 
         };
         
         window.showCourseSessions = showCourseSessions;
-        window.forceRefreshData = forceRefreshData;
-        window.deleteItem = deleteItem;
         window.closeModal = (id) => document.getElementById(id).style.display = 'none';
-        window.quickAddEnrollment = quickAddEnrollment;
-        window.batchAddEnrollments = batchAddEnrollments;
         
         function attachSessionButtonsHandlers() {
             document.querySelectorAll('.view-sessions-btn').forEach(btn => {
@@ -825,6 +1036,9 @@
         };
         
         function renderPage() {
+            if (!Array.isArray(courses)) courses = [];
+            if (!Array.isArray(sessions)) sessions = [];
+            
             const filteredCourses = getFilteredCourses();
             const totalCourses = filteredCourses.length;
             const totalSessions = sessions.length;
@@ -835,9 +1049,9 @@
                     <div class="stat-card"><div class="stat-number">${totalSessions}</div><div class="stat-label">🎯 الجلسات</div></div>
                 </div>
                 
-                <div class="quick-enroll-card">
+                <div class="enrollment-card">
                     <h3>⚡ تسجيل سريع لمتدرب</h3>
-                    <div class="quick-enroll-form">
+                    <div class="enrollment-form">
                         <div class="form-group">
                             <label>📝 كود الجلسة</label>
                             <input type="text" id="quickSessionCode" placeholder="مثال: S001" list="sessionsList">
@@ -860,17 +1074,13 @@
                                 <option value="Failed">❌ راسب</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label>⭐ الدرجة (اختياري)</label>
-                            <input type="number" id="quickScore" step="0.1" placeholder="0-100">
-                        </div>
                         <button onclick="window.quickAddEnrollment()">➕ تسجيل</button>
                     </div>
                 </div>
                 
-                <div class="quick-enroll-card">
+                <div class="enrollment-card">
                     <h3>📋 تسجيل متعدد (دفعة واحدة)</h3>
-                    <div class="quick-enroll-form">
+                    <div class="enrollment-form">
                         <div class="form-group">
                             <label>📝 كود الجلسة</label>
                             <select id="batchSessionCode">
@@ -891,6 +1101,27 @@
                         <label>📝 أكواد الموظفين (كل كود في سطر أو مفصول بفاصلة)</label>
                         <textarea id="batchEmployeeIds" rows="3" placeholder="مثال:&#10;123&#10;456&#10;789"></textarea>
                         <button onclick="window.batchAddEnrollments()">📥 تسجيل الجميع</button>
+                    </div>
+                </div>
+                
+                <div class="delete-enroll-card">
+                    <h3>🗑️ حذف تسجيل موظف من جلسة</h3>
+                    <div class="delete-enroll-form">
+                        <div class="form-group">
+                            <label>📝 كود الجلسة</label>
+                            <input type="text" id="deleteSessionCode" placeholder="مثال: S001" list="sessionsListDelete">
+                            <datalist id="sessionsListDelete">
+                                ${sessions.map(s => `<option value="${escapeHtml(String(s.session_code))}">${escapeHtml(String(s.session_code))}</option>`).join('')}
+                            </datalist>
+                        </div>
+                        <div class="form-group">
+                            <label>👤 كود الموظف</label>
+                            <input type="text" id="deleteEmployeeId" placeholder="مثال: 123" list="employeesListDelete">
+                            <datalist id="employeesListDelete">
+                                ${employeesList.map(emp => `<option value="${escapeHtml(emp.id)}">${escapeHtml(emp.id)} - ${escapeHtml(emp.fullName || '')}</option>`).join('')}
+                            </datalist>
+                        </div>
+                        <button onclick="window.deleteEnrollmentByCode()" style="background:#ffd700; color:#7b341e;">🗑️ حذف التسجيل</button>
                     </div>
                 </div>
                 
@@ -920,25 +1151,113 @@
             return div.innerHTML; 
         }
         
-        function formatDate(d) { 
-            if (!d) return ''; 
+        function formatDate(d) {
+            if (!d) return '📅 تاريخ غير محدد';
+            
             if (typeof d === 'number') { 
-                const date = new Date((d - 25569) * 86400000); 
-                return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`; 
-            } 
-            if (typeof d === 'string' && d.match(/^\d{4}-\d{2}-\d{2}/)) return d.split('T')[0]; 
-            return d; 
+                const date = new Date(d);
+                if (!isNaN(date.getTime()) && date.getFullYear() > 2000) {
+                    return `📅 ${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+                }
+                if (d > 40000 && d < 50000) {
+                    const excelDate = new Date((d - 25569) * 86400000);
+                    return `📅 ${excelDate.getFullYear()}-${String(excelDate.getMonth()+1).padStart(2,'0')}-${String(excelDate.getDate()).padStart(2,'0')}`;
+                }
+                return '📅 تاريخ غير محدد';
+            }
+            
+            if (typeof d === 'string') {
+                if (d.trim() === '') return '📅 تاريخ غير محدد';
+                const parsedDate = new Date(d);
+                if (!isNaN(parsedDate.getTime()) && parsedDate.getFullYear() > 2000) {
+                    return `📅 ${parsedDate.getFullYear()}-${String(parsedDate.getMonth()+1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}`;
+                }
+                if (d.match(/^\d{4}-\d{2}-\d{2}/)) {
+                    return `📅 ${d.split('T')[0]}`;
+                }
+                return `📅 ${d}`;
+            }
+            
+            if (d instanceof Date && !isNaN(d.getTime()) && d.getFullYear() > 2000) {
+                return `📅 ${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            }
+            
+            return '📅 تاريخ غير محدد';
         }
         
-        function formatTime(t) { 
-            if (!t) return ''; 
-            if (typeof t === 'number') { 
-                const totalSeconds = Math.round(t * 86400); 
-                const hours = Math.floor(totalSeconds / 3600); 
-                const minutes = Math.floor((totalSeconds % 3600) / 60); 
-                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`; 
-            } 
-            return t; 
+        function formatDateForInput(d) {
+            if (!d) return '';
+            
+            if (typeof d === 'string') {
+                const parsedDate = new Date(d);
+                if (!isNaN(parsedDate.getTime()) && parsedDate.getFullYear() > 1970) {
+                    return `${parsedDate.getFullYear()}-${String(parsedDate.getMonth()+1).padStart(2,'0')}-${String(parsedDate.getDate()).padStart(2,'0')}`;
+                }
+                if (d.includes('-') && d.length === 10) return d;
+                return '';
+            }
+            
+            if (typeof d === 'number') { 
+                const date = new Date(d);
+                if (!isNaN(date.getTime()) && date.getFullYear() > 1970) {
+                    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+                }
+                return '';
+            }
+            
+            if (d instanceof Date && !isNaN(d.getTime())) {
+                return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+            }
+            
+            return '';
+        }
+        
+        function formatTime(t) {
+            if (!t) return '';
+            
+            if (typeof t === 'string') {
+                if (t.includes(':')) {
+                    const parts = t.split(':');
+                    if (parts.length >= 2) {
+                        return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+                    }
+                }
+                return t;
+            }
+            
+            if (typeof t === 'number') {
+                const totalSeconds = Math.round(t * 86400);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                if (hours === 0 && minutes === 0) return '';
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            }
+            
+            return '';
+        }
+        
+        function formatTimeForInput(t) {
+            if (!t) return '';
+            
+            if (typeof t === 'string') {
+                if (t.includes(':')) {
+                    const parts = t.split(':');
+                    if (parts.length >= 2) {
+                        return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+                    }
+                }
+                return t;
+            }
+            
+            if (typeof t === 'number') {
+                const totalSeconds = Math.round(t * 86400);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                if (hours === 0 && minutes === 0) return '';
+                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            }
+            
+            return '';
         }
         
         function showToast(msg, isError = false) { 
@@ -949,29 +1268,10 @@
             setTimeout(() => toast.remove(), 3000); 
         }
         
-        async function checkAdminStatus(user) {
-            try {
-                const adminDoc = await getDocs(query(collection(db, "admins"), where("uid", "==", user.uid)));
-                isAdmin = !adminDoc.empty;
-                if (user.email === "admin@test.com") isAdmin = true;
-            } catch(e) { isAdmin = false; }
-            return isAdmin;
-        }
-        
         function logout() { signOut(auth).then(() => window.location.href = 'index.html'); }
         
-        async function loadPage() {
-            const hasCache = hasValidCache();
-            if (hasCache) {
-                employeesList = loadFromLocalStorage(STORAGE_KEYS.EMPLOYEES) || [];
-                courses = loadFromLocalStorage(STORAGE_KEYS.COURSES) || [];
-                sessions = loadFromLocalStorage(STORAGE_KEYS.SESSIONS) || [];
-                console.log('📦 تحميل من الكاش:', { courses: courses.length, sessions: sessions.length });
-            } else {
-                console.log('📡 تحميل من Firebase (أول مرة)');
-                await Promise.all([loadEmployees(true), loadData(true)]);
-                localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, Date.now().toString());
-            }
+        async function init() {
+            loadDataFromLocalStorage();
             
             document.getElementById('app').innerHTML = `
                 <div class="navbar">
@@ -986,23 +1286,92 @@
                     <div id="content"></div>
                 </div>
                 
-                <div id="courseModal" class="modal"><div class="modal-content"><h3 id="courseModalTitle">إضافة كورس</h3><input type="hidden" id="courseId"><div class="form-group"><label>كود الكورس *</label><input type="text" id="courseCode" placeholder="مثال: CS101"></div><div class="form-group"><label>اسم الكورس *</label><input type="text" id="courseName" placeholder="اسم الكورس"></div><div class="form-group"><label>التصنيف</label><input type="text" id="courseCategory" placeholder="مثال: برمجة"></div><div class="form-group"><label>عدد الساعات</label><input type="number" id="courseHours" step="0.5" placeholder="0"></div><div class="modal-buttons"><button onclick="window.saveCourse()">💾 حفظ</button><button onclick="window.closeModal('courseModal')">❌ إلغاء</button></div></div></div>
+                <!-- مودال إضافة كورس -->
+                <div id="courseModal" class="modal">
+                    <div class="modal-content">
+                        <h3 id="courseModalTitle">إضافة كورس</h3>
+                        <input type="hidden" id="courseId">
+                        <div class="form-group">
+                            <label>كود الكورس *</label>
+                            <input type="text" id="courseCode" placeholder="كود الكورس">
+                        </div>
+                        <div class="form-group">
+                            <label>اسم الكورس *</label>
+                            <input type="text" id="courseName" placeholder="اسم الكورس">
+                        </div>
+                        <div class="form-group">
+                            <label>التصنيف</label>
+                            <input type="text" id="courseCategory" placeholder="التصنيف">
+                        </div>
+                        <div class="form-group">
+                            <label>⏱️ مدة ساعات الكورس</label>
+                            <input type="number" id="courseDuration" step="0.5" placeholder="عدد الساعات">
+                        </div>
+                        <div class="modal-buttons">
+                            <button onclick="window.saveCourse()">💾 حفظ</button>
+                            <button onclick="window.closeModal('courseModal')">❌ إلغاء</button>
+                        </div>
+                    </div>
+                </div>
                 
-                <div id="sessionModal" class="modal"><div class="modal-content"><h3 id="sessionModalTitle">إضافة جلسة</h3><input type="hidden" id="sessionId"><div class="form-group"><label>كود الجلسة *</label><input type="text" id="sessionCode" placeholder="مثال: S001"></div><div class="form-group"><label>كود الكورس *</label><select id="sessionCourseCode"><option value="">اختر الكورس</option></select></div><div class="form-group"><label>التاريخ</label><input type="date" id="sessionDate"></div><div class="time-input-group"><div class="form-group"><label>وقت البداية</label><input type="time" id="sessionStartTime"></div><div class="form-group"><label>وقت النهاية</label><input type="time" id="sessionEndTime"></div></div><div class="form-group"><label>اسم المدرب</label><input type="text" id="sessionTrainer" placeholder="اسم المدرب"></div><div class="modal-buttons"><button onclick="window.saveSession()">💾 حفظ</button><button onclick="window.closeModal('sessionModal')">❌ إلغاء</button></div></div></div>
+                <!-- مودال إضافة جلسة -->
+                <div id="sessionModal" class="modal">
+                    <div class="modal-content">
+                        <h3 id="sessionModalTitle">إضافة جلسة</h3>
+                        <input type="hidden" id="sessionId">
+                        <div class="form-group">
+                            <label>كود الجلسة *</label>
+                            <input type="text" id="sessionCode" placeholder="كود الجلسة">
+                        </div>
+                        <div class="form-group">
+                            <label>كود الكورس *</label>
+                            <select id="sessionCourseCode">
+                                <option value="">اختر الكورس</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>التاريخ</label>
+                            <input type="date" id="sessionDate">
+                        </div>
+                        <div class="form-group">
+                            <label>🕐 وقت البداية (24 ساعة)</label>
+                            <input type="time" id="sessionStartTime" step="60">
+                        </div>
+                        <div class="form-group">
+                            <label>🕐 وقت النهاية (24 ساعة)</label>
+                            <input type="time" id="sessionEndTime" step="60">
+                        </div>
+                        <div class="modal-buttons">
+                            <button onclick="window.saveSession()">💾 حفظ</button>
+                            <button onclick="window.closeModal('sessionModal')">❌ إلغاء</button>
+                        </div>
+                    </div>
+                </div>
                 
-                <div id="sessionsModal" class="modal"><div class="modal-content"><h3 id="sessionsModalTitle">جلسات الكورس</h3><div id="sessionsModalContent"></div><div class="modal-buttons"><button onclick="window.closeModal('sessionsModal')">❌ إغلاق</button></div></div></div>
+                <div id="sessionsModal" class="modal">
+                    <div class="modal-content">
+                        <h3 id="sessionsModalTitle">جلسات الكورس</h3>
+                        <div id="sessionsModalContent"></div>
+                        <div class="modal-buttons">
+                            <button onclick="window.closeModal('sessionsModal')">❌ إغلاق</button>
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير - Off Job</p></div>
             `;
             renderPage();
             window.logout = logout;
+            
+            if (courses.length === 0) {
+                showToast("📌 لا توجد بيانات، اضغط على 'تحميل البيانات من Firebase'", false);
+            }
         }
         
         onAuthStateChanged(auth, async (user) => {
             if (!user) { window.location.href = 'login.html'; return; }
             currentUser = user;
-            await checkAdminStatus(user);
-            await loadPage();
+            await init();
         });
     </script>
 </body>
