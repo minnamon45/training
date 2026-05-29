@@ -111,20 +111,20 @@
             border-radius: 0.8rem;
             -webkit-overflow-scrolling: touch;
         }
-        .sections-table, .links-table, .users-table, .materials-table {
+        .sections-table, .links-table, .users-table, .materials-table, .employees-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.8rem;
             min-width: 500px;
         }
-        .sections-table th, .links-table th, .users-table th, .materials-table th {
+        .sections-table th, .links-table th, .users-table th, .materials-table th, .employees-table th {
             background: linear-gradient(135deg, #1e3a5f, #2b7a4b);
             color: white;
             padding: 8px 6px;
             text-align: center;
             font-size: 0.75rem;
         }
-        .sections-table td, .links-table td, .users-table td, .materials-table td {
+        .sections-table td, .links-table td, .users-table td, .materials-table td, .employees-table td {
             padding: 8px 6px;
             text-align: center;
             border-bottom: 1px solid #e2e8f0;
@@ -135,7 +135,7 @@
 
         /* ========== الأزرار ========== */
         .action-buttons { display: flex; gap: 0.3rem; flex-wrap: wrap; justify-content: center; }
-        .edit-btn, .delete-btn, .pin-btn {
+        .edit-btn, .delete-btn, .pin-btn, .danger-btn {
             padding: 0.2rem 0.6rem;
             border-radius: 1rem;
             font-size: 0.65rem;
@@ -146,6 +146,7 @@
         .edit-btn { background: #4299e1; }
         .delete-btn { background: #e53e3e; }
         .pin-btn { background: #ed8936; }
+        .danger-btn { background: #c53030; }
 
         /* ========== النوافذ المنبثقة ========== */
         .modal {
@@ -278,6 +279,15 @@
             border-radius: 1rem;
             text-align: center;
         }
+        .export-buttons-group, .delete-buttons-group {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .btn-warning { background: #ed8936; }
+        .btn-danger { background: #e53e3e; }
+        .btn-info { background: #4299e1; }
 
         /* ========== التجاوب ========== */
         @media (max-width: 768px) {
@@ -451,9 +461,15 @@
             
             let html = '<div class="table-wrapper"><table class="users-table"><thead><tr><th>#</th><th>البريد الإلكتروني</th><th>الدور</th><th>تاريخ الإنشاء</th><th>العمليات</th></tr></thead><tbody>';
             usersList.forEach((user, index) => {
-                html += `<tr><td style="width:35px;">${index+1}</span><td style="text-align:right;"><span class="user-avatar">${(user.email?.charAt(0)||'U').toUpperCase()}</span> ${escapeHtml(user.email||'-')}</span><td><span style="background:#e2e8f0; padding:0.15rem 0.6rem; border-radius:1rem;">${escapeHtml(user.role||'user')}</span></span><td>${user.createdAt ? new Date(user.createdAt).toLocaleDateString('ar-EG') : '-'}</span><td class="action-buttons"><button class="delete-btn" onclick="window.deleteUserAccount('${user.uid}', '${escapeHtml(user.email)}')">🗑️</button></span></tr>`;
+                html += `<tr>
+                    <td style="width:35px;">${index+1}</td>
+                    <td style="text-align:right;"><span class="user-avatar">${(user.email?.charAt(0)||'U').toUpperCase()}</span> ${escapeHtml(user.email||'-')}</td>
+                    <td><span style="background:#e2e8f0; padding:0.15rem 0.6rem; border-radius:1rem;">${escapeHtml(user.role||'user')}</span></td>
+                    <td>${user.createdAt ? new Date(user.createdAt).toLocaleDateString('ar-EG') : '-'}</td>
+                    <td class="action-buttons"><button class="delete-btn" onclick="window.deleteUserAccount('${user.uid}', '${escapeHtml(user.email)}')">🗑️</button></td>
+                </tr>`;
             });
-            html += '</tbody>}</div>';
+            html += '</tbody></table></div>';
             container.innerHTML = html;
         }
         
@@ -518,9 +534,16 @@
             
             let html = `<div class="table-wrapper"><table class="sections-table"><thead><tr><th>#</th><th>الأيقونة</th><th>اسم القسم</th><th>الوصف</th><th>الروابط</th><th>العمليات</th></tr></thead><tbody>`;
             currentData.sections.forEach((s, i) => {
-                html += `<tr><td style="width:35px;">${i+1}</span><td class="icon-cell">${s.icon||'📁'}</span><td class="name-cell">${escapeHtml(s.name)}</span><td class="desc-cell" title="${escapeHtml(s.description||'-')}">${escapeHtml(s.description||'-')}</span><td><span class="links-count">${s.links?.length||0}</span></span><td class="action-buttons"><button class="edit-btn" onclick="window.openEditSection(${s.id})">✏️</button><button class="delete-btn" onclick="window.deleteSection(${s.id})">🗑️</button></span></tr>`;
+                html += `<tr>
+                    <td style="width:35px;">${i+1}</td>
+                    <td class="icon-cell">${s.icon||'📁'}</td>
+                    <td class="name-cell">${escapeHtml(s.name)}</td>
+                    <td class="desc-cell" title="${escapeHtml(s.description||'-')}">${escapeHtml(s.description||'-')}</td>
+                    <td><span class="links-count">${s.links?.length||0}</span></td>
+                    <td class="action-buttons"><button class="edit-btn" onclick="window.openEditSection(${s.id})">✏️</button><button class="delete-btn" onclick="window.deleteSection(${s.id})">🗑️</button></td>
+                </tr>`;
             });
-            html += `</tbody>}</div>`;
+            html += `</tbody></table></div>`;
             container.innerHTML = html;
         }
         
@@ -547,11 +570,20 @@
                 return;
             }
             
-            let html = `<div class="table-wrapper"><table class="links-table"><thead><tr style="background: linear-gradient(135deg, #1e3a5f, #2b7a4b); color: white;"><th>#</th><th>القسم</th><th>العنوان</th><th>الرابط</th><th>النوع</th><th>👁️</th><th>📌</th><th>العمليات</th><tr></thead><tbody>`;
+            let html = `<div class="table-wrapper"><table class="links-table"><thead><tr><th>#</th><th>القسم</th><th>العنوان</th><th>الرابط</th><th>النوع</th><th>👁️</th><th>📌</th><th>العمليات</th></tr></thead><tbody>`;
             allLinks.forEach((link, index) => {
-                html += `<tr><td style="width:35px;">${index+1}</span><td><span style="background:#e2e8f0; padding:0.15rem 0.5rem; border-radius:1rem; font-size:0.65rem;">${link.sectionIcon} ${escapeHtml(link.sectionName)}</span></span><td style="text-align:right;">${escapeHtml(link.title)}</span><td style="direction:ltr; font-size:0.65rem;">${link.url ? link.url.substring(0,35)+'...' : '-'}</span><td><span style="background:${link.type==='internal'?'#bee3f8':'#fef5e7'}; padding:0.15rem 0.4rem; border-radius:1rem;">${link.type==='internal'?'داخلي':'خارجي'}</span></span><td>${link.views||0}</span><td>${link.pinned?'✅':'❌'}</span><td class="action-buttons"><button class="edit-btn" onclick="window.openEditLink(${link.sectionId},${link.id})">✏️</button><button class="pin-btn" onclick="window.togglePin(${link.sectionId},${link.id})">📌</button><button class="delete-btn" onclick="window.deleteLink(${link.sectionId},${link.id})">🗑️</button></span></tr>`;
+                html += `<tr>
+                    <td style="width:35px;">${index+1}</td>
+                    <td><span style="background:#e2e8f0; padding:0.15rem 0.5rem; border-radius:1rem; font-size:0.65rem;">${link.sectionIcon} ${escapeHtml(link.sectionName)}</span></td>
+                    <td style="text-align:right;">${escapeHtml(link.title)}</td>
+                    <td style="direction:ltr; font-size:0.65rem;">${link.url ? link.url.substring(0,35)+'...' : '-'}</td>
+                    <td><span style="background:${link.type==='internal'?'#bee3f8':'#fef5e7'}; padding:0.15rem 0.4rem; border-radius:1rem;">${link.type==='internal'?'داخلي':'خارجي'}</span></td>
+                    <td>${link.views||0}</td>
+                    <td>${link.pinned?'✅':'❌'}</td>
+                    <td class="action-buttons"><button class="edit-btn" onclick="window.openEditLink(${link.sectionId},${link.id})">✏️</button><button class="pin-btn" onclick="window.togglePin(${link.sectionId},${link.id})">📌</button><button class="delete-btn" onclick="window.deleteLink(${link.sectionId},${link.id})">🗑️</button></td>
+                </tr>`;
             });
-            html += `</tbody>}</div><div style="margin-top:0.8rem; text-align:center; font-size:0.65rem;">📊 إجمالي الروابط: ${allLinks.length}</div>`;
+            html += `</tbody></table></div><div style="margin-top:0.8rem; text-align:center; font-size:0.65rem;">📊 إجمالي الروابط: ${allLinks.length}</div>`;
             container.innerHTML = html;
         }
         
@@ -807,10 +839,182 @@
             
             let html = '<div class="table-wrapper"><table class="materials-table"><thead><tr><th>#</th><th>العنوان</th><th>التصنيف</th><th>النوع</th><th>الرابط</th><th>👁️</th><th>📥</th><th>العمليات</th></tr></thead><tbody>';
             trainingMaterials.forEach((m, i) => {
-                html += `<tr><td style="width:35px;">${i+1}</span><td style="text-align:right;">${escapeHtml(m.title)}</span></td><td>${escapeHtml(m.category||'-')}</span><td><span class="material-type-badge">${m.type||'pdf'}</span></span><td style="direction:ltr; font-size:0.6rem;">${m.fileUrl ? m.fileUrl.substring(0,30)+'...' : '-'}</span><td><span style="background:#bee3f8; padding:0.15rem 0.4rem; border-radius:1rem;">${m.views||0}</span><td><span style="background:#c6f6d5; padding:0.15rem 0.4rem; border-radius:1rem;">${m.downloads||0}</span></td><td class="action-buttons"><button class="edit-btn" onclick='window.openEditMaterialModal(${JSON.stringify(m).replace(/'/g, "&#39;")})'>✏️</button><button class="delete-btn" onclick="window.deleteMaterial('${m.id}')">🗑️</button></span></tr>`;
+                html += `<tr>
+                    <td style="width:35px;">${i+1}</td>
+                    <td style="text-align:right;">${escapeHtml(m.title)}</td>
+                    <td>${escapeHtml(m.category||'-')}</td>
+                    <td><span class="material-type-badge">${m.type||'pdf'}</span></td>
+                    <td style="direction:ltr; font-size:0.6rem;">${m.fileUrl ? m.fileUrl.substring(0,30)+'...' : '-'}</td>
+                    <td><span style="background:#bee3f8; padding:0.15rem 0.4rem; border-radius:1rem;">${m.views||0}</span></td>
+                    <td><span style="background:#c6f6d5; padding:0.15rem 0.4rem; border-radius:1rem;">${m.downloads||0}</span></td>
+                    <td class="action-buttons"><button class="edit-btn" onclick='window.openEditMaterialModal(${JSON.stringify(m).replace(/'/g, "&#39;")})'>✏️</button><button class="delete-btn" onclick="window.deleteMaterial('${m.id}')">🗑️</button></td>
+                </tr>`;
             });
             html += '</tbody>}</div>';
             container.innerHTML = html;
+        }
+        
+        // ========== دوال التصدير الجديدة ==========
+        
+        // تصدير الموظفين
+        async function exportEmployees() {
+            try {
+                showToast("📤 جاري تصدير بيانات الموظفين...");
+                const snapshot = await getDocs(collection(db, "employees"));
+                const employees = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    employees.push({
+                        "Employee ID": data.id || doc.id,
+                        "Full Name": data.fullName || "",
+                        "Department": data.department || "",
+                        "Position": data.position || "",
+                        "Level": data.level || "",
+                        "Hire Date": data.hireDate || "",
+                        "Status": data.status || "Active"
+                    });
+                });
+                
+                const ws = XLSX.utils.json_to_sheet(employees);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Employees");
+                XLSX.writeFile(wb, `employees_${new Date().toISOString().slice(0,19)}.xlsx`);
+                showToast(`✅ تم تصدير ${employees.length} موظف`);
+            } catch (error) {
+                showToast("❌ فشل تصدير الموظفين", true);
+                console.error(error);
+            }
+        }
+        
+        // تصدير بيانات التدريب (On Job أو Off Job)
+        async function exportTrainingData(type) {
+            const typeName = type === 'onjob' ? 'On Job' : 'Off Job';
+            try {
+                showToast(`📤 جاري تصدير تدريبات ${typeName}...`);
+                
+                // جلب الكورسات
+                const coursesSnap = await getDocs(collection(db, `${type}_courses`));
+                const courses = [];
+                coursesSnap.forEach(doc => {
+                    const data = doc.data();
+                    courses.push({
+                        "course_code": data.course_code,
+                        "course_name": data.course_name,
+                        "category": data.category || "",
+                        "duration_hours": data.duration_hours || 0
+                    });
+                });
+                
+                // جلب الجلسات
+                const sessionsSnap = await getDocs(collection(db, `${type}_sessions`));
+                const sessions = [];
+                sessionsSnap.forEach(doc => {
+                    const data = doc.data();
+                    sessions.push({
+                        "session_code": data.session_code,
+                        "course_code": data.course_code,
+                        "session_date": data.session_date || "",
+                        "trainer_name": data.trainer_name || ""
+                    });
+                });
+                
+                // جلب التسجيلات
+                const enrollmentsSnap = await getDocs(collection(db, `${type}_enrollments`));
+                const enrollments = [];
+                enrollmentsSnap.forEach(doc => {
+                    const data = doc.data();
+                    enrollments.push({
+                        "employee_id": data.employee_id,
+                        "session_code": data.session_code,
+                        "enrollment_status": data.enrollment_status || "Completed",
+                        "score": data.score || ""
+                    });
+                });
+                
+                // إنشاء ملف Excel
+                const wb = XLSX.utils.book_new();
+                const wsCourses = XLSX.utils.json_to_sheet(courses);
+                const wsSessions = XLSX.utils.json_to_sheet(sessions);
+                const wsEnrollments = XLSX.utils.json_to_sheet(enrollments);
+                
+                XLSX.utils.book_append_sheet(wb, wsCourses, "Courses");
+                XLSX.utils.book_append_sheet(wb, wsSessions, "Sessions");
+                XLSX.utils.book_append_sheet(wb, wsEnrollments, "Enrollments");
+                
+                XLSX.writeFile(wb, `${type}_training_${new Date().toISOString().slice(0,19)}.xlsx`);
+                showToast(`✅ تم تصدير تدريبات ${typeName}`);
+            } catch (error) {
+                showToast(`❌ فشل تصدير تدريبات ${typeName}`, true);
+                console.error(error);
+            }
+        }
+        
+        // ========== دوال الحذف الجماعي الجديدة ==========
+        
+        // حذف جميع الموظفين
+        async function deleteAllEmployees() {
+            if (!confirm("⚠️ تحذير: هذا سيحذف جميع الموظفين بشكل دائم! هل أنت متأكد؟")) return;
+            if (!confirm("✅ تأكيد نهائي: اكتب 'نعم' للمتابعة")) return;
+            
+            try {
+                showToast("🗑️ جاري حذف جميع الموظفين...");
+                const snapshot = await getDocs(collection(db, "employees"));
+                let count = 0;
+                const batch = writeBatch(db);
+                snapshot.forEach(doc => {
+                    batch.delete(doc.ref);
+                    count++;
+                });
+                await batch.commit();
+                showToast(`✅ تم حذف ${count} موظف`);
+            } catch (error) {
+                showToast("❌ فشل حذف الموظفين", true);
+                console.error(error);
+            }
+        }
+        
+        // حذف جميع بيانات التدريب لنوع معين
+        async function deleteAllTrainingData(type) {
+            const typeName = type === 'onjob' ? 'On Job' : 'Off Job';
+            if (!confirm(`⚠️ تحذير: هذا سيحذف جميع بيانات تدريبات ${typeName} بشكل دائم (كورسات، جلسات، تسجيلات)! هل أنت متأكد؟`)) return;
+            if (!confirm("✅ تأكيد نهائي: اكتب 'نعم' للمتابعة")) return;
+            
+            try {
+                showToast(`🗑️ جاري حذف تدريبات ${typeName}...`);
+                
+                // حذف الكورسات
+                const coursesSnap = await getDocs(collection(db, `${type}_courses`));
+                let batch = writeBatch(db);
+                let count = 0;
+                coursesSnap.forEach(doc => {
+                    batch.delete(doc.ref);
+                    count++;
+                });
+                await batch.commit();
+                
+                // حذف الجلسات
+                const sessionsSnap = await getDocs(collection(db, `${type}_sessions`));
+                batch = writeBatch(db);
+                sessionsSnap.forEach(doc => {
+                    batch.delete(doc.ref);
+                    count++;
+                });
+                await batch.commit();
+                
+                // حذف التسجيلات
+                const enrollmentsSnap = await getDocs(collection(db, `${type}_enrollments`));
+                batch = writeBatch(db);
+                enrollmentsSnap.forEach(doc => {
+                    batch.delete(doc.ref);
+                    count++;
+                });
+                await batch.commit();
+                
+                showToast(`✅ تم حذف ${count} سجل من تدريبات ${typeName}`);
+            } catch (error) {
+                showToast(`❌ فشل حذف تدريبات ${typeName}`, true);
+                console.error(error);
+            }
         }
         
         // ========== استيراد/تصدير JSON ==========
@@ -819,11 +1023,30 @@
             const linksSnap = await getDocs(collection(db, "links"));
             const usersSnap = await getDocs(collection(db, "users"));
             const materialsSnap = await getDocs(collection(db, "training_materials"));
+            const employeesSnap = await getDocs(collection(db, "employees"));
+            const onjobCoursesSnap = await getDocs(collection(db, "onjob_courses"));
+            const onjobSessionsSnap = await getDocs(collection(db, "onjob_sessions"));
+            const onjobEnrollmentsSnap = await getDocs(collection(db, "onjob_enrollments"));
+            const offjobCoursesSnap = await getDocs(collection(db, "offjob_courses"));
+            const offjobSessionsSnap = await getDocs(collection(db, "offjob_sessions"));
+            const offjobEnrollmentsSnap = await getDocs(collection(db, "offjob_enrollments"));
+            
             const data = {
                 sections: sectionsSnap.docs.map(d => d.data()),
                 links: linksSnap.docs.map(d => d.data()),
                 users: usersSnap.docs.map(d => ({ uid: d.id, ...d.data() })),
-                materials: materialsSnap.docs.map(d => d.data())
+                materials: materialsSnap.docs.map(d => d.data()),
+                employees: employeesSnap.docs.map(d => d.data()),
+                onjob: {
+                    courses: onjobCoursesSnap.docs.map(d => d.data()),
+                    sessions: onjobSessionsSnap.docs.map(d => d.data()),
+                    enrollments: onjobEnrollmentsSnap.docs.map(d => d.data())
+                },
+                offjob: {
+                    courses: offjobCoursesSnap.docs.map(d => d.data()),
+                    sessions: offjobSessionsSnap.docs.map(d => d.data()),
+                    enrollments: offjobEnrollmentsSnap.docs.map(d => d.data())
+                }
             };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const a = document.createElement('a');
@@ -853,6 +1076,33 @@
                     if (data.materials) {
                         for (const material of data.materials) {
                             await setDoc(doc(db, "training_materials", material.id), material);
+                        }
+                    }
+                    if (data.employees) {
+                        for (const employee of data.employees) {
+                            await setDoc(doc(db, "employees", String(employee.id || employee.EmployeeID)), employee);
+                        }
+                    }
+                    if (data.onjob) {
+                        for (const course of data.onjob.courses || []) {
+                            await setDoc(doc(db, "onjob_courses", course.course_code), course);
+                        }
+                        for (const session of data.onjob.sessions || []) {
+                            await setDoc(doc(db, "onjob_sessions", session.session_code), session);
+                        }
+                        for (const enrollment of data.onjob.enrollments || []) {
+                            await setDoc(doc(db, "onjob_enrollments", `${enrollment.employee_id}_${enrollment.session_code}`), enrollment);
+                        }
+                    }
+                    if (data.offjob) {
+                        for (const course of data.offjob.courses || []) {
+                            await setDoc(doc(db, "offjob_courses", course.course_code), course);
+                        }
+                        for (const session of data.offjob.sessions || []) {
+                            await setDoc(doc(db, "offjob_sessions", session.session_code), session);
+                        }
+                        for (const enrollment of data.offjob.enrollments || []) {
+                            await setDoc(doc(db, "offjob_enrollments", `${enrollment.employee_id}_${enrollment.session_code}`), enrollment);
                         }
                     }
                     showToast('✅ تم الاستيراد');
@@ -1128,7 +1378,6 @@
                     <div id="sectionsTab" class="tab-content active">
                         <div class="admin-card">
                             <h3>➕ إضافة قسم</h3>
-                            <div id="sectionMsg" class="msg"></div>
                             <input type="text" id="sectionName" placeholder="اسم القسم">
                             <input type="text" id="sectionIcon" placeholder="الأيقونة (📁)">
                             <input type="text" id="sectionDesc" placeholder="الوصف">
@@ -1140,7 +1389,6 @@
                         </div>
                         <div class="admin-card">
                             <h3>🔗 إضافة رابط</h3>
-                            <div id="linkMsg" class="msg"></div>
                             <select id="linkSection">${sectionsOptions}</select>
                             <input type="text" id="linkTitle" placeholder="عنوان الرابط">
                             <input type="url" id="linkUrl" placeholder="الرابط">
@@ -1182,7 +1430,6 @@
                     <div id="usersTab" class="tab-content">
                         <div class="admin-card">
                             <h3>➕ إضافة مستخدم</h3>
-                            <div id="userMsg" class="msg"></div>
                             <input type="email" id="newUserEmail" placeholder="البريد الإلكتروني">
                             <input type="password" id="newUserPassword" placeholder="كلمة المرور (6 أحرف)">
                             <select id="newUserRole">
@@ -1200,16 +1447,39 @@
                     <!-- تبويب البيانات -->
                     <div id="dataTab" class="tab-content">
                         <div class="admin-card" style="background:#fef5e7;">
-                            <h3>📁 JSON</h3>
-                            <div class="backup-buttons" style="display:flex; gap:0.8rem; flex-wrap:wrap;">
-                                <button onclick="window.exportAllToJSON()" style="background:#4299e1;">📥 تصدير</button>
-                                <button onclick="document.getElementById('jsonImportInput').click()" style="background:#9f7aea;">📤 استيراد</button>
-                                <input type="file" id="jsonImportInput" accept=".json" style="display:none" onchange="window.importBackupJSON(this.files[0])">
-                                <button class="refresh-btn" onclick="window.refreshAdminData()" style="background:#718096;">🔄 تحديث</button>
+                            <h3>📁 تصدير JSON</h3>
+                            <div class="export-buttons-group">
+                                <button onclick="window.exportAllToJSON()" class="btn-info">📥 تصدير جميع البيانات (JSON)</button>
                             </div>
                         </div>
+                        
                         <div class="admin-card" style="background:#e8f0fe;">
-                            <h3>📥 Excel</h3>
+                            <h3>📤 تصدير Excel</h3>
+                            <div class="export-buttons-group">
+                                <button onclick="window.exportEmployees()" class="btn-info">👥 تصدير بيانات الموظفين</button>
+                                <button onclick="window.exportTrainingData('onjob')" class="btn-info">📘 تصدير تدريبات On Job</button>
+                                <button onclick="window.exportTrainingData('offjob')" class="btn-info">📗 تصدير تدريبات Off Job</button>
+                            </div>
+                        </div>
+                        
+                        <div class="admin-card" style="background:#fee2e2;">
+                            <h3>🗑️ حذف جماعي</h3>
+                            <div class="delete-buttons-group">
+                                <button onclick="window.deleteAllEmployees()" class="btn-danger">🗑️ حذف جميع الموظفين</button>
+                                <button onclick="window.deleteAllTrainingData('onjob')" class="btn-danger">🗑️ حذف جميع تدريبات On Job</button>
+                                <button onclick="window.deleteAllTrainingData('offjob')" class="btn-danger">🗑️ حذف جميع تدريبات Off Job</button>
+                            </div>
+                        </div>
+                        
+                        <div class="admin-card" style="background:#f0f4f8;">
+                            <h3>📥 استيراد JSON</h3>
+                            <button onclick="document.getElementById('jsonImportInput').click()" style="background:#9f7aea;">📤 استيراد نسخة احتياطية</button>
+                            <input type="file" id="jsonImportInput" accept=".json" style="display:none" onchange="window.importBackupJSON(this.files[0])">
+                            <button class="refresh-btn" onclick="window.refreshAdminData()" style="background:#718096; margin-top:1rem;">🔄 تحديث البيانات</button>
+                        </div>
+                        
+                        <div class="admin-card">
+                            <h3>📥 رفع Excel (موظفين + تدريبات)</h3>
                             <div class="import-grid">
                                 <div class="import-card">
                                     <h4>👥 الموظفين</h4>
@@ -1306,6 +1576,10 @@
             window.closeModal = closeModal;
             window.switchTab = switchTab;
             window.exportAllToJSON = exportAllToJSON;
+            window.exportEmployees = exportEmployees;
+            window.exportTrainingData = exportTrainingData;
+            window.deleteAllEmployees = deleteAllEmployees;
+            window.deleteAllTrainingData = deleteAllTrainingData;
             window.refreshAdminData = refreshAdminData;
             window.addNewUser = addNewUser;
             window.deleteUserAccount = deleteUserAccount;
