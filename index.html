@@ -286,25 +286,17 @@ async function loadData() {
     }
 }
         
-// ========== التحقق من صلاحية الأدمن من Firebase فقط ==========
-async function checkAdminStatus(user) {
+async function checkAdmin(user) {
     try {
-        // ✅ التحقق من مجموعة admins في Firebase فقط
-        const adminDoc = await getDocs(query(collection(db, "admins"), where("uid", "==", user.uid)));
+        const adminDoc = await getDoc(doc(db, "admins", user.uid));
+        isAdmin = adminDoc.exists();
         
-        if (!adminDoc.empty) {
-            isAdmin = true;
+        if (isAdmin) {
             console.log("✅ أدمن مصرح له:", user.email);
-            return true;
         }
-        
-        console.log("❌ غير مصرح له:", user.email);
-        isAdmin = false;
-        return false;
     } catch (error) {
         console.error("❌ فشل التحقق من الصلاحيات:", error);
         isAdmin = false;
-        return false;
     }
 }
         
@@ -397,25 +389,26 @@ async function checkAdminStatus(user) {
         }
         
         // ========== بناء شريط التنقل ==========
-        function buildNav() {
-            const nav = document.getElementById("navLinks");
-            if (!nav) return;
-            
-            let html = `<span class="user-welcome">👋 ${escapeHtml(window.currentUser?.email || 'مستخدم')}</span>`;
-            
-            if (isAdmin) {
-                html += `<a href="admin.html" class="admin-btn">⚙️ لوحة التحكم</a>`;
-            }
-            
-            html += `<a href="#" id="logoutBtn" class="logout-btn">🚪 خروج</a>`;
-            nav.innerHTML = html;
-            
-            document.getElementById("logoutBtn")?.addEventListener("click", async (e) => {
-                e.preventDefault();
-                await signOut(auth);
-                window.location.href = "login.html";
-            });
-        }
+function buildNav() {
+    const nav = document.getElementById("navLinks");
+    if (!nav) return;
+    
+    let html = `<span class="user-welcome">👋 ${escapeHtml(window.currentUser?.email || 'مستخدم')}</span>`;
+    
+    // ✅ زر لوحة التحكم يظهر للأدمن فقط
+    if (isAdmin) {
+        html += `<a href="admin.html" class="admin-btn">⚙️ لوحة التحكم</a>`;
+    }
+    
+    html += `<a href="#" id="logoutBtn" class="logout-btn">🚪 خروج</a>`;
+    nav.innerHTML = html;
+    
+    document.getElementById("logoutBtn")?.addEventListener("click", async (e) => {
+        e.preventDefault();
+        await signOut(auth);
+        window.location.href = "login.html";
+    });
+}
         
         // ========== البحث ==========
         window.searchContent = () => {
