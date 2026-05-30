@@ -243,7 +243,8 @@
         let sessions = [];
         let enrollments = [];
         let employees = [];
-        let currentMonth = -1;
+        let currentMonth = new Date().getMonth(); // الشهر الحالي
+        let currentYear = new Date().getFullYear(); // السنة الحالية
         let employeeDeptMap = new Map();
 
         const monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
@@ -483,25 +484,26 @@
             }
         }
 
-        function filterSessionsByMonth() {
-            if (currentMonth === -1) return sessions;
-            
-            const filtered = sessions.filter(session => {
-                if (!session.session_date) return false;
-                
-                let dateObj = getDateObject(session.session_date);
-                
-                if (!dateObj || isNaN(dateObj.getTime())) {
-                    return false;
-                }
-                
-                return dateObj.getMonth() === currentMonth;
-            });
-            
-            console.log(`📊 بعد الفلترة: ${filtered.length} جلسة من أصل ${sessions.length}`);
-            return filtered;
-        }
-
+function filterSessionsByMonth() {
+    // ✅ لو "كل الشهور" - نرجع جلسات السنة المختارة فقط
+    if (currentMonth === -1) {
+        return sessions.filter(session => {
+            if (!session.session_date) return false;
+            let dateObj = getDateObject(session.session_date);
+            return dateObj && !isNaN(dateObj.getTime()) && 
+                   dateObj.getFullYear() === currentYear;
+        });
+    }
+    
+    // ✅ شهر محدد + سنة محددة
+    return sessions.filter(session => {
+        if (!session.session_date) return false;
+        let dateObj = getDateObject(session.session_date);
+        return dateObj && !isNaN(dateObj.getTime()) && 
+               dateObj.getMonth() === currentMonth && 
+               dateObj.getFullYear() === currentYear;
+    });
+}
         function getCourseByCode(courseCode) {
             return courses.find(c => c.course_code === courseCode);
         }
@@ -509,6 +511,74 @@
         function getEmployeeById(empId) {
             return employees.find(e => e.id == empId);
         }
+
+        Chart.register(ChartDataLabels);
+
+        const chartOptionsWithLabels = {
+            responsive: true,
+            maintainAspectRatio: true,
+            layout: { 
+                padding: { top: 40, bottom: 20, left: 20, right: 20 } 
+            },
+            plugins: {
+                legend: { 
+                    position: 'top', 
+                    labels: { font: { size: 11 } } 
+                },
+                tooltip: { 
+                    titleFont: { size: 11 }, 
+                    bodyFont: { size: 10 } 
+                },
+                datalabels: { 
+                    display: true, 
+                    color: '#1e3a5f',
+                    backgroundColor: 'rgba(255,255,255,0.95)',
+                    borderRadius: 8,
+                    padding: { left: 6, right: 6, top: 4, bottom: 4 },
+                    anchor: 'end',
+                    align: 'top',
+                    offset: 10,
+                    textAlign: 'center',
+                    font: { 
+                        weight: 'bold', 
+                        size: 12,
+                        family: 'Tajawal'
+                    },
+                    formatter: function(value) {
+                        return value;
+                    }
+                }
+            },
+scales: { 
+                y: { 
+                    beginAtZero: true, 
+                    title: { display: true, text: 'العدد', font: { weight: 'bold', size: 11 } },
+                    ticks: { 
+                        autoSkip: true, 
+                        maxTicksLimit: 10, 
+                        font: { size: 10 } 
+                    }
+                },
+                x: { 
+                    ticks: { font: { size: 10 } },
+                    grid: { offset: true }
+                }
+            }
+        };
+
+        const chartOptionsWithLabelsHours = {
+            ...chartOptionsWithLabels,
+            plugins: {
+                ...chartOptionsWithLabels.plugins,
+                datalabels: {
+                    ...chartOptionsWithLabels.plugins.datalabels,
+                    formatter: function(value) {
+                        return value.toFixed(1);
+                    }
+                }
+            }
+        };
+
 
         // ========== حساب إحصائيات الأقسام ==========
         function calculateDepartmentStats(filteredSessions) {
@@ -796,11 +866,16 @@
             </div>`;
         }
 
-        function changeMonth() { 
-            currentMonth = parseInt(document.getElementById('monthSelect').value); 
-            console.log(`📅 تم اختيار الشهر: ${currentMonth === -1 ? 'كل الشهور' : monthNames[currentMonth]}`);
-            loadPage(); 
-        }
+function changeMonth() { 
+    currentMonth = parseInt(document.getElementById('monthSelect').value); 
+    loadPage(); 
+}
+
+// ✅ دالة تغيير السنة - أضفها هنا
+function changeYear() {
+    currentYear = parseInt(document.getElementById('yearSelect').value);
+    loadPage();
+}
 
         function logout() { 
             // مسح الكاش عند تسجيل الخروج
@@ -816,65 +891,72 @@
             });
         }
 
-        async function loadPage(forceRefresh = false) {
-            console.log("🚀 بدء تحميل الصفحة...");
-            
-            await Promise.all([
-                loadEmployeesData(forceRefresh),
-                loadCourses(forceRefresh),
-                loadSessions(forceRefresh),
-                loadEnrollments(forceRefresh)
-            ]);
-            
-            console.log(`📊 ملخص البيانات المحملة:`);
-            console.log(`   - الدورات: ${courses.length}`);
-            console.log(`   - الجلسات: ${sessions.length}`);
-            console.log(`   - التسجيلات: ${enrollments.length}`);
-            console.log(`   - الموظفين: ${employees.length}`);
-            
-            let filteredSessions = filterSessionsByMonth();
-            
-            const stats = calculateStats(filteredSessions);
-            const deptStats = calculateDepartmentStats(filteredSessions);
-            const coursesStats = calculateCoursesStats(filteredSessions);
-            const employeesDetails = getEmployeesDetails(filteredSessions);
-            
-            window.currentEmployeesDetails = employeesDetails;
-            const monthName = currentMonth === -1 ? "كل الشهور" : monthNames[currentMonth];
-            
-            document.getElementById('app').innerHTML = `
-                <div class="navbar">
-                    <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
-                    <div class="nav-links">
-                        <a href="index.html" class="home">🏠 الرئيسية</a>
-                        <a href="#" onclick="logout()" class="logout">🚪 تسجيل خروج</a>
-                    </div>
+async function loadPage(forceRefresh) {
+    await Promise.all([
+        loadEmployeesData(forceRefresh),
+        loadCourses(forceRefresh),
+        loadSessions(forceRefresh),
+        loadEnrollments(forceRefresh)
+    ]);
+    
+    let filteredSessions = filterSessionsByMonth();
+    
+    const stats = calculateStats(filteredSessions);
+    const deptStats = calculateDepartmentStats(filteredSessions);
+    const coursesStats = calculateCoursesStats(filteredSessions);
+    const employeesDetails = getEmployeesDetails(filteredSessions);
+    
+    window.currentEmployeesDetails = employeesDetails;
+    const monthName = currentMonth === -1 ? "كل الشهور" : monthNames[currentMonth];
+    
+    // ✅ توليد قائمة السنوات تلقائياً
+    const currentFullYear = new Date().getFullYear();
+    const startYear = 2025;
+    let yearOptionsHTML = '';
+    for (let y = startYear; y <= currentFullYear + 1; y++) {
+        yearOptionsHTML += `<option value="${y}" ${currentYear === y ? 'selected' : ''}>${y}</option>`;
+    }
+    
+    document.getElementById('app').innerHTML = `
+        <div class="navbar">
+            <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
+            <div class="nav-links">
+                <a href="index.html" class="home">🏠 الرئيسية</a>
+                <a href="#" onclick="logout()" class="logout">🚪 تسجيل خروج</a>
+            </div>
+        </div>
+        <div class="container">
+            <div class="page-header"><h1>📊 تقارير التدريب (On Job)</h1><p>تحليل شامل للتدريبات الداخلية - ${monthName} ${currentYear}</p></div>
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label>📅 السنة:</label>
+                    <select id="yearSelect" class="month-select" onchange="changeYear()">
+                        ${yearOptionsHTML}
+                    </select>
                 </div>
-                <div class="container">
-                    <div class="page-header"><h1>📊 تقارير التدريب (On Job)</h1><p>تحليل شامل للتدريبات الداخلية</p></div>
-                    <div class="filter-bar">
-                        <div class="filter-group"><label>📅 اختر الشهر:</label>
-                        <select id="monthSelect" class="month-select" onchange="changeMonth()">
-                            <option value="-1" ${currentMonth===-1?'selected':''}>كل الشهور</option>
-                            ${monthNames.map((m,i)=>`<option value="${i}" ${currentMonth===i?'selected':''}>${m}</option>`).join('')}
-                        </select></div>
-                        <div class="filter-group"><span>📊 عرض بيانات ${monthName}</span></div>
-                        <div class="filter-group"><button class="refresh-btn" onclick="refreshAllData()">🔄 تحديث البيانات</button></div>
-                    </div>
-                    ${renderStats(stats)}
-                    <div class="data-table-card"><h3>🏆 أكثر الأقسام مشاركة</h3>${renderDepartmentStats(deptStats)}</div>
-                    ${renderCharts(deptStats)}
-                    <div class="data-table-card"><h3>👥 الموظفين المشاركين (${monthName})</h3>${renderDepartmentFilter(employeesDetails)}<div id="employeesTableContainer" style="margin-top:1rem;">${renderEmployeesTable(employeesDetails, 'all')}</div></div>
-                    <div class="data-table-card"><h3>📚 التدريبات المنفذة خلال ${monthName}</h3>${renderCoursesTable(coursesStats)}</div>
+                <div class="filter-group">
+                    <label>📅 الشهر:</label>
+                    <select id="monthSelect" class="month-select" onchange="changeMonth()">
+                        <option value="-1" ${currentMonth === -1 ? 'selected' : ''}>كل الشهور</option>
+                        ${monthNames.map((m, i) => `<option value="${i}" ${currentMonth === i ? 'selected' : ''}>${m}</option>`).join('')}
+                    </select>
                 </div>
-                <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير</p></div>
-            `;
-            
-            updateCacheInfo();
-            window.filterEmployeesTable = filterEmployeesTable;
-            window.showEmployeeDetails = showEmployeeDetails;
-            window.refreshAllData = refreshAllData;
-        }
+                <div class="filter-group"><span>📊 عرض بيانات ${monthName} ${currentYear}</span></div>
+                <div class="filter-group"><button class="refresh-btn" onclick="refreshAllData()">🔄 تحديث البيانات</button></div>
+            </div>
+            ${renderStats(stats)}
+            <div class="data-table-card"><h3>🏆 أكثر الأقسام مشاركة</h3><div id="deptStatsContainer">${renderDepartmentStats(deptStats)}</div></div>
+            ${renderCharts(deptStats)}
+            <div class="data-table-card"><h3>👥 الموظفين المشاركين (${monthName} ${currentYear})</h3>${renderDepartmentFilter(employeesDetails)}<div id="employeesTableContainer" style="margin-top:1rem;">${renderEmployeesTable(employeesDetails, 'all')}</div></div>
+            <div class="data-table-card"><h3>📚 التدريبات المنفذة خلال ${monthName} ${currentYear}</h3><div id="coursesTableContainer">${renderCoursesTable(coursesStats)}</div></div>
+        </div>
+        <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير</p></div>
+    `;
+    
+    updateCacheInfo();
+    window.filterEmployeesTable = filterEmployeesTable;
+    window.showEmployeeDetails = showEmployeeDetails;
+}
 
         // ========== بدء التشغيل ==========
         auth.onAuthStateChanged(async (user) => {
@@ -882,6 +964,7 @@
                 console.log("✅ مستخدم مسجل دخول:", user.email);
                 await loadPage(false);
                 window.changeMonth = changeMonth;
+                        window.changeYear = changeYear;   // ✅ أضف هذا السطر
                 window.logout = logout;
             } else {
                 const loggedUser = JSON.parse(sessionStorage.getItem('loggedUser'));
