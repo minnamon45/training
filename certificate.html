@@ -560,89 +560,86 @@
         }
 
         // ========== معاينة الشهادة ==========
-        function previewCertificate() {
-            const selectedEmployees = Array.from(document.querySelectorAll('.employee-check:checked'));
-            if (selectedEmployees.length === 0) {
-                showToast('❌ الرجاء اختيار موظف واحد على الأقل', true);
-                return;
-            }
+function previewCertificate() {
+    const selectedEmployees = Array.from(document.querySelectorAll('.employee-check:checked'));
+    if (selectedEmployees.length === 0) {
+        showToast('❌ الرجاء اختيار موظف واحد على الأقل', true);
+        return;
+    }
 
-            const sessionCode = document.getElementById('sessionSelect').value;
-            const session = getSessionByCode(sessionCode);
-            const course = getCourseByCode(session?.course_code);
-            const certificateDate = document.getElementById('certificateDate').value || new Date().toISOString().split('T')[0];
-            const firstEmployee = selectedEmployees[0];
-            const courseName = course?.course_name || session?.session_code;
+    const sessionCode = document.getElementById('sessionSelect').value;
+    const session = getSessionByCode(sessionCode);
+    const course = getCourseByCode(session?.course_code);
+    const certificateDate = document.getElementById('certificateDate').value || new Date().toISOString().split('T')[0];
+    const firstEmployee = selectedEmployees[0];
+    const courseName = course?.course_name || session?.session_code;
 
-            const previewDiv = document.getElementById('previewCard');
-            previewDiv.innerHTML = `
-                <div class="preview-card" style="display:block;">
-                    <h3>🎓 معاينة الشهادة</h3>
-                    <div class="certificate-wrapper">
-                        <img src="${CERTIFICATE_BG}" class="certificate-bg-image" alt="Certificate" onerror="this.src='https://via.placeholder.com/800x600?text=Certificate'">
-                        <div class="certificate-employee-name"><span>${firstEmployee.dataset.name}</span></div>
-                        <div class="certificate-intro-text"><span>In recognition of active participation and successful completion of the training course</span></div>
-                        <div class="certificate-course-name"><span>"${courseName}"</span></div>
-                        <div class="certificate-date-text"><span>Held on ${certificateDate} at Long Beach Resort Hurghada.</span></div>
-                    </div>
+    const previewDiv = document.getElementById('previewCard');
+    previewDiv.innerHTML = `
+        <div class="preview-card" style="display:block;">
+            <h3>🎓 معاينة الشهادة</h3>
+            <div class="certificate-wrapper">
+                <img src="${CERTIFICATE_BG}" class="certificate-bg-image" alt="Certificate" onerror="this.src='https://via.placeholder.com/800x600?text=Certificate'">
+                <div class="certificate-employee-name"><span>${firstEmployee.dataset.name}</span></div>
+                <div class="certificate-intro-text">
+                    <span>In recognition of active participation and successful completion<br>of the training course</span>
                 </div>
-            `;
-            previewDiv.style.display = 'block';
-        }
+                <div class="certificate-course-name"><span>"${courseName}"</span></div>
+                <div class="certificate-date-text">
+                    <span>Held on ${certificateDate} at Long Beach Resort Hurghada.</span>
+                </div>
+            </div>
+        </div>
+    `;
+    previewDiv.style.display = 'block';
+}
 
         // ========== طباعة الشهادات ==========
-        function generateCertificates() {
-            const selectedEmployees = Array.from(document.querySelectorAll('.employee-check:checked'));
-            if (selectedEmployees.length === 0) {
-                showToast('❌ الرجاء اختيار موظفين لطباعة الشهادات', true);
-                return;
-            }
+function generateCertificates() {
+    const selectedEmployees = Array.from(document.querySelectorAll('.employee-check:checked'));
+    if (selectedEmployees.length === 0) {
+        showToast('❌ الرجاء اختيار موظفين لطباعة الشهادات', true);
+        return;
+    }
 
-            const sessionCode = document.getElementById('sessionSelect').value;
-            const session = getSessionByCode(sessionCode);
-            const course = getCourseByCode(session?.course_code);
-            const certificateDate = document.getElementById('certificateDate').value || new Date().toISOString().split('T')[0];
-            const courseName = course?.course_name || session?.session_code;
+    const sessionCode = document.getElementById('sessionSelect').value;
+    const session = getSessionByCode(sessionCode);
+    const course = getCourseByCode(session?.course_code);
+    const certificateDate = document.getElementById('certificateDate').value || new Date().toISOString().split('T')[0];
+    const courseName = course?.course_name || session?.session_code;
 
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head><meta charset="UTF-8"><title>Certificates</title>
-                <style>
-                    * { margin:0; padding:0; box-sizing:border-box; }
-                    @page { size: A4 landscape; margin: 0; }
-                    .certificate-page { width:297mm; height:210mm; position:relative; page-break-after:always; overflow:hidden; }
-                    .certificate-bg-image { width:100%; height:100%; position:absolute; top:0; left:0; z-index:1; }
-                    .certificate-employee-name { position:absolute; top:38%; left:0; width:100%; text-align:center; z-index:10; font-size:38px; font-weight:bold; color:#1e3a5f; }
-                    .certificate-intro-text { position:absolute; top:52%; left:0; width:100%; text-align:center; z-index:10; font-size:17px; font-weight:bold; color:#1e3a5f; }
-                    .certificate-course-name { position:absolute; top:60%; left:0; width:100%; text-align:center; z-index:10; font-size:28px; font-weight:bold; color:#2b7a4b; }
-                    .certificate-date-text { position:absolute; top:70%; left:0; width:100%; text-align:center; z-index:10; font-size:17px; font-weight:bold; color:#4a5568; }
-                    @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } .certificate-page { box-shadow:none; } }
-                </style></head>
-                <body>
-                    ${selectedEmployees.map(emp => `
-                        <div class="certificate-page">
-                            <img src="${CERTIFICATE_BG}" class="certificate-bg-image" onerror="this.src='https://via.placeholder.com/800x600?text=Certificate'">
-                            <div class="certificate-employee-name">${emp.dataset.name}</div>
-                            <div class="certificate-intro-text">In recognition of active participation and successful completion of the training course</div>
-                            <div class="certificate-course-name">"${courseName}"</div>
-                            <div class="certificate-date-text">Held on ${certificateDate} at Long Beach Resort Hurghada.</div>
-                        </div>
-                    `).join('')}
-                    <script>window.onload=function(){window.print();setTimeout(()=>window.close(),500);}<\/script>
-                </body></html>
-            `);
-            printWindow.document.close();
-            showToast(`✅ جاري طباعة ${selectedEmployees.length} شهادة`);
-        }
-
-        function logout() {
-            auth.signOut().then(() => {
-                sessionStorage.removeItem('loggedUser');
-                window.location.href = 'login.html';
-            });
-        }
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"><title>Certificates</title>
+        <style>
+            * { margin:0; padding:0; box-sizing:border-box; }
+            @page { size: A4 landscape; margin: 0; }
+            .certificate-page { width:297mm; height:210mm; position:relative; page-break-after:always; overflow:hidden; }
+            .certificate-bg-image { width:100%; height:100%; position:absolute; top:0; left:0; z-index:1; }
+            .certificate-employee-name { position:absolute; top:35%; left:0; width:100%; text-align:center; z-index:10; font-size:38px; font-weight:bold; color:#1e3a5f; }
+            .certificate-intro-text { position:absolute; top:48%; left:0; width:100%; text-align:center; z-index:10; font-size:17px; font-weight:bold; color:#1e3a5f; line-height:1.8; padding:0 80px; }
+            .certificate-course-name { position:absolute; top:58%; left:0; width:100%; text-align:center; z-index:10; font-size:28px; font-weight:bold; color:#2b7a4b; }
+            .certificate-date-text { position:absolute; top:66%; left:0; width:100%; text-align:center; z-index:10; font-size:17px; font-weight:bold; color:#4a5568; line-height:1.8; }
+            @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } .certificate-page { box-shadow:none; } }
+        </style></head>
+        <body>
+            ${selectedEmployees.map(emp => `
+                <div class="certificate-page">
+                    <img src="${CERTIFICATE_BG}" class="certificate-bg-image" onerror="this.src='https://via.placeholder.com/800x600?text=Certificate'">
+                    <div class="certificate-employee-name">${emp.dataset.name}</div>
+                    <div class="certificate-intro-text">In recognition of active participation and successful completion<br>of the training course</div>
+                    <div class="certificate-course-name">"${courseName}"</div>
+                    <div class="certificate-date-text">Held on ${certificateDate} at Long Beach Resort Hurghada.</div>
+                </div>
+            `).join('')}
+            <script>window.onload=function(){window.print();setTimeout(()=>window.close(),500);}<\/script>
+        </body></html>
+    `);
+    printWindow.document.close();
+    showToast(`✅ جاري طباعة ${selectedEmployees.length} شهادة`);
+}
 
         // ========== تحميل الصفحة ==========
         async function loadPage() {
