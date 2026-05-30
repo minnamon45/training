@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تقارير التدريب On Job - نظام إدارة التعليم والتطوير</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>On-Job Training Reports - Learning & Development Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
@@ -14,43 +14,44 @@
     <script src="cache-manager.js"></script>
     <script type="module" src="auth-guard.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { background: #f0f4f8; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #f4f7fc; }
 
         .navbar {
             background: white;
             padding: 1rem 2rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 1rem;
         }
-        .logo h2 { color: #1e3a5f; }
-        .logo span { color: #2b7a4b; }
-        .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .logo h2 { color: #0a2540; font-weight: 700; }
+        .logo span { color: #2c7a4d; }
+        .nav-links { display: flex; gap: 0.75rem; flex-wrap: wrap; }
         .nav-links a, .nav-links button {
             text-decoration: none;
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 1.25rem;
             border-radius: 2rem;
             font-weight: 500;
             cursor: pointer;
             border: none;
             font-size: 0.9rem;
+            transition: all 0.2s ease;
         }
         .nav-links a:hover, .nav-links button:hover { transform: translateY(-2px); opacity: 0.9; }
-        .nav-links .home { background: #2b7a4b; color: white; }
-        .nav-links .logout { background: #e53e3e; color: white; }
+        .nav-links .home { background: #2c7a4d; color: white; }
+        .nav-links .logout { background: #dc2626; color: white; }
 
         .container { max-width: 1400px; margin: 2rem auto; padding: 0 1.5rem; }
         .page-header { margin-bottom: 2rem; }
-        .page-header h1 { color: #1e3a5f; font-size: 2rem; }
-        .page-header p { color: #718096; }
+        .page-header h1 { color: #0a2540; font-size: 2rem; font-weight: 700; text-align: center;}
+        .page-header p { color: #5a6874; }
 
         .filter-bar {
             background: white;
-            border-radius: 1rem;
+            border-radius: 1.25rem;
             padding: 1rem 1.5rem;
             margin-bottom: 2rem;
             display: flex;
@@ -58,38 +59,38 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         .filter-group { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-        .filter-group label { font-weight: bold; color: #1e3a5f; }
-        .month-select, .dept-select {
+        .filter-group label { font-weight: 600; color: #0a2540; }
+        .month-select, .dept-select, .year-select {
             padding: 0.5rem 1rem;
-            border: 2px solid #e2e8f0;
+            border: 2px solid #e2edf2;
             border-radius: 2rem;
-            font-size: 1rem;
+            font-size: 0.9rem;
             background: white;
             cursor: pointer;
+            font-weight: 500;
         }
-
         .refresh-btn {
-            background: #4299e1;
+            background: #3b82f6;
             color: white;
             border: none;
-            padding: 0.3rem 0.8rem;
-            border-radius: 1rem;
+            padding: 0.4rem 1rem;
+            border-radius: 2rem;
             cursor: pointer;
             font-size: 0.8rem;
+            font-weight: 500;
         }
-
         .cache-info {
             font-size: 0.7rem;
-            color: #718096;
+            color: #5a6874;
             margin-bottom: 1rem;
             text-align: center;
         }
-
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 1.5rem;
             margin-bottom: 2rem;
         }
@@ -98,10 +99,11 @@
             border-radius: 1.5rem;
             padding: 1.5rem;
             text-align: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            transition: 0.2s;
         }
-        .stat-value { font-size: 2rem; font-weight: bold; color: #1e3a5f; }
-        .stat-label { color: #718096; font-size: 0.85rem; margin-top: 0.3rem; }
+        .stat-value { font-size: 2rem; font-weight: 800; color: #0a2540; }
+        .stat-label { color: #5a6874; font-size: 0.85rem; margin-top: 0.3rem; font-weight: 500; }
 
         .dept-stats-grid {
             display: grid;
@@ -112,26 +114,26 @@
         .dept-card {
             background: white;
             border-radius: 1rem;
-            padding: 1rem;
+            padding: 1rem 1.2rem;
             display: flex;
             align-items: center;
             gap: 1rem;
-            border-right: 4px solid #00346d;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-left: 4px solid #0a2540;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
         .dept-rank { 
-            background: #ef8f3d; 
+            background: #f97316; 
             color: white; 
-            padding: 0.3rem 0.8rem; 
-            border-radius: 1rem; 
+            padding: 0.3rem 0.9rem; 
+            border-radius: 2rem; 
             font-size: 16px; 
             font-weight: bold;
-            min-width: 45px;
+            min-width: 48px;
             text-align: center;
         }
         .dept-info { flex: 1; }
-        .dept-name { font-weight: bold; color: #1e3a5f; font-size: 1rem; }
-        .dept-stats { color: #718096; font-size: 0.75rem; margin-top: 0.2rem; }
+        .dept-name { font-weight: 700; color: #0a2540; font-size: 1rem; }
+        .dept-stats { color: #5a6874; font-size: 0.75rem; margin-top: 0.2rem; }
 
         .charts-row {
             display: grid;
@@ -143,9 +145,9 @@
             background: white;
             border-radius: 1.5rem;
             padding: 1.5rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 14px rgba(0,0,0,0.05);
         }
-        .chart-card h3 { color: #1e3a5f; margin-bottom: 1rem; border-right: 4px solid #2b7a4b; padding-right: 1rem; }
+        .chart-card h3 { color: #0a2540; margin-bottom: 1rem; border-left: 4px solid #2c7a4d; padding-left: 1rem; font-weight: 600; }
         canvas { max-height: 350px; }
 
         .data-table-card {
@@ -153,72 +155,100 @@
             border-radius: 1.5rem;
             padding: 1.5rem;
             margin-bottom: 2rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
         }
         .data-table-card h3 { 
-            color: #1e3a5f; 
+            color: #0a2540; 
             margin-bottom: 1rem; 
-            border-right: 4px solid #2b7a4b; 
-            padding-right: 1rem;
+            border-left: 4px solid #2c7a4d; 
+            padding-left: 1rem;
             font-size: 1.3rem;
+            font-weight: 600;
         }
         .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         th { 
-            background: #1e3a5f; 
+            background: #0a2540; 
             color: white; 
-            font-weight: bold;
+            font-weight: 600;
             padding: 12px;
             text-align: center;
         }
         td { 
             padding: 12px; 
             text-align: center; 
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2edf2;
         }
         .badge-sessions {
-            background: #e2e8f0;
+            background: #e2edf2;
             padding: 0.2rem 0.8rem;
             border-radius: 1rem;
-            color: #4a5568;
+            color: #2c3e50;
+            font-weight: 500;
         }
         .badge-attendees {
-            background: #c6f6d5;
+            background: #dcfce7;
             padding: 0.2rem 0.8rem;
             border-radius: 1rem;
-            color: #22543d;
-            font-weight: bold;
+            color: #166534;
+            font-weight: 600;
         }
         .badge-hours {
-            background: #fed7d7;
+            background: #fee2e2;
             padding: 0.2rem 0.8rem;
             border-radius: 1rem;
-            color: #c53030;
-            font-weight: bold;
+            color: #b91c1c;
+            font-weight: 600;
         }
         .btn-details {
-            background: #4299e1;
+            background: #3b82f6;
             color: white;
             border: none;
-            padding: 0.3rem 0.8rem;
-            border-radius: 1rem;
+            padding: 0.25rem 0.9rem;
+            border-radius: 1.5rem;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
+            font-weight: 500;
         }
-        .btn-details:hover { background: #3182ce; }
+        .btn-details:hover { background: #2563eb; }
 
-        .footer { text-align: center; padding: 2rem; color: #718096; }
+        .footer { text-align: center; padding: 2rem; color: #5a6874; font-size: 0.8rem; }
+        
+        .toast-msg {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #2c7a4d;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 2rem;
+            z-index: 1000;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .toast-msg.error { background: #dc2626; }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
 
+        @media (max-width: 992px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        }
         @media (max-width: 768px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
             .charts-row { grid-template-columns: 1fr; }
-            .table-wrapper { overflow-x: auto; }
-            th, td { padding: 0.5rem; font-size: 0.75rem; }
+            th, td { padding: 0.5rem; font-size: 0.7rem; }
+        }
+        @media (max-width: 576px) {
+            .stats-grid { grid-template-columns: 1fr !important; }
         }
     </style>
 </head>
 <body>
-    <div id="app">جاري التحميل...</div>
+    <div id="app">Loading...</div>
 
     <script>
         // ========== Firebase Configuration ==========
@@ -238,18 +268,18 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
         
-        // ========== متغيرات التخزين ==========
+        // ========== Storage Variables ==========
         let courses = [];
         let sessions = [];
         let enrollments = [];
         let employees = [];
-        let currentMonth = new Date().getMonth(); // الشهر الحالي
-        let currentYear = new Date().getFullYear(); // السنة الحالية
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
         let employeeDeptMap = new Map();
 
-        const monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+        const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-        // مفاتيح الكاش لكل نوع من البيانات
+        // Cache Keys
         const CACHE_KEYS = {
             EMPLOYEES: 'onjob_employees_v1',
             COURSES: 'onjob_courses_v1',
@@ -257,57 +287,54 @@
             ENROLLMENTS: 'onjob_enrollments_v1'
         };
 
-        // ========== عرض حالة الكاش ==========
+        function showToast(message, isError) {
+            var toast = document.createElement('div');
+            toast.className = 'toast-msg';
+            if (isError) toast.classList.add('error');
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(function() { toast.remove(); }, 3000);
+        }
+
         function updateCacheInfo() {
-            const cacheInfo = document.getElementById('cacheInfo');
+            var cacheInfo = document.getElementById('cacheInfo');
             if (!cacheInfo) return;
             
             if (window.CacheManager) {
-                const cachedEmployees = CacheManager.get(CACHE_KEYS.EMPLOYEES);
-                const cachedCourses = CacheManager.get(CACHE_KEYS.COURSES);
-                const cachedSessions = CacheManager.get(CACHE_KEYS.SESSIONS);
-                const cachedEnrollments = CacheManager.get(CACHE_KEYS.ENROLLMENTS);
+                var cachedEmployees = CacheManager.get(CACHE_KEYS.EMPLOYEES);
+                var cachedCourses = CacheManager.get(CACHE_KEYS.COURSES);
+                var cachedSessions = CacheManager.get(CACHE_KEYS.SESSIONS);
+                var cachedEnrollments = CacheManager.get(CACHE_KEYS.ENROLLMENTS);
                 
                 if (cachedEmployees && cachedCourses && cachedSessions && cachedEnrollments) {
-                    const cacheTime = localStorage.getItem(CACHE_KEYS.EMPLOYEES + '_time');
+                    var cacheTime = localStorage.getItem(CACHE_KEYS.EMPLOYEES + '_time');
                     if (cacheTime) {
-                        const date = new Date(parseInt(cacheTime));
-                        //cacheInfo.innerHTML = `📦 البيانات من الكاش - آخر تحديث: ${date.toLocaleString('ar-EG')} &nbsp;|&nbsp; <a href="#" onclick="refreshAllData(); return false;" style="color:#4299e1;">🔄 تحديث يدوي</a>`;
+                        var date = new Date(parseInt(cacheTime));
+                        cacheInfo.innerHTML = '📦 Data from cache - Last updated: ' + date.toLocaleString('en-US') + ' &nbsp;|&nbsp; <a href="#" onclick="refreshAllData(); return false;" style="color:#3b82f6;">🔄 Manual Refresh</a>';
                     } else {
-                        //cacheInfo.innerHTML = `📦 البيانات من الكاش &nbsp;|&nbsp; <a href="#" onclick="refreshAllData(); return false;" style="color:#4299e1;">🔄 تحديث يدوي</a>`;
+                        cacheInfo.innerHTML = '📦 Data from cache &nbsp;|&nbsp; <a href="#" onclick="refreshAllData(); return false;" style="color:#3b82f6;">🔄 Manual Refresh</a>';
                     }
                 } else {
-                    cacheInfo.innerHTML = `☁️ البيانات من Firebase (تم التحديث الآن)`;
+                    cacheInfo.innerHTML = '☁️ Data from Firebase (updated now)';
                 }
             }
         }
 
-        // ========== تحديث جميع البيانات يدوياً ==========
         async function refreshAllData() {
-            showToast("🔄 جاري تحديث البيانات...");
+            showToast("🔄 Refreshing data...", false);
             if (window.CacheManager) {
-                for (const key in CACHE_KEYS) {
+                for (var key in CACHE_KEYS) {
                     CacheManager.remove(CACHE_KEYS[key]);
                     localStorage.removeItem(CACHE_KEYS[key] + '_time');
                 }
             }
             await loadPage(true);
-            showToast("✅ تم تحديث البيانات بنجاح");
+            showToast("✅ Data updated successfully", false);
         }
 
-        function showToast(message, isError = false) {
-            const toast = document.createElement('div');
-            toast.className = 'toast-msg';
-            if (isError) toast.classList.add('error');
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
-
-        // ========== دوال تحويل التاريخ (Excel Serial Number) ==========
+        // ========== Date Conversion Functions ==========
         function formatDate(dateValue) {
             if (!dateValue) return '-';
-            
             if (typeof dateValue === 'number') {
                 var utcDays = dateValue - 25569;
                 var date = new Date(utcDays * 86400000);
@@ -316,7 +343,6 @@
                 var day = String(date.getDate()).padStart(2, '0');
                 return year + '-' + month + '-' + day;
             }
-            
             var dateStr = dateValue.toString();
             if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) return dateStr;
             return dateStr.split('T')[0];
@@ -324,12 +350,10 @@
 
         function getDateObject(dateValue) {
             if (!dateValue) return null;
-            
             if (typeof dateValue === 'number') {
                 var utcDays = dateValue - 25569;
                 return new Date(utcDays * 86400000);
             }
-            
             var dateStr = dateValue.toString();
             if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
                 return new Date(dateStr);
@@ -337,33 +361,30 @@
             return new Date(dateStr);
         }
 
-        // ========== تحميل بيانات الموظفين من Firebase (مع كاش) ==========
-        async function loadEmployeesData(forceRefresh = false) {
+        // ========== Load Data from Firebase with Cache ==========
+        async function loadEmployeesData(forceRefresh) {
             try {
                 if (!forceRefresh && window.CacheManager) {
-                    const cached = CacheManager.get(CACHE_KEYS.EMPLOYEES);
+                    var cached = CacheManager.get(CACHE_KEYS.EMPLOYEES);
                     if (cached) {
-                        console.log("📦 استخدام الكاش للموظفين");
                         employees = cached;
                         employeeDeptMap.clear();
-                        employees.forEach(emp => {
+                        for (var i = 0; i < employees.length; i++) {
+                            var emp = employees[i];
                             if (emp.id && emp.department && emp.status !== 'Left') {
                                 employeeDeptMap.set(emp.id.toString(), emp.department);
                             }
-                        });
+                        }
                         return employees;
                     }
                 }
                 
-                console.log("☁️ جلب الموظفين من Firebase");
-                const snapshot = await db.collection('employees').get();
+                var snapshot = await db.collection('employees').get();
                 employees = [];
                 employeeDeptMap.clear();
-                
-                snapshot.forEach(doc => {
-                    const emp = { id: doc.id, ...doc.data() };
+                snapshot.forEach(function(doc) {
+                    var emp = { id: doc.id, ...doc.data() };
                     employees.push(emp);
-                    
                     if (emp.id && emp.department && emp.status !== 'Left') {
                         employeeDeptMap.set(emp.id.toString(), emp.department);
                     }
@@ -373,32 +394,26 @@
                     CacheManager.set(CACHE_KEYS.EMPLOYEES, employees);
                     localStorage.setItem(CACHE_KEYS.EMPLOYEES + '_time', Date.now().toString());
                 }
-                
-                console.log(`✅ تم تحميل ${employees.length} موظف`);
                 return employees;
             } catch (error) {
-                console.error("❌ خطأ في تحميل الموظفين:", error);
                 employees = [];
                 return [];
             }
         }
 
-        // ========== تحميل الدورات من Firebase (مع كاش) ==========
-        async function loadCourses(forceRefresh = false) {
+        async function loadCourses(forceRefresh) {
             try {
                 if (!forceRefresh && window.CacheManager) {
-                    const cached = CacheManager.get(CACHE_KEYS.COURSES);
+                    var cached = CacheManager.get(CACHE_KEYS.COURSES);
                     if (cached) {
-                        console.log("📦 استخدام الكاش للدورات");
                         courses = cached;
                         return courses;
                     }
                 }
                 
-                console.log("☁️ جلب الدورات من Firebase");
-                const snapshot = await db.collection('onjob_courses').get();
+                var snapshot = await db.collection('onjob_courses').get();
                 courses = [];
-                snapshot.forEach(doc => {
+                snapshot.forEach(function(doc) {
                     courses.push({ id: doc.id, ...doc.data() });
                 });
                 
@@ -406,67 +421,53 @@
                     CacheManager.set(CACHE_KEYS.COURSES, courses);
                     localStorage.setItem(CACHE_KEYS.COURSES + '_time', Date.now().toString());
                 }
-                
-                console.log(`✅ تم تحميل ${courses.length} دورة من onjob_courses`);
                 return courses;
             } catch (error) {
-                console.error("❌ خطأ في تحميل الدورات:", error);
                 courses = [];
                 return [];
             }
         }
 
-        // ========== تحميل الجلسات من Firebase (مع كاش) ==========
-        async function loadSessions(forceRefresh = false) {
+        async function loadSessions(forceRefresh) {
             try {
                 if (!forceRefresh && window.CacheManager) {
-                    const cached = CacheManager.get(CACHE_KEYS.SESSIONS);
+                    var cached = CacheManager.get(CACHE_KEYS.SESSIONS);
                     if (cached) {
-                        console.log("📦 استخدام الكاش للجلسات");
                         sessions = cached;
                         return sessions;
                     }
                 }
                 
-                console.log("☁️ جلب الجلسات من Firebase");
-                const snapshot = await db.collection('onjob_sessions').get();
+                var snapshot = await db.collection('onjob_sessions').get();
                 sessions = [];
-                snapshot.forEach(doc => {
-                    const sessionData = { id: doc.id, ...doc.data() };
-                    sessions.push(sessionData);
+                snapshot.forEach(function(doc) {
+                    sessions.push({ id: doc.id, ...doc.data() });
                 });
                 
                 if (window.CacheManager) {
                     CacheManager.set(CACHE_KEYS.SESSIONS, sessions);
                     localStorage.setItem(CACHE_KEYS.SESSIONS + '_time', Date.now().toString());
                 }
-                
-                console.log(`✅ تم تحميل ${sessions.length} جلسة من onjob_sessions`);
-                sessions.forEach(s => console.log(`  - ${s.session_code}: ${s.session_date} -> ${formatDate(s.session_date)}`));
                 return sessions;
             } catch (error) {
-                console.error("❌ خطأ في تحميل الجلسات:", error);
                 sessions = [];
                 return [];
             }
         }
 
-        // ========== تحميل التسجيلات من Firebase (مع كاش) ==========
-        async function loadEnrollments(forceRefresh = false) {
+        async function loadEnrollments(forceRefresh) {
             try {
                 if (!forceRefresh && window.CacheManager) {
-                    const cached = CacheManager.get(CACHE_KEYS.ENROLLMENTS);
+                    var cached = CacheManager.get(CACHE_KEYS.ENROLLMENTS);
                     if (cached) {
-                        console.log("📦 استخدام الكاش للتسجيلات");
                         enrollments = cached;
                         return enrollments;
                     }
                 }
                 
-                console.log("☁️ جلب التسجيلات من Firebase");
-                const snapshot = await db.collection('onjob_enrollments').get();
+                var snapshot = await db.collection('onjob_enrollments').get();
                 enrollments = [];
-                snapshot.forEach(doc => {
+                snapshot.forEach(function(doc) {
                     enrollments.push({ id: doc.id, ...doc.data() });
                 });
                 
@@ -474,171 +475,124 @@
                     CacheManager.set(CACHE_KEYS.ENROLLMENTS, enrollments);
                     localStorage.setItem(CACHE_KEYS.ENROLLMENTS + '_time', Date.now().toString());
                 }
-                
-                console.log(`✅ تم تحميل ${enrollments.length} تسجيل من onjob_enrollments`);
                 return enrollments;
             } catch (error) {
-                console.error("❌ خطأ في تحميل التسجيلات:", error);
                 enrollments = [];
                 return [];
             }
         }
 
-function filterSessionsByMonth() {
-    // ✅ لو "كل الشهور" - نرجع جلسات السنة المختارة فقط
-    if (currentMonth === -1) {
-        return sessions.filter(session => {
-            if (!session.session_date) return false;
-            let dateObj = getDateObject(session.session_date);
-            return dateObj && !isNaN(dateObj.getTime()) && 
-                   dateObj.getFullYear() === currentYear;
-        });
-    }
-    
-    // ✅ شهر محدد + سنة محددة
-    return sessions.filter(session => {
-        if (!session.session_date) return false;
-        let dateObj = getDateObject(session.session_date);
-        return dateObj && !isNaN(dateObj.getTime()) && 
-               dateObj.getMonth() === currentMonth && 
-               dateObj.getFullYear() === currentYear;
-    });
-}
+        function filterSessionsByMonth() {
+            if (currentMonth === -1) {
+                return sessions.filter(function(session) {
+                    if (!session.session_date) return false;
+                    var dateObj = getDateObject(session.session_date);
+                    return dateObj && !isNaN(dateObj.getTime()) && 
+                           dateObj.getFullYear() === currentYear;
+                });
+            }
+            
+            return sessions.filter(function(session) {
+                if (!session.session_date) return false;
+                var dateObj = getDateObject(session.session_date);
+                return dateObj && !isNaN(dateObj.getTime()) && 
+                       dateObj.getMonth() === currentMonth && 
+                       dateObj.getFullYear() === currentYear;
+            });
+        }
+
         function getCourseByCode(courseCode) {
-            return courses.find(c => c.course_code === courseCode);
+            for (var i = 0; i < courses.length; i++) {
+                if (courses[i].course_code === courseCode) return courses[i];
+            }
+            return null;
         }
 
         function getEmployeeById(empId) {
-            return employees.find(e => e.id == empId);
+            for (var i = 0; i < employees.length; i++) {
+                if (employees[i].id == empId) return employees[i];
+            }
+            return null;
         }
 
-        Chart.register(ChartDataLabels);
-
-        const chartOptionsWithLabels = {
-            responsive: true,
-            maintainAspectRatio: true,
-            layout: { 
-                padding: { top: 40, bottom: 20, left: 20, right: 20 } 
-            },
-            plugins: {
-                legend: { 
-                    position: 'top', 
-                    labels: { font: { size: 11 } } 
-                },
-                tooltip: { 
-                    titleFont: { size: 11 }, 
-                    bodyFont: { size: 10 } 
-                },
-                datalabels: { 
-                    display: true, 
-                    color: '#1e3a5f',
-                    backgroundColor: 'rgba(255,255,255,0.95)',
-                    borderRadius: 8,
-                    padding: { left: 6, right: 6, top: 4, bottom: 4 },
-                    anchor: 'end',
-                    align: 'top',
-                    offset: 10,
-                    textAlign: 'center',
-                    font: { 
-                        weight: 'bold', 
-                        size: 12,
-                        family: 'Tajawal'
-                    },
-                    formatter: function(value) {
-                        return value;
-                    }
-                }
-            },
-scales: { 
-                y: { 
-                    beginAtZero: true, 
-                    title: { display: true, text: 'العدد', font: { weight: 'bold', size: 11 } },
-                    ticks: { 
-                        autoSkip: true, 
-                        maxTicksLimit: 10, 
-                        font: { size: 10 } 
-                    }
-                },
-                x: { 
-                    ticks: { font: { size: 10 } },
-                    grid: { offset: true }
-                }
-            }
-        };
-
-        const chartOptionsWithLabelsHours = {
-            ...chartOptionsWithLabels,
-            plugins: {
-                ...chartOptionsWithLabels.plugins,
-                datalabels: {
-                    ...chartOptionsWithLabels.plugins.datalabels,
-                    formatter: function(value) {
-                        return value.toFixed(1);
-                    }
-                }
-            }
-        };
-
-
-        // ========== حساب إحصائيات الأقسام ==========
         function calculateDepartmentStats(filteredSessions) {
-            const deptStats = new Map();
+            var deptStats = new Map();
             
-            filteredSessions.forEach(session => {
-                const sessionCode = session.session_code;
-                const sessionEnrollments = enrollments.filter(e => e.session_code === sessionCode && e.enrollment_status === 'Completed');
-                const course = getCourseByCode(session.course_code);
-                const sessionHours = course?.duration_hours || 0;
+            for (var i = 0; i < filteredSessions.length; i++) {
+                var session = filteredSessions[i];
+                var sessionCode = session.session_code;
+                var attendees = [];
+                for (var j = 0; j < enrollments.length; j++) {
+                    if (enrollments[j].session_code === sessionCode && enrollments[j].enrollment_status === 'Completed') {
+                        attendees.push(enrollments[j]);
+                    }
+                }
+                var course = getCourseByCode(session.course_code);
+                var sessionHours = course ? course.duration_hours : 0;
                 
-                sessionEnrollments.forEach(enrollment => {
-                    const empId = enrollment.employee_id;
-                    let dept = employeeDeptMap.get(empId);
+                for (var k = 0; k < attendees.length; k++) {
+                    var attendee = attendees[k];
+                    var empId = attendee.employee_id;
+                    var dept = employeeDeptMap.get(empId);
                     
                     if (!dept) {
-                        const employee = getEmployeeById(empId);
+                        var employee = getEmployeeById(empId);
                         if (employee && employee.department) {
                             dept = employee.department;
                             employeeDeptMap.set(empId, dept);
                         }
                     }
                     
-                    if (!dept) dept = 'غير محدد';
+                    if (!dept) dept = 'Unassigned Department';
                     
                     if (!deptStats.has(dept)) {
                         deptStats.set(dept, { 
-                            sessions: new Set(),
-                            uniqueEmployees: new Set(),
+                            uniqueEmployees: new Set(), 
+                            sessions: new Set(), 
                             hours: 0
                         });
                     }
-                    const stats = deptStats.get(dept);
+                    var stats = deptStats.get(dept);
                     stats.uniqueEmployees.add(empId);
                     stats.sessions.add(sessionCode);
                     stats.hours += sessionHours;
+                }
+            }
+            
+            var result = [];
+            var keys = Array.from(deptStats.keys());
+            for (var l = 0; l < keys.length; l++) {
+                var dept = keys[l];
+                var stats = deptStats.get(dept);
+                result.push({
+                    department: dept,
+                    sessions: stats.sessions.size,
+                    uniqueEmployees: stats.uniqueEmployees.size,
+                    hours: parseFloat(stats.hours.toFixed(1))
                 });
-            });
-            
-            const result = Array.from(deptStats.keys()).map(dept => ({
-                department: dept,
-                sessions: deptStats.get(dept).sessions.size,
-                uniqueEmployees: deptStats.get(dept).uniqueEmployees.size,
-                hours: parseFloat(deptStats.get(dept).hours.toFixed(1))
-            }));
-            
-            return result.sort((a, b) => b.uniqueEmployees - a.uniqueEmployees);
+            }
+            return result.sort(function(a, b) { return b.uniqueEmployees - a.uniqueEmployees; });
         }
 
-        // ========== حساب إحصائيات الكورسات ==========
         function calculateCoursesStats(filteredSessions) {
-            const courseStats = new Map();
+            var courseStats = new Map();
             
-            filteredSessions.forEach(session => {
-                const course = getCourseByCode(session.course_code);
-                const courseName = course ? course.course_name : 'غير محدد';
-                const sessionHours = course?.duration_hours || 0;
+            for (var i = 0; i < filteredSessions.length; i++) {
+                var session = filteredSessions[i];
+                var course = getCourseByCode(session.course_code);
+                var courseName = course ? course.course_name : 'Not Specified';
+                var sessionHours = course ? course.duration_hours : 0;
                 
-                const sessionEnrollments = enrollments.filter(e => e.session_code === session.session_code && e.enrollment_status === 'Completed');
-                const uniqueEmployees = new Set(sessionEnrollments.map(e => e.employee_id));
+                var attendees = [];
+                for (var j = 0; j < enrollments.length; j++) {
+                    if (enrollments[j].session_code === session.session_code && enrollments[j].enrollment_status === 'Completed') {
+                        attendees.push(enrollments[j]);
+                    }
+                }
+                var uniqueEmployees = new Set();
+                for (var k = 0; k < attendees.length; k++) {
+                    uniqueEmployees.add(attendees[k].employee_id);
+                }
                 
                 if (!courseStats.has(courseName)) {
                     courseStats.set(courseName, { 
@@ -647,39 +601,76 @@ scales: {
                         hours: 0 
                     });
                 }
-                const stats = courseStats.get(courseName);
+                var stats = courseStats.get(courseName);
                 stats.sessions++;
-                uniqueEmployees.forEach(empId => stats.uniqueEmployees.add(empId));
+                var empIds = Array.from(uniqueEmployees);
+                for (var l = 0; l < empIds.length; l++) {
+                    stats.uniqueEmployees.add(empIds[l]);
+                }
                 stats.hours += sessionHours * uniqueEmployees.size;
-            });
+            }
             
-            const result = Array.from(courseStats.keys()).map(courseName => ({
-                courseName: courseName,
-                sessions: courseStats.get(courseName).sessions,
-                uniqueAttendees: courseStats.get(courseName).uniqueEmployees.size,
-                hours: parseFloat(courseStats.get(courseName).hours.toFixed(1))
-            }));
-            
-            return result.sort((a, b) => b.uniqueAttendees - a.uniqueAttendees);
+            var result = [];
+            var keys = Array.from(courseStats.keys());
+            for (var m = 0; m < keys.length; m++) {
+                var courseName = keys[m];
+                var stats = courseStats.get(courseName);
+                result.push({
+                    courseName: courseName,
+                    sessions: stats.sessions,
+                    uniqueAttendees: stats.uniqueEmployees.size,
+                    hours: parseFloat(stats.hours.toFixed(1))
+                });
+            }
+            return result.sort(function(a, b) { return b.uniqueAttendees - a.uniqueAttendees; });
         }
 
         function calculateStats(filteredSessions) {
-            const sessionCodes = new Set(filteredSessions.map(s => s.session_code));
-            const filteredEnrollments = enrollments.filter(e => sessionCodes.has(e.session_code));
-            const completedEnrollments = filteredEnrollments.filter(e => e.enrollment_status === 'Completed');
-            const uniqueEmployees = new Set();
-            filteredEnrollments.forEach(e => { if (e.employee_id) uniqueEmployees.add(e.employee_id); });
+            var sessionCodes = new Set();
+            for (var i = 0; i < filteredSessions.length; i++) {
+                sessionCodes.add(filteredSessions[i].session_code);
+            }
             
-            let totalHours = 0;
-            const executedCourses = new Set();
-            filteredSessions.forEach(session => {
-                const course = getCourseByCode(session.course_code);
-                const sessionHours = course?.duration_hours || 0;
-                const attendanceCount = enrollments.filter(e => e.session_code === session.session_code && e.enrollment_status === 'Completed').length;
+            var filteredEnrollments = [];
+            for (var j = 0; j < enrollments.length; j++) {
+                if (sessionCodes.has(enrollments[j].session_code)) {
+                    filteredEnrollments.push(enrollments[j]);
+                }
+            }
+            
+            var completedEnrollments = [];
+            for (var k = 0; k < filteredEnrollments.length; k++) {
+                if (filteredEnrollments[k].enrollment_status === 'Completed') {
+                    completedEnrollments.push(filteredEnrollments[k]);
+                }
+            }
+            
+            var uniqueEmployees = new Set();
+            for (var l = 0; l < filteredEnrollments.length; l++) {
+                if (filteredEnrollments[l].employee_id) {
+                    uniqueEmployees.add(filteredEnrollments[l].employee_id);
+                }
+            }
+            
+            var totalHours = 0;
+            var executedCourses = new Set();
+            for (var m = 0; m < filteredSessions.length; m++) {
+                var session = filteredSessions[m];
+                var course = getCourseByCode(session.course_code);
+                var sessionHours = course ? course.duration_hours : 0;
+                var attendanceCount = 0;
+                for (var n = 0; n < enrollments.length; n++) {
+                    if (enrollments[n].session_code === session.session_code && enrollments[n].enrollment_status === 'Completed') {
+                        attendanceCount++;
+                    }
+                }
                 totalHours += sessionHours * attendanceCount;
                 if (attendanceCount > 0 && course) executedCourses.add(course.course_name);
-            });
-            const hoursPerEmployee = uniqueEmployees.size > 0 ? (totalHours / uniqueEmployees.size).toFixed(1) : 0;
+            }
+            
+            var hoursPerEmployee = uniqueEmployees.size > 0 ? (totalHours / uniqueEmployees.size).toFixed(1) : 0;
+            var completionRate = filteredEnrollments.length > 0 ? (completedEnrollments.length / filteredEnrollments.length * 100).toFixed(1) : 0;
+            
             return {
                 totalCoursesAll: courses.length,
                 totalCoursesExecuted: executedCourses.size,
@@ -689,285 +680,426 @@ scales: {
                 uniqueEmployees: uniqueEmployees.size,
                 totalHours: parseFloat(totalHours.toFixed(1)),
                 hoursPerEmployee: hoursPerEmployee,
-                completionRate: filteredEnrollments.length > 0 ? (completedEnrollments.length / filteredEnrollments.length * 100).toFixed(1) : 0
+                completionRate: completionRate
             };
         }
 
         function getEmployeesDetails(filteredSessions) {
-            const employeesMap = new Map();
+            var employeesMap = new Map();
             
-            filteredSessions.forEach(session => {
-                const sessionCode = session.session_code;
-                const sessionEnrollments = enrollments.filter(e => e.session_code === sessionCode && e.enrollment_status === 'Completed');
-                const course = getCourseByCode(session.course_code);
-                const sessionHours = course?.duration_hours || 0;
+            for (var i = 0; i < filteredSessions.length; i++) {
+                var session = filteredSessions[i];
+                var sessionCode = session.session_code;
+                var attendees = [];
+                for (var j = 0; j < enrollments.length; j++) {
+                    if (enrollments[j].session_code === sessionCode && enrollments[j].enrollment_status === 'Completed') {
+                        attendees.push(enrollments[j]);
+                    }
+                }
+                var course = getCourseByCode(session.course_code);
+                var sessionHours = course ? course.duration_hours : 0;
                 
-                sessionEnrollments.forEach(enrollment => {
-                    const empId = enrollment.employee_id;
-                    const empData = getEmployeeById(empId);
-                    if (!empData) return;
+                for (var k = 0; k < attendees.length; k++) {
+                    var attendee = attendees[k];
+                    var empId = attendee.employee_id;
+                    var empData = getEmployeeById(empId);
+                    if (!empData) continue;
                     
                     if (!employeesMap.has(empId)) {
                         employeesMap.set(empId, {
                             id: empId,
-                            name: empData.fullName || 'غير معروف',
-                            department: empData.department || 'غير محدد',
+                            name: empData.fullName || 'Unknown',
+                            department: empData.department || 'Not Specified',
                             position: empData.position || '-',
                             sessions: [],
                             totalHours: 0,
                             totalCourses: new Set()
                         });
                     }
-                    const emp = employeesMap.get(empId);
+                    var emp = employeesMap.get(empId);
                     emp.sessions.push({
                         session_date: formatDate(session.session_date),
-                        course_name: course?.course_name || 'غير محدد',
-                        category: course?.category || '-',
+                        course_name: course ? course.course_name : 'Not Specified',
+                        category: course ? course.category : '-',
                         hours: sessionHours,
                         trainer: session.trainer_name || '-',
-                        score: enrollment.score || 'N/A'
+                        score: attendee.score || 'N/A'
                     });
                     emp.totalHours += sessionHours;
-                    emp.totalCourses.add(course?.course_name);
-                });
-            });
+                    if (course) emp.totalCourses.add(course.course_name);
+                }
+            }
             
-            const result = Array.from(employeesMap.values()).map(emp => ({
-                ...emp,
-                totalCourses: emp.totalCourses.size,
-                totalHours: parseFloat(emp.totalHours.toFixed(1)),
-                sessions: emp.sessions.sort((a, b) => new Date(b.session_date) - new Date(a.session_date))
-            }));
-            return result.sort((a, b) => b.totalHours - a.totalHours);
+            var result = [];
+            var keys = Array.from(employeesMap.keys());
+            for (var l = 0; l < keys.length; l++) {
+                var emp = employeesMap.get(keys[l]);
+                result.push({
+                    ...emp,
+                    totalCourses: emp.totalCourses.size,
+                    totalHours: parseFloat(emp.totalHours.toFixed(1)),
+                    sessions: emp.sessions.sort(function(a, b) { return new Date(b.session_date) - new Date(a.session_date); })
+                });
+            }
+            return result.sort(function(a, b) { return b.totalHours - a.totalHours; });
         }
 
         function renderEmployeesTable(employeesDetails, selectedDept) {
-            let filteredEmployees = employeesDetails;
-            if (selectedDept !== 'all') filteredEmployees = employeesDetails.filter(emp => emp.department === selectedDept);
-            if (filteredEmployees.length === 0) return '<div style="text-align:center; padding:2rem;">📭 لا يوجد موظفين مشاركين</div>';
-            return `
-                <div class="table-wrapper">
-                    <table style="width:100%; min-width:800px;">
-                        <thead>
-                            <tr style="background:#1e3a5f; color:white;">
-                                <th>#</th><th>كود الموظف</th><th>الاسم</th>
-                                <th>القسم</th><th>الوظيفة</th><th>الكورسات</th>
-                                <th>الجلسات</th><th>الساعات</th><th>التفاصيل</th>
-                            <tr>
-                        </thead>
-                        <tbody>
-                            ${filteredEmployees.map((emp, index) => `
-                                <tr>
-                                    <td>${index+1}</td>
-                                    <td>${emp.id}</td>
-                                    <td><strong>${emp.name}</strong></td>
-                                    <td><span style="background:#e2e8f0; padding:0.2rem 0.6rem; border-radius:1rem;">${emp.department}</span></td>
-                                    <td>${emp.position}</td>
-                                    <td>${emp.totalCourses} كورس</span></td>
-                                    <td>${emp.sessions.length} جلسة</span></td>
-                                    <td><span style="font-weight:bold; color:#2b7a4b;">${emp.totalHours}</span> ساعة</span></td>
-                                    <td><button class="btn-details" onclick="showEmployeeDetails('${emp.id}')">📋 عرض</button></td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+            var filteredEmployees = employeesDetails;
+            if (selectedDept !== 'all') {
+                filteredEmployees = [];
+                for (var i = 0; i < employeesDetails.length; i++) {
+                    if (employeesDetails[i].department === selectedDept) {
+                        filteredEmployees.push(employeesDetails[i]);
+                    }
+                }
+            }
+            if (filteredEmployees.length === 0) return '<div style="text-align:center; padding:2rem;">📭 No participating employees</div>';
+            
+            var html = '<div class="table-wrapper"><table style="width:100%; min-width:800px;"><thead><tr style="background:#0a2540; color:white;"><th>#</th><th>Employee ID</th><th>Name</th><th>Department</th><th>Position</th><th>Courses</th><th>Sessions</th><th>Hours</th><th>Details</th></tr></thead><tbody>';
+            for (var i = 0; i < filteredEmployees.length; i++) {
+                var emp = filteredEmployees[i];
+                html += '<table>' +
+                    '<td>' + (i+1) + '</td>' +
+                    '<td>' + emp.id + '</td>' +
+                    '<td><strong>' + emp.name + '</strong></td>' +
+                    '<td><span style="background:#e2edf2; padding:0.2rem 0.6rem; border-radius:1rem;">' + emp.department + '</span></td>' +
+                    '<td>' + emp.position + '</td>' +
+                    '<td>' + emp.totalCourses + ' course(s)</td>' +
+                    '<td>' + emp.sessions.length + ' session(s)</td>' +
+                    '<td><span style="font-weight:bold; color:#2c7a4d;">' + emp.totalHours + '</span> hrs</td>' +
+                    '<td><button class="btn-details" onclick="showEmployeeDetails(\'' + emp.id + '\')">📋 View</button></td>' +
+                '</tr>';
+            }
+            html += '</tbody>}</div>';
+            return html;
         }
 
         function renderDepartmentFilter(employeesDetails) {
-            const departments = [...new Set(employeesDetails.map(emp => emp.department))].sort();
-            return `<div class="filter-group"><label>🏢 القسم:</label><select id="employeeDeptFilter" class="dept-select" onchange="filterEmployeesTable()"><option value="all">كل الأقسام</option>${departments.map(d => `<option value="${d}">${d}</option>`).join('')}</select></div>`;
+            var departmentsSet = new Set();
+            for (var i = 0; i < employeesDetails.length; i++) {
+                departmentsSet.add(employeesDetails[i].department);
+            }
+            var departments = Array.from(departmentsSet).sort();
+            var html = '<div class="filter-group"><label>🏢 Department:</label><select id="employeeDeptFilter" class="dept-select" onchange="filterEmployeesTable()"><option value="all">All Departments</option>';
+            for (var j = 0; j < departments.length; j++) {
+                html += '<option value="' + departments[j] + '">' + departments[j] + '</option>';
+            }
+            html += '</select></div>';
+            return html;
         }
 
         function filterEmployeesTable() {
-            const dept = document.getElementById('employeeDeptFilter').value;
-            const container = document.getElementById('employeesTableContainer');
+            var dept = document.getElementById('employeeDeptFilter').value;
+            var container = document.getElementById('employeesTableContainer');
             if (container) container.innerHTML = renderEmployeesTable(window.currentEmployeesDetails, dept);
         }
 
         function showEmployeeDetails(employeeId) {
-            const employeesDetails = window.currentEmployeesDetails;
-            const emp = employeesDetails.find(e => e.id == employeeId);
+            var employeesDetails = window.currentEmployeesDetails;
+            var emp = null;
+            for (var i = 0; i < employeesDetails.length; i++) {
+                if (employeesDetails[i].id == employeeId) {
+                    emp = employeesDetails[i];
+                    break;
+                }
+            }
             if (!emp) return;
-            const sortedSessions = [...emp.sessions].sort((a, b) => new Date(b.session_date) - new Date(a.session_date));
-            const modal = document.createElement('div');
-            modal.style.cssText = `position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center; z-index:1000;`;
-            modal.innerHTML = `<div style="background:white; border-radius:1.5rem; width:90%; max-width:800px; max-height:80vh; overflow-y:auto; padding:1.5rem;">
-                <div style="display:flex; justify-content:space-between;"><h3>📋 سجل تدريبات الموظف (On Job)</h3><button onclick="this.closest('div').parentElement.remove()" style="background:#e53e3e; color:white; border:none; padding:0.3rem 1rem; border-radius:1rem;">✖</button></div>
-                <div style="background:linear-gradient(135deg, #1e3a5f, #2b7a4b); color:white; padding:1rem; border-radius:1rem; margin:1rem 0;">
-                    <div><strong>👤 الاسم:</strong> ${emp.name}</div>
-                    <div><strong>🆔 كود الموظف:</strong> ${emp.id}</div>
-                    <div><strong>🏢 القسم:</strong> ${emp.department}</div>
-                    <div><strong>📚 عدد الكورسات:</strong> ${emp.totalCourses}</div>
-                    <div><strong>🎯 عدد الجلسات:</strong> ${emp.sessions.length}</div>
-                    <div><strong>⏰ إجمالي الساعات:</strong> ${emp.totalHours} ساعة</div>
-                </div>
-                <table style="width:100%; border-collapse:collapse;"><thead><tr style="background:#f7fafc;"><th>#</th><th>التاريخ</th><th>الكورس</th><th>المدرب</th><th>الساعات</th><th>الدرجة</th></tr></thead><tbody>
-                    ${sortedSessions.map((s, i) => `<tr><td style="width:40px;">${i+1}</td><td style="text-align:center;">${s.session_date||'-'}</td><td style="text-align:center;">${s.course_name}</td><td style="text-align:center;">${s.trainer||'-'}</td><td style="text-align:center;">${s.hours} ساعة</span></td><td style="text-align:center;"><span style="background:#c6f6d5; padding:0.2rem 0.5rem; border-radius:1rem;">${s.score||'N/A'}</span></td></tr>`).join('')}
-                </tbody>}</div>`;
+            var sortedSessions = [...emp.sessions].sort(function(a, b) { return new Date(b.session_date) - new Date(a.session_date); });
+            var modal = document.createElement('div');
+            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); display:flex; justify-content:center; align-items:center; z-index:1000;';
+            var modalHtml = '<div style="background:white; border-radius:1.5rem; width:90%; max-width:800px; max-height:80vh; overflow-y:auto; padding:1.5rem;">';
+            modalHtml += '<div style="display:flex; justify-content:space-between;"><h3>📋 Employee Training Log (On-Job)</h3><button onclick="this.closest(\'div\').parentElement.remove()" style="background:#dc2626; color:white; border:none; padding:0.3rem 1rem; border-radius:1rem;">✖</button></div>';
+            modalHtml += '<div style="background:linear-gradient(135deg, #0a2540, #2c7a4d); color:white; padding:1rem; border-radius:1rem; margin:1rem 0;">';
+            modalHtml += '<div><strong>👤 Name:</strong> ' + emp.name + '</div>';
+            modalHtml += '<div><strong>🆔 Employee ID:</strong> ' + emp.id + '</div>';
+            modalHtml += '<div><strong>🏢 Department:</strong> ' + emp.department + '</div>';
+            modalHtml += '<div><strong>📚 Number of Courses:</strong> ' + emp.totalCourses + '</div>';
+            modalHtml += '<div><strong>🎯 Number of Sessions:</strong> ' + emp.sessions.length + '</div>';
+            modalHtml += '<div><strong>⏰ Total Hours:</strong> ' + emp.totalHours + ' hrs</div>';
+            modalHtml += '</div><table style="width:100%; border-collapse:collapse;"><thead><tr style="background:#f7fafc;"><th>#</th><th>Date</th><th>Course</th><th>Trainer</th><th>Hours</th><th>Score</th></tr></thead><tbody>';
+            for (var j = 0; j < sortedSessions.length; j++) {
+                var s = sortedSessions[j];
+                modalHtml += '<tr>' +
+                    '<td>' + (j+1) + '</td>' +
+                    '<td>' + (s.session_date || '-') + '</td>' +
+                    '<td>' + s.course_name + '</td>' +
+                    '<td>' + (s.trainer || '-') + '</td>' +
+                    '<td>' + s.hours + ' hrs</td>' +
+                    '<td><span style="background:#dcfce7; padding:0.2rem 0.5rem; border-radius:1rem;">' + (s.score || 'N/A') + '</span></td>' +
+                '</tr>';
+            }
+            modalHtml += '</tbody>}</div>';
+            modal.innerHTML = modalHtml;
             document.body.appendChild(modal);
-            modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+            modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
         }
 
         function renderDepartmentStats(deptStats) {
-            if (deptStats.length === 0) return '<div style="text-align:center; padding:2rem;">لا توجد بيانات</div>';
-            return `<div class="dept-stats-grid">${deptStats.map((dept, index) => `<div class="dept-card"><div class="dept-rank">#${index+1}</div><div class="dept-info"><div class="dept-name">🏢 ${dept.department}</div><div class="dept-stats">📚 ${dept.sessions} جلسة | 👥 ${dept.uniqueEmployees} موظف | ⏰ ${dept.hours} ساعة</div></div></div>`).join('')}</div>`;
+            if (deptStats.length === 0) return '<div style="text-align:center; padding:2rem;">No data available</div>';
+            var html = '<div class="dept-stats-grid">';
+            for (var i = 0; i < deptStats.length; i++) {
+                var dept = deptStats[i];
+                html += '<div class="dept-card"><div class="dept-rank">#' + (i+1) + '</div><div class="dept-info"><div class="dept-name">🏢 ' + dept.department + '</div><div class="dept-stats">📚 ' + dept.sessions + ' sessions | 👥 ' + dept.uniqueEmployees + ' employees | ⏰ ' + dept.hours + ' hrs</div></div></div>';
+            }
+            html += '</div>';
+            return html;
         }
 
         function renderCoursesTable(coursesStats) {
-            if (coursesStats.length === 0) return '<div style="text-align:center; padding:2rem;">📭 لا توجد تدريبات منفذة في هذا الشهر</div>';
-            return `<div class="table-wrapper"><table><thead><tr style="background:#1e3a5f; color:white;"><th>#</th><th>اسم الكورس</th><th>عدد الجلسات</th><th>عدد الحضور</th><th>إجمالي الساعات</th></tr></thead><tbody>
-                ${coursesStats.map((course, index) => `<tr><td style="padding: 12px; text-align: center; font-weight: bold;">${index + 1}</td><td style="padding: 12px; text-align: center; font-weight: 500;">${course.courseName}</td><td style="padding: 12px; text-align: center;"><span class="badge-sessions">${course.sessions} جلسة</span></td><td style="padding: 12px; text-align: center;"><span class="badge-attendees">${course.uniqueAttendees} موظف</span></td><td style="padding: 12px; text-align: center;"><span class="badge-hours">${course.hours} ساعة</span></td></tr>`).join('')}
-            </tbody></td></div>`;
+            if (coursesStats.length === 0) return '<div style="text-align:center; padding:2rem;">📭 No trainings delivered this month</div>';
+            var html = '<div class="table-wrapper">\n</table>\n<thead><tr style="background:#0a2540; color:white;"><th>#</th><th>Course Name</th><th>Number of Sessions</th><th>Number of Attendees</th><th>Total Hours</th></tr></thead><tbody>';
+            for (var i = 0; i < coursesStats.length; i++) {
+                var course = coursesStats[i];
+                html += '<tr>' +
+                    '<td>' + (i+1) + '</td>' +
+                    '<td>' + course.courseName + '</td>' +
+                    '<td><span class="badge-sessions">' + course.sessions + ' session(s)</span></td>' +
+                    '<td><span class="badge-attendees">' + course.uniqueAttendees + ' employee(s)</span></td>' +
+                    '<td><span class="badge-hours">' + course.hours + ' hrs</span></td>' +
+                '</tr>';
+            }
+            html += '</tbody>}</div>';
+            return html;
         }
 
         function renderStats(stats) {
-            return `<div class="stats-grid">
-                <div class="stat-card"><div class="stat-value">${stats.totalCoursesAll}</div><div class="stat-label">📚 إجمالي الكورسات</div></div>
-                <div class="stat-card"><div class="stat-value">${stats.totalCoursesExecuted}</div><div class="stat-label">✅ الكورسات المنفذة</div></div>
-                <div class="stat-card"><div class="stat-value">${stats.totalSessions}</div><div class="stat-label">🎯 إجمالي الجلسات</div></div>
-                <div class="stat-card"><div class="stat-value">${stats.uniqueEmployees}</div><div class="stat-label">👥 عدد الموظفين</div></div>
-                <div class="stat-card"><div class="stat-value">${stats.totalHours}</div><div class="stat-label">⏰ إجمالي الساعات</div></div>
-                <div class="stat-card"><div class="stat-value">${stats.hoursPerEmployee}</div><div class="stat-label">📊 الساعات لكل موظف</div></div>
-                <div class="stat-card"><div class="stat-value">${stats.completionRate}%</div><div class="stat-label">✅ نسبة الإكمال</div></div>
-            </div>`;
+            return '<div class="stats-grid">' +
+                '<div class="stat-card"><div class="stat-value">' + stats.totalCoursesAll + '</div><div class="stat-label">📚 Total Courses</div></div>' +
+                '<div class="stat-card"><div class="stat-value">' + stats.totalCoursesExecuted + '</div><div class="stat-label">✅ Executed Courses</div></div>' +
+                '<div class="stat-card"><div class="stat-value">' + stats.totalSessions + '</div><div class="stat-label">🎯 Completed Sessions</div></div>' +
+                '<div class="stat-card"><div class="stat-value">' + stats.uniqueEmployees + '</div><div class="stat-label">👥 Employees Trained</div></div>' +
+                '<div class="stat-card"><div class="stat-value">' + stats.totalHours + '</div><div class="stat-label">⏰ Total Hours</div></div>' +
+                '<div class="stat-card"><div class="stat-value">' + stats.hoursPerEmployee + '</div><div class="stat-label">📊 Avg Hours/Employee</div></div>' +
+                '<div class="stat-card"><div class="stat-value">' + stats.completionRate + '%</div><div class="stat-label">✅ Completion Rate</div></div>' +
+                '</div>';
         }
 
+        Chart.register(ChartDataLabels);
+
         function renderCharts(deptStats) {
-            const hoursSorted = [...deptStats].sort((a, b) => b.hours - a.hours);
-            const deptNamesHours = hoursSorted.map(d => d.department);
-            const deptHours = hoursSorted.map(d => d.hours);
-            const employeesSorted = [...deptStats].sort((a, b) => b.uniqueEmployees - a.uniqueEmployees);
-            const deptNamesEmployees = employeesSorted.map(d => d.department);
-            const deptUniqueEmployees = employeesSorted.map(d => d.uniqueEmployees);
+            var hoursSorted = [...deptStats].sort(function(a, b) { return b.hours - a.hours; });
+            var deptNamesHours = hoursSorted.map(function(d) { return d.department; });
+            var deptHours = hoursSorted.map(function(d) { return d.hours; });
+            var employeesSorted = [...deptStats].sort(function(a, b) { return b.uniqueEmployees - a.uniqueEmployees; });
+            var deptNamesEmployees = employeesSorted.map(function(d) { return d.department; });
+            var deptUniqueEmployees = employeesSorted.map(function(d) { return d.uniqueEmployees; });
             
-            setTimeout(() => {
-                const deptEmployeesCtx = document.getElementById('deptEmployeesChart')?.getContext('2d');
+            setTimeout(function() {
+                var deptEmployeesCtx = document.getElementById('deptEmployeesChart')?.getContext('2d');
                 if (deptEmployeesCtx) {
                     new Chart(deptEmployeesCtx, {
                         type: 'bar',
-                        data: { labels: deptNamesEmployees, datasets: [{ label: 'عدد الموظفين', data: deptUniqueEmployees, backgroundColor: '#4299e1' }] }
+                        data: { 
+                            labels: deptNamesEmployees, 
+                            datasets: [{ 
+                                label: 'Number of Employees', 
+                                data: deptUniqueEmployees, 
+                                backgroundColor: '#3b82f6',
+                                borderRadius: 10,
+                                barPercentage: 0.7
+                            }] 
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: { position: 'top', labels: { font: { size: 12 } } },
+                                datalabels: { 
+                                    display: true, 
+                                    color: '#0a2540',
+                                    backgroundColor: 'rgba(255,255,255,0.95)',
+                                    borderRadius: 8,
+                                    padding: { left: 6, right: 6, top: 4, bottom: 4 },
+                                    anchor: 'end',
+                                    align: 'top',
+                                    offset: 8,
+                                    font: { weight: 'bold', size: 11, family: 'Inter' }
+                                }
+                            },
+                            scales: { 
+                                y: { beginAtZero: true, title: { display: true, text: 'Number of Employees', font: { weight: 'bold', size: 11 } }, ticks: { stepSize: 1, font: { size: 10 } } },
+                                x: { ticks: { font: { size: 10 } } }
+                            }
+                        }
                     });
                 }
                 
-                const deptHoursCtx = document.getElementById('deptHoursChart')?.getContext('2d');
+                var deptHoursCtx = document.getElementById('deptHoursChart')?.getContext('2d');
                 if (deptHoursCtx) {
                     new Chart(deptHoursCtx, {
                         type: 'bar',
-                        data: { labels: deptNamesHours, datasets: [{ label: 'عدد الساعات', data: deptHours, backgroundColor: '#2b7a4b' }] }
+                        data: { 
+                            labels: deptNamesHours, 
+                            datasets: [{ 
+                                label: 'Total Hours', 
+                                data: deptHours, 
+                                backgroundColor: '#2c7a4d',
+                                borderRadius: 10,
+                                barPercentage: 0.7
+                            }] 
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: true,
+                            plugins: {
+                                legend: { position: 'top', labels: { font: { size: 12 } } },
+                                datalabels: { 
+                                    display: true, 
+                                    color: '#0a2540',
+                                    backgroundColor: 'rgba(255,255,255,0.95)',
+                                    borderRadius: 8,
+                                    padding: { left: 6, right: 6, top: 4, bottom: 4 },
+                                    anchor: 'end',
+                                    align: 'top',
+                                    offset: 8,
+                                    font: { weight: 'bold', size: 11, family: 'Inter' },
+                                    formatter: function(value) { return value.toFixed(1); }
+                                }
+                            },
+                            scales: { 
+                                y: { beginAtZero: true, title: { display: true, text: 'Total Hours', font: { weight: 'bold', size: 11 } }, ticks: { stepSize: 1, font: { size: 10 } } },
+                                x: { ticks: { font: { size: 10 } } }
+                            }
+                        }
                     });
                 }
             }, 100);
             
-            return `<div class="charts-row">
-                <div class="chart-card"><h3>📊 عدد الموظفين المشاركين</h3><canvas id="deptEmployeesChart"></canvas></div>
-                <div class="chart-card"><h3>⏰ إجمالي ساعات التدريب</h3><canvas id="deptHoursChart"></canvas></div>
-            </div>`;
+            return '<div class="charts-row">' +
+                '<div class="chart-card"><h3>📊 Employees per Department</h3><div class="chart-wrapper"><canvas id="deptEmployeesChart"></canvas></div></div>' +
+                '<div class="chart-card"><h3>⏰ Training Hours per Department</h3><div class="chart-wrapper"><canvas id="deptHoursChart"></canvas></div></div>' +
+                '</div>';
         }
 
-function changeMonth() { 
-    currentMonth = parseInt(document.getElementById('monthSelect').value); 
-    loadPage(); 
-}
+        function changeMonth() { 
+            currentMonth = parseInt(document.getElementById('monthSelect').value); 
+            loadPage(); 
+        }
 
-// ✅ دالة تغيير السنة - أضفها هنا
-function changeYear() {
-    currentYear = parseInt(document.getElementById('yearSelect').value);
-    loadPage();
-}
+        function changeYear() {
+            currentYear = parseInt(document.getElementById('yearSelect').value);
+            loadPage();
+        }
+
+        async function loadPage(forceRefresh) {
+            await Promise.all([
+                loadEmployeesData(forceRefresh),
+                loadCourses(forceRefresh),
+                loadSessions(forceRefresh),
+                loadEnrollments(forceRefresh)
+            ]);
+            
+            var filteredSessions = filterSessionsByMonth();
+            
+            var stats = calculateStats(filteredSessions);
+            var deptStats = calculateDepartmentStats(filteredSessions);
+            var coursesStats = calculateCoursesStats(filteredSessions);
+            var employeesDetails = getEmployeesDetails(filteredSessions);
+            
+            window.currentEmployeesDetails = employeesDetails;
+            var monthName = currentMonth === -1 ? "All Months" : monthNames[currentMonth];
+            
+            var currentFullYear = new Date().getFullYear();
+            var startYear = 2025;
+            var yearOptionsHTML = '';
+            for (var y = startYear; y <= currentFullYear + 1; y++) {
+                yearOptionsHTML += '<option value="' + y + '" ' + (currentYear === y ? 'selected' : '') + '>' + y + '</option>';
+            }
+            
+            document.getElementById('app').innerHTML = `
+                <div class="navbar">
+                    <div class="logo"><h2>🎓 <span>Learning</span> & Development Management System</h2></div>
+                    <div class="nav-links">
+                        <a href="index.html" class="home">🏠 Dashboard</a>
+                        <a href="#" onclick="logout()" class="logout">🚪 Logout</a>
+                    </div>
+                </div>
+                <div class="container">
+                    <div class="page-header">
+                        <h1>📊 On-Job Training Reports</h1>
+                    </div>
+                    
+                    <div class="filter-bar">
+                        <div class="filter-group">
+                            <label>📅 Year:</label>
+                            <select id="yearSelect" class="year-select" onchange="changeYear()">
+                                ${yearOptionsHTML}
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>📅 Month:</label>
+                            <select id="monthSelect" class="month-select" onchange="changeMonth()">
+                                <option value="-1" ${currentMonth === -1 ? 'selected' : ''}>All Months</option>
+                                ${monthNames.map(function(m, i) { 
+                                    return '<option value="' + i + '" ' + (currentMonth === i ? 'selected' : '') + '>' + m + '</option>'; 
+                                }).join('')}
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <button class="refresh-btn" onclick="refreshAllData()">🔄 Refresh Data</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Report Title - Centered before cards -->
+                    <div style="text-align: center; margin: 1.5rem 0 1rem 0;">
+                        <div style="display: inline-block; background: linear-gradient(135deg, #0a2540, #2c7a4d); color: white; padding: 0.75rem 2rem; border-radius: 2rem; font-weight: 600; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                            📊 On-Job Training Report for ${monthName} ${currentYear}
+                        </div>
+                    </div>
+                    
+                    <div id="statsContainer">${renderStats(stats)}</div>
+                    
+                    <div class="data-table-card">
+                        <h3>🏆 Most Participating Departments</h3>
+                        <div id="deptStatsContainer">${renderDepartmentStats(deptStats)}</div>
+                    </div>
+                    
+                    <div id="chartsContainer">${renderCharts(deptStats)}</div>
+                    
+                    <div class="data-table-card">
+                        <h3>👥 Participating Employees (${monthName} ${currentYear})</h3>
+                        ${renderDepartmentFilter(employeesDetails)}
+                        <div id="employeesTableContainer" style="margin-top:1rem;">${renderEmployeesTable(employeesDetails, 'all')}</div>
+                    </div>
+                    
+                    <div class="data-table-card">
+                        <h3>📚 Trainings Delivered During ${monthName} ${currentYear}</h3>
+                        <div id="coursesTableContainer">${renderCoursesTable(coursesStats)}</div>
+                    </div>
+                </div>
+                <div class="footer">
+                    <p>© 2025 Learning & Development Management System</p>
+                </div>
+            `;
+            
+            updateCacheInfo();
+            window.filterEmployeesTable = filterEmployeesTable;
+            window.showEmployeeDetails = showEmployeeDetails;
+        }
 
         function logout() { 
-            // مسح الكاش عند تسجيل الخروج
             if (window.CacheManager) {
-                for (const key in CACHE_KEYS) {
+                for (var key in CACHE_KEYS) {
                     CacheManager.remove(CACHE_KEYS[key]);
                     localStorage.removeItem(CACHE_KEYS[key] + '_time');
                 }
             }
-            auth.signOut().then(() => {
+            auth.signOut().then(function() {
                 sessionStorage.removeItem('loggedUser'); 
                 window.location.href = 'login.html';
             });
         }
 
-async function loadPage(forceRefresh) {
-    await Promise.all([
-        loadEmployeesData(forceRefresh),
-        loadCourses(forceRefresh),
-        loadSessions(forceRefresh),
-        loadEnrollments(forceRefresh)
-    ]);
-    
-    let filteredSessions = filterSessionsByMonth();
-    
-    const stats = calculateStats(filteredSessions);
-    const deptStats = calculateDepartmentStats(filteredSessions);
-    const coursesStats = calculateCoursesStats(filteredSessions);
-    const employeesDetails = getEmployeesDetails(filteredSessions);
-    
-    window.currentEmployeesDetails = employeesDetails;
-    const monthName = currentMonth === -1 ? "كل الشهور" : monthNames[currentMonth];
-    
-    // ✅ توليد قائمة السنوات تلقائياً
-    const currentFullYear = new Date().getFullYear();
-    const startYear = 2025;
-    let yearOptionsHTML = '';
-    for (let y = startYear; y <= currentFullYear + 1; y++) {
-        yearOptionsHTML += `<option value="${y}" ${currentYear === y ? 'selected' : ''}>${y}</option>`;
-    }
-    
-    document.getElementById('app').innerHTML = `
-        <div class="navbar">
-            <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
-            <div class="nav-links">
-                <div class="filter-group"><button class="refresh-btn" onclick="refreshAllData()">🔄 تحديث البيانات</button></div>
-                <a href="index.html" class="home">🏠 الرئيسية</a>
-                <a href="#" onclick="logout()" class="logout">🚪 تسجيل خروج</a>
-            </div>
-        </div>
-        <div class="container">
-            <div class="page-header"><h1>📊 تقارير التدريب (On Job)</h1><p>تحليل شامل للتدريبات الداخلية - ${monthName} ${currentYear}</p></div>
-            <div class="filter-bar">
-                <div class="filter-group">
-                    <label>📅 السنة:</label>
-                    <select id="yearSelect" class="month-select" onchange="changeYear()">
-                        ${yearOptionsHTML}
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>📅 الشهر:</label>
-                    <select id="monthSelect" class="month-select" onchange="changeMonth()">
-                        <option value="-1" ${currentMonth === -1 ? 'selected' : ''}>كل الشهور</option>
-                        ${monthNames.map((m, i) => `<option value="${i}" ${currentMonth === i ? 'selected' : ''}>${m}</option>`).join('')}
-                    </select>
-                </div>
-                <div class="filter-group"><span>📊 عرض بيانات ${monthName} ${currentYear}</span></div>
-            </div>
-            ${renderStats(stats)}
-            <div class="data-table-card"><h3>🏆 أكثر الأقسام مشاركة</h3><div id="deptStatsContainer">${renderDepartmentStats(deptStats)}</div></div>
-            ${renderCharts(deptStats)}
-            <div class="data-table-card"><h3>👥 الموظفين المشاركين (${monthName} ${currentYear})</h3>${renderDepartmentFilter(employeesDetails)}<div id="employeesTableContainer" style="margin-top:1rem;">${renderEmployeesTable(employeesDetails, 'all')}</div></div>
-            <div class="data-table-card"><h3>📚 التدريبات المنفذة خلال ${monthName} ${currentYear}</h3><div id="coursesTableContainer">${renderCoursesTable(coursesStats)}</div></div>
-        </div>
-        <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير</p></div>
-    `;
-    
-    updateCacheInfo();
-    window.filterEmployeesTable = filterEmployeesTable;
-    window.showEmployeeDetails = showEmployeeDetails;
-}
-
-        // ========== بدء التشغيل ==========
-        auth.onAuthStateChanged(async (user) => {
+        auth.onAuthStateChanged(async function(user) {
             if (user) {
-                console.log("✅ مستخدم مسجل دخول:", user.email);
                 await loadPage(false);
                 window.changeMonth = changeMonth;
-                        window.changeYear = changeYear;   // ✅ أضف هذا السطر
+                window.changeYear = changeYear;
                 window.logout = logout;
+                window.refreshAllData = refreshAllData;
             } else {
-                const loggedUser = JSON.parse(sessionStorage.getItem('loggedUser'));
+                var loggedUser = JSON.parse(sessionStorage.getItem('loggedUser'));
                 if (loggedUser) {
                     await loadPage(false);
                 } else {
