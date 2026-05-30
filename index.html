@@ -1,27 +1,27 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Training Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
-        body { background: #f0f4f8; visibility: visible; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: #f4f7fc; visibility: visible; }
 
         .navbar {
             background: white;
             padding: 0.8rem 1.5rem;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
             gap: 0.8rem;
         }
-        .logo h2 { color: #1e3a5f; font-size: 1.2rem; }
-        .logo span { color: #2b7a4b; }
+        .logo h2 { color: #0a2540; font-size: 1.2rem; font-weight: 700; }
+        .logo span { color: #2c7a4d; }
         .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
         .nav-links a, .nav-links button {
             text-decoration: none;
@@ -33,17 +33,17 @@
             font-size: 0.8rem;
             color: white;
         }
-        .user-welcome { color: #4a5568; font-size: 0.85rem; margin-left: 0.5rem; }
-        .admin-btn { background: #2b7a4b; }
-        .logout-btn { background: #e53e3e; }
+        .user-welcome { color: #5a6874; font-size: 0.85rem; margin-left: 0.5rem; }
+        .admin-btn { background: #2c7a4d; }
+        .logout-btn { background: #dc2626; }
 
         .hero {
             text-align: center;
             padding: 2rem 1rem;
-            background: linear-gradient(135deg, #1e3a5f, #2b7a4b);
+            background: linear-gradient(135deg, #0a2540, #2c7a4d);
             color: white;
         }
-        .hero h1 { font-size: 1.8rem; margin-bottom: 0.5rem; }
+        .hero h1 { font-size: 1.8rem; margin-bottom: 0.5rem; font-weight: 700; }
         .hero p { opacity: 0.9; font-size: 1rem; }
 
         .search-container {
@@ -70,15 +70,17 @@
             padding: 0.8rem 0.5rem;
             font-size: 0.9rem;
             outline: none;
+            font-family: 'Inter', sans-serif;
         }
         .search-box button {
-            background: #2b7a4b;
+            background: #2c7a4d;
             color: white;
             border: none;
             padding: 0.8rem 1.5rem;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
             font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
         }
         .search-box button:hover { background: #1e5a38; }
         .search-results {
@@ -93,8 +95,9 @@
         .search-result-item {
             padding: 0.8rem 1rem;
             cursor: pointer;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2edf2;
             transition: 0.2s;
+            font-size: 0.85rem;
         }
         .search-result-item:hover { background: #f7fafc; }
 
@@ -113,7 +116,7 @@
         }
         .section-card:hover { transform: translateY(-3px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .section-header {
-            background: linear-gradient(135deg, #1e3a5f, #2b7a4b);
+            background: linear-gradient(135deg, #0a2540, #2c7a4d);
             color: white;
             padding: 1rem;
             display: flex;
@@ -121,7 +124,7 @@
             gap: 0.8rem;
         }
         .section-icon { font-size: 2rem; }
-        .section-header h3 { font-size: 1rem; margin-bottom: 0.2rem; }
+        .section-header h3 { font-size: 1rem; margin-bottom: 0.2rem; font-weight: 600; }
         .section-header small { opacity: 0.8; font-size: 0.75rem; }
         .links-list { padding: 0.5rem; }
         .links-list a {
@@ -130,15 +133,16 @@
             align-items: center;
             padding: 0.7rem 0.8rem;
             text-decoration: none;
-            color: #1e3a5f;
+            color: #0a2540;
             border-radius: 0.5rem;
             transition: 0.2s;
             font-size: 0.85rem;
         }
         .links-list a:hover { background: #f7fafc; }
+        .link-title { font-weight: 500; }
         .view-count {
-            background: #e2e8f0;
-            color: #4a5568;
+            background: #e2edf2;
+            color: #5a6874;
             font-size: 0.7rem;
             padding: 0.2rem 0.6rem;
             border-radius: 1rem;
@@ -147,15 +151,15 @@
         .loading-message {
             text-align: center;
             padding: 3rem;
-            color: #718096;
+            color: #5a6874;
             font-size: 1.1rem;
         }
         .loading-spinner {
             display: inline-block;
             width: 40px;
             height: 40px;
-            border: 4px solid #e2e8f0;
-            border-top: 4px solid #2b7a4b;
+            border: 4px solid #e2edf2;
+            border-top: 4px solid #2c7a4d;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-bottom: 1rem;
@@ -167,10 +171,10 @@
         .empty-message {
             text-align: center;
             padding: 3rem;
-            color: #718096;
+            color: #5a6874;
             grid-column: 1 / -1;
         }
-        .footer { text-align: center; padding: 1.5rem; color: #718096; font-size: 0.8rem; }
+        .footer { text-align: center; padding: 1.5rem; color: #5a6874; font-size: 0.8rem; }
 
         @media (max-width: 768px) {
             .navbar { flex-direction: column; text-align: center; }
@@ -200,113 +204,112 @@
         let appData = null;
         let isAdmin = false;
         
-async function loadData() {
-    try {
-        console.log("🔄 ========== بدء تحميل البيانات ==========");
-        
-        // ✅ تحميل من Firebase مباشرة
-        const sectionsSnap = await getDocs(collection(db, "sections"));
-        const linksSnap = await getDocs(collection(db, "links"));
-        
-        console.log("☁️ تم التحميل من Firebase");
-        
-        // ✅ استخراج الأقسام
-        const sections = [];
-        sectionsSnap.forEach(doc => {
-            const data = doc.data();
-            console.log("📁 قسم - doc.id:", doc.id, "نوعه:", typeof doc.id);
-            console.log("📁 قسم - data:", JSON.stringify(data));
-            sections.push({ 
-                id: doc.id, // ✅ نخليه string زي ما هو
-                name: data.name || "بدون اسم",
-                icon: data.icon || "📁",
-                description: data.description || ""
-            });
-        });
-        
-        // ✅ استخراج الروابط
-        const links = [];
-        linksSnap.forEach(doc => {
-            const data = doc.data();
-            console.log("🔗 رابط - doc.id:", doc.id, "نوعه:", typeof doc.id);
-            console.log("🔗 رابط - data:", JSON.stringify(data));
-            console.log("🔗 رابط - sectionId:", data.sectionId, "نوعه:", typeof data.sectionId);
-            links.push({ 
-                id: doc.id,
-                title: data.title || "بدون عنوان",
-                url: data.url || "#",
-                type: data.type || "internal",
-                views: data.views || 0,
-                pinned: data.pinned || false,
-                sectionId: data.sectionId
-            });
-        });
-        
-        console.log("📊 إجمالي الأقسام:", sections.length);
-        console.log("📊 إجمالي الروابط:", links.length);
-        
-        // ✅ ربط الروابط بالأقسام - جرب كل الطرق
-        appData = sections.map(s => {
-            const sectionLinks = links.filter(l => {
-                // جرب مقارنة بكل الطرق الممكنة
-                const match1 = String(l.sectionId) === String(s.id);
-                const match2 = Number(l.sectionId) === Number(s.id);
-                const match3 = l.sectionId == s.id;
+        async function loadData() {
+            try {
+                console.log("🔄 ========== Starting data load ==========");
                 
-                if (match1 || match2 || match3) {
-                    return true;
+                // ✅ Load from Firebase directly
+                const sectionsSnap = await getDocs(collection(db, "sections"));
+                const linksSnap = await getDocs(collection(db, "links"));
+                
+                console.log("☁️ Loaded from Firebase");
+                
+                // ✅ Extract sections
+                const sections = [];
+                sectionsSnap.forEach(doc => {
+                    const data = doc.data();
+                    console.log("📁 Section - doc.id:", doc.id, "type:", typeof doc.id);
+                    console.log("📁 Section - data:", JSON.stringify(data));
+                    sections.push({ 
+                        id: doc.id,
+                        name: data.name || "Unnamed",
+                        icon: data.icon || "📁",
+                        description: data.description || ""
+                    });
+                });
+                
+                // ✅ Extract links
+                const links = [];
+                linksSnap.forEach(doc => {
+                    const data = doc.data();
+                    console.log("🔗 Link - doc.id:", doc.id, "type:", typeof doc.id);
+                    console.log("🔗 Link - data:", JSON.stringify(data));
+                    console.log("🔗 Link - sectionId:", data.sectionId, "type:", typeof data.sectionId);
+                    links.push({ 
+                        id: doc.id,
+                        title: data.title || "Untitled",
+                        url: data.url || "#",
+                        type: data.type || "internal",
+                        views: data.views || 0,
+                        pinned: data.pinned || false,
+                        sectionId: data.sectionId
+                    });
+                });
+                
+                console.log("📊 Total sections:", sections.length);
+                console.log("📊 Total links:", links.length);
+                
+                // ✅ Match links to sections
+                appData = sections.map(s => {
+                    const sectionLinks = links.filter(l => {
+                        const match1 = String(l.sectionId) === String(s.id);
+                        const match2 = Number(l.sectionId) === Number(s.id);
+                        const match3 = l.sectionId == s.id;
+                        
+                        if (match1 || match2 || match3) {
+                            return true;
+                        }
+                        return false;
+                    });
+                    
+                    console.log(`📁 "${s.name}" (id: ${s.id}, type: ${typeof s.id}) -> ${sectionLinks.length} links`);
+                    console.log(`   sectionIds present:`, links.map(l => `${l.sectionId} (${typeof l.sectionId})`).join(', '));
+                    
+                    return { 
+                        ...s, 
+                        links: sectionLinks
+                    };
+                });
+                
+                // ✅ If no links matched, show all links in first section
+                const totalLinks = appData.reduce((sum, s) => sum + s.links.length, 0);
+                console.log("📊 Total matched links:", totalLinks);
+                
+                if (totalLinks === 0 && links.length > 0 && sections.length > 0) {
+                    console.warn("⚠️ Link matching failed! Displaying all links in first section");
+                    appData[0].links = links.map(l => ({ ...l, id: l.id }));
                 }
+                
+                console.log("✅ ========== Load complete ==========");
+                return true;
+            } catch (error) {
+                console.error("❌ Load failed:", error);
+                appData = [];
                 return false;
-            });
-            
-            console.log(`📁 "${s.name}" (id: ${s.id}, type: ${typeof s.id}) -> ${sectionLinks.length} رابط`);
-            console.log(`   sectionIds الموجودة:`, links.map(l => `${l.sectionId} (${typeof l.sectionId})`).join(', '));
-            
-            return { 
-                ...s, 
-                links: sectionLinks
-            };
-        });
-        
-        // ✅ لو مفيش روابط خالص، نعرض كل الروابط في أول قسم
-        const totalLinks = appData.reduce((sum, s) => sum + s.links.length, 0);
-        console.log("📊 إجمالي الروابط المرتبطة:", totalLinks);
-        
-        if (totalLinks === 0 && links.length > 0 && sections.length > 0) {
-            console.warn("⚠️ فشل ربط الروابط! جاري عرض كل الروابط في القسم الأول");
-            appData[0].links = links.map(l => ({ ...l, id: l.id }));
+            }
         }
         
-        console.log("✅ ========== انتهى التحميل ==========");
-        return true;
-    } catch (error) {
-        console.error("❌ فشل التحميل:", error);
-        appData = [];
-        return false;
-    }
-}
-        
-async function checkAdmin(user) {
-    try {
-        const adminDoc = await getDoc(doc(db, "admins", user.uid));
-        isAdmin = adminDoc.exists();
-        
-        if (isAdmin) {
-            console.log("✅ أدمن مصرح له:", user.email);
+        async function checkAdmin(user) {
+            try {
+                const adminDoc = await getDoc(doc(db, "admins", user.uid));
+                isAdmin = adminDoc.exists();
+                
+                if (isAdmin) {
+                    console.log("✅ Admin authorized:", user.email);
+                }
+            } catch (error) {
+                console.error("❌ Admin check failed:", error);
+                isAdmin = false;
+            }
         }
-    } catch (error) {
-        console.error("❌ فشل التحقق من الصلاحيات:", error);
-        isAdmin = false;
-    }
-}
         
-        // ========== معالجة النقر على الرابط ==========
+        // ========== Handle link click ==========
         function handleLinkClick(linkId, url, event) {
             if (event) event.preventDefault();
             
             if (!url || url === "#") return;
             
-            // تسجيل الزيارة ثم التوجيه
+            // Register view then redirect
             registerView(linkId).then(() => {
                 window.location.href = url;
             }).catch(() => {
@@ -314,24 +317,23 @@ async function checkAdmin(user) {
             });
         }
         
-        // ========== عرض واجهة أولية سريعة ==========
+        // ========== Show initial UI quickly ==========
         function showInitialUI(user) {
             document.getElementById("app").innerHTML = `
                 <div class="navbar">
-                    <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
+                    <div class="logo"><h2>🎓 <span>Training</span> & Development System</h2></div>
                     <div class="nav-links" id="navLinks">
-                        <span class="user-welcome">👋 ${escapeHtml(user?.email || 'مستخدم')}</span>
+                        <span class="user-welcome">👋 Welcome, ${escapeHtml(user?.email || 'User')}</span>
                     </div>
                 </div>
                 <div class="hero">
-                    <h1>مرحباً بك في نظام التدريب</h1>
-                    <p>منصة متكاملة لإدارة التدريب والتطوير</p>
+                    <h1>Welcome to Training Dashboard</h1>
                 </div>
                 <div class="search-container">
                     <div class="search-box">
                         <span class="search-icon">🔍</span>
-                        <input type="text" id="searchInput" placeholder="بحث عن قسم أو رابط..." onkeypress="if(event.key==='Enter')window.searchContent()">
-                        <button onclick="window.searchContent()">بحث</button>
+                        <input type="text" id="searchInput" placeholder="Search for section or link..." onkeypress="if(event.key==='Enter')window.searchContent()">
+                        <button onclick="window.searchContent()">Search</button>
                     </div>
                     <div id="searchResults" class="search-results"></div>
                 </div>
@@ -339,17 +341,17 @@ async function checkAdmin(user) {
                     <div id="sectionsContainer" class="sections-grid">
                         <div class="loading-message" style="grid-column: 1 / -1;">
                             <div class="loading-spinner"></div>
-                            <p>⏳ جاري تحميل الأقسام والروابط...</p>
+                            <p>⏳ Loading sections and links...</p>
                         </div>
                     </div>
                 </div>
                 <div class="footer">
-                    <p>© 2025 نظام إدارة التعليم والتطوير - جميع الحقوق محفوظة</p>
+                    <p>© 2025 Training & Development System - All Rights Reserved</p>
                 </div>
             `;
         }
         
-        // ========== تحديث الأقسام بعد التحميل ==========
+        // ========== Update sections after data load ==========
         function updateSections() {
             const container = document.getElementById("sectionsContainer");
             if (!container) return;
@@ -358,7 +360,7 @@ async function checkAdmin(user) {
                 container.innerHTML = `
                     <div class="empty-message">
                         <p style="font-size:2rem;">📭</p>
-                        <p>لا توجد أقسام متاحة حالياً</p>
+                        <p>No sections available</p>
                     </div>
                 `;
                 return;
@@ -381,36 +383,36 @@ async function checkAdmin(user) {
                                     <span class="view-count">👁️ ${l.views || 0}</span>
                                 </a>
                             `).join("")
-                            : '<div style="text-align:center; padding:1rem; color:#a0aec0;">لا توجد روابط</div>'
+                            : '<div style="text-align:center; padding:1rem; color:#a0aec0;">No links available</div>'
                         }
                     </div>
                 </div>
             `).join("");
         }
         
-        // ========== بناء شريط التنقل ==========
-function buildNav() {
-    const nav = document.getElementById("navLinks");
-    if (!nav) return;
-    
-    let html = `<span class="user-welcome">👋 ${escapeHtml(window.currentUser?.email || 'مستخدم')}</span>`;
-    
-    // ✅ زر لوحة التحكم يظهر للأدمن فقط
-    if (isAdmin) {
-        html += `<a href="admin.html" class="admin-btn">⚙️ لوحة التحكم</a>`;
-    }
-    
-    html += `<a href="#" id="logoutBtn" class="logout-btn">🚪 خروج</a>`;
-    nav.innerHTML = html;
-    
-    document.getElementById("logoutBtn")?.addEventListener("click", async (e) => {
-        e.preventDefault();
-        await signOut(auth);
-        window.location.href = "login.html";
-    });
-}
+        // ========== Build navigation bar ==========
+        function buildNav() {
+            const nav = document.getElementById("navLinks");
+            if (!nav) return;
+            
+            let html = `<span class="user-welcome">👋 Welcome, ${escapeHtml(window.currentUser?.email || 'User')}</span>`;
+            
+            // ✅ Admin panel button appears only for admins
+            if (isAdmin) {
+                html += `<a href="admin.html" class="admin-btn">⚙️ Admin Panel</a>`;
+            }
+            
+            html += `<a href="#" id="logoutBtn" class="logout-btn">🚪 Logout</a>`;
+            nav.innerHTML = html;
+            
+            document.getElementById("logoutBtn")?.addEventListener("click", async (e) => {
+                e.preventDefault();
+                await signOut(auth);
+                window.location.href = "login.html";
+            });
+        }
         
-        // ========== البحث ==========
+        // ========== Search functionality ==========
         window.searchContent = () => {
             const input = document.getElementById("searchInput");
             const resultsDiv = document.getElementById("searchResults");
@@ -434,7 +436,7 @@ function buildNav() {
             });
             
             if (results.length === 0) {
-                resultsDiv.innerHTML = '<div class="search-result-item" style="color:#a0aec0;">🔍 لا توجد نتائج</div>';
+                resultsDiv.innerHTML = '<div class="search-result-item" style="color:#a0aec0;">🔍 No results found</div>';
             } else {
                 resultsDiv.innerHTML = results.map(r => `
                     <div class="search-result-item" onclick="window.handleLinkClick('${r.id || ''}', '${r.url || '#'}', event)">
@@ -446,7 +448,7 @@ function buildNav() {
             resultsDiv.style.display = "block";
         };
         
-        // ========== دوال مساعدة ==========
+        // ========== Helper functions ==========
         function escapeHtml(text) {
             if (!text) return '';
             const div = document.createElement('div');
@@ -454,7 +456,7 @@ function buildNav() {
             return div.innerHTML;
         }
         
-        // ========== بدء التطبيق ==========
+        // ========== Initialize application ==========
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.href = "login.html";
@@ -463,19 +465,19 @@ function buildNav() {
             
             window.currentUser = user;
             
-            // ✅ عرض الواجهة الأولية فوراً
+            // ✅ Show initial UI immediately
             showInitialUI(user);
             
-            // ✅ ربط الدوال العامة
+            // ✅ Bind global functions
             window.handleLinkClick = handleLinkClick;
             
-            // ✅ تحميل البيانات في الخلفية
+            // ✅ Load data in background
             const [adminResult, dataResult] = await Promise.all([
                 checkAdmin(user),
                 loadData()
             ]);
             
-            // ✅ تحديث الصفحة بالبيانات
+            // ✅ Update page with data
             updateSections();
             buildNav();
         });
