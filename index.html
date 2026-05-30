@@ -286,20 +286,27 @@ async function loadData() {
     }
 }
         
-        // ========== التحقق من صلاحيات الأدمن ==========
-        async function checkAdmin(user) {
-            try {
-                const adminDoc = await getDoc(doc(db, "admins", user.uid));
-                isAdmin = adminDoc.exists();
-                if (!isAdmin) {
-                    const adminEmails = ["admin@test.com", "mina@test.com"];
-                    isAdmin = adminEmails.includes(user.email);
-                }
-            } catch (error) {
-                console.error("❌ فشل التحقق من صلاحيات الأدمن:", error);
-                isAdmin = false;
-            }
+// ========== التحقق من صلاحية الأدمن من Firebase فقط ==========
+async function checkAdminStatus(user) {
+    try {
+        // ✅ التحقق من مجموعة admins في Firebase فقط
+        const adminDoc = await getDocs(query(collection(db, "admins"), where("uid", "==", user.uid)));
+        
+        if (!adminDoc.empty) {
+            isAdmin = true;
+            console.log("✅ أدمن مصرح له:", user.email);
+            return true;
         }
+        
+        console.log("❌ غير مصرح له:", user.email);
+        isAdmin = false;
+        return false;
+    } catch (error) {
+        console.error("❌ فشل التحقق من الصلاحيات:", error);
+        isAdmin = false;
+        return false;
+    }
+}
         
         // ========== معالجة النقر على الرابط ==========
         function handleLinkClick(linkId, url, event) {
