@@ -188,6 +188,13 @@
             border-radius: 1rem;
             font-weight: bold;
         }
+        .status-badge-new-hire {
+            background: #e0e7ff;
+            color: #3730a3;
+            padding: 0.2rem 0.8rem;
+            border-radius: 1rem;
+            font-weight: bold;
+        }
 
         .toast-msg {
             position: fixed;
@@ -240,13 +247,14 @@
         let sessions = [];
         let enrollments = [];
         let employees = [];
+        let currentYear = new Date().getFullYear();
 
-        // مفاتيح الكاش لكل نوع من البيانات
+        // مفاتيح الكاش
         const CACHE_KEYS = {
-            EMPLOYEES: 'required_employees_v1',
-            COURSES: 'required_courses_v1',
-            SESSIONS: 'required_sessions_v1',
-            ENROLLMENTS: 'required_enrollments_v1'
+            EMPLOYEES: 'required_employees_v2',
+            COURSES: 'required_courses_v2',
+            SESSIONS: 'required_sessions_v2',
+            ENROLLMENTS: 'required_enrollments_v2'
         };
 
         function showToast(message, isError = false) {
@@ -258,24 +266,17 @@
             setTimeout(() => toast.remove(), 3000);
         }
 
-        // ========== عرض حالة الكاش ==========
         function updateCacheInfo() {
             const cacheInfo = document.getElementById('cacheInfo');
             if (!cacheInfo) return;
             
             if (window.CacheManager) {
                 const cachedEmployees = CacheManager.get(CACHE_KEYS.EMPLOYEES);
-                const cachedCourses = CacheManager.get(CACHE_KEYS.COURSES);
-                const cachedSessions = CacheManager.get(CACHE_KEYS.SESSIONS);
-                const cachedEnrollments = CacheManager.get(CACHE_KEYS.ENROLLMENTS);
-                
-                if (cachedEmployees && cachedCourses && cachedSessions && cachedEnrollments) {
+                if (cachedEmployees) {
                     const cacheTime = localStorage.getItem(CACHE_KEYS.EMPLOYEES + '_time');
                     if (cacheTime) {
                         const date = new Date(parseInt(cacheTime));
                         cacheInfo.innerHTML = '📦 البيانات من الكاش - آخر تحديث: ' + date.toLocaleString('ar-EG') + ' &nbsp;|&nbsp; <a href="#" onclick="refreshAllData(); return false;" style="color:#4299e1;">🔄 تحديث يدوي</a>';
-                    } else {
-                        //cacheInfo.innerHTML = '📦 البيانات من الكاش &nbsp;|&nbsp; <a href="#" onclick="refreshAllData(); return false;" style="color:#4299e1;">🔄 تحديث يدوي</a>';
                     }
                 } else {
                     cacheInfo.innerHTML = '☁️ البيانات من Firebase (تم التحديث الآن)';
@@ -283,7 +284,6 @@
             }
         }
 
-        // ========== تحديث جميع البيانات يدوياً ==========
         async function refreshAllData() {
             showToast("🔄 جاري تحديث البيانات...");
             if (window.CacheManager) {
@@ -297,7 +297,6 @@
             showToast("✅ تم تحديث البيانات بنجاح");
         }
 
-        // الكورسات التي تتطلب اختبار
         const EXAM_REQUIRED_COURSES = [
             'food safety', 'سلامة الغذاء', 'haccp', 'fire fighting', 'السلامة والصحة المهنية'
         ];
@@ -308,7 +307,79 @@
             return EXAM_REQUIRED_COURSES.some(keyword => courseNameLower.includes(keyword));
         }
 
-        // ========== تحميل البيانات من Firebase (مع كاش) ==========
+        // ========== دالة فحص تاريخ التوظيف ==========
+        function getHireYear(employee) {
+            if (!employee || !employee.hireDate) return null;
+            
+            let hireDateStr = employee.hireDate;
+            
+            // لو التاريخ رقم Excel
+            if (typeof hireDateStr === 'number') {
+                const utcDays = hireDateStr - 25569;
+                const date = new Date(utcDays * 86400000);
+                return date.getFullYear();
+            }
+            
+            // لو التاريخ نص
+            if (typeof hireDateStr === 'string') {
+                // صيغة YYYY-MM-DD
+                const match = hireDateStr.match(/^(\d{4})/);
+                if (match) return parseInt(match[1]);
+                
+                // نحول لـ Date
+                const date = new Date(hireDateStr);
+                if (!isNaN(date.getTime())) return date.getFullYear();
+            }
+            
+            return null;
+        }
+
+        function isNewHire(employee) {
+            const hireYear = getHireYear(employee);
+            if (!hireYear) return false;
+            return hireYear === currentYear;
+        }
+
+        // ========== فحص حضور New Hire Induction ==========
+        function hasAttendedNewHireInduction(employeeId) {
+            const newHireCourseNames = [
+                'new hire induction', 
+                'تعريف الموظفين الجدد',
+                'new hire',
+                'employee induction'
+            ];
+            
+            const newHireCourse = courses.find(c => {
+                const courseName = (c.course_name || '').toLowerCase();
+                return newHireCourseNames.some(name => courseName.includes(name));
+            });
+            
+            if (!newHireCourse) {
+                console.log('⚠️ لم يتم العثور على كورس تعريف الموظفين الجدد');
+                return false;
+            }
+            
+            const newHireSessions = sessions.filter(s => 
+                String(s.course_code).trim() === String(newHireCourse.course_code).trim()
+            );
+            
+            if (newHireSessions.length === 0) return false;
+            
+            const newHireSessionCodes = newHireSessions.map(s => String(s.session_code).trim());
+            
+            const hasAttended = enrollments.some(e => {
+                const empIdMatch = String(e.employee_id).trim() === String(employeeId).trim();
+                const sessionMatch = newHireSessionCodes.includes(String(e.session_code).trim());
+                const status = String(e.enrollment_status || '').trim().toLowerCase();
+                const isCompleted = (status === 'completed' || status === 'مكتمل' || status === 'pass');
+                
+                return empIdMatch && sessionMatch && isCompleted;
+            });
+            
+            return hasAttended;
+        }
+
+        // ========== تحميل البيانات ==========
         async function loadEmployeesFromFirebase(forceRefresh = false) {
             try {
                 if (!forceRefresh && window.CacheManager) {
@@ -330,12 +401,21 @@
                     }
                 });
                 
+                // ✅ ترتيب حسب تاريخ التوظيف (الأحدث أولاً)
+                employees.sort((a, b) => {
+                    const hireA = getHireYear(a) || 0;
+                    const hireB = getHireYear(b) || 0;
+                    return hireB - hireA;
+                });
+                
                 if (window.CacheManager) {
                     CacheManager.set(CACHE_KEYS.EMPLOYEES, employees);
                     localStorage.setItem(CACHE_KEYS.EMPLOYEES + '_time', Date.now().toString());
                 }
                 
-                console.log('✅ تم تحميل ' + employees.length + ' موظف');
+                // ✅ إحصائيات الموظفين الجدد
+                const newHiresCount = employees.filter(e => isNewHire(e)).length;
+                console.log('✅ تم تحميل ' + employees.length + ' موظف (منهم ' + newHiresCount + ' موظف جديد في ' + currentYear + ')');
                 return employees;
             } catch (error) {
                 console.error("❌ خطأ في تحميل الموظفين:", error);
@@ -367,7 +447,7 @@
                     localStorage.setItem(CACHE_KEYS.COURSES + '_time', Date.now().toString());
                 }
                 
-                console.log('✅ تم تحميل ' + courses.length + ' دورة من offjob_courses');
+                console.log('✅ تم تحميل ' + courses.length + ' دورة');
                 return courses;
             } catch (error) {
                 console.error("❌ خطأ في تحميل الدورات:", error);
@@ -381,7 +461,6 @@
                 if (!forceRefresh && window.CacheManager) {
                     const cached = CacheManager.get(CACHE_KEYS.SESSIONS);
                     if (cached) {
-                        console.log("📦 استخدام الكاش للجلسات");
                         sessions = cached;
                         return sessions;
                     }
@@ -396,7 +475,6 @@
                 
                 if (window.CacheManager) {
                     CacheManager.set(CACHE_KEYS.SESSIONS, sessions);
-                    localStorage.setItem(CACHE_KEYS.SESSIONS + '_time', Date.now().toString());
                 }
                 
                 console.log('✅ تم تحميل ' + sessions.length + ' جلسة');
@@ -413,7 +491,6 @@
                 if (!forceRefresh && window.CacheManager) {
                     const cached = CacheManager.get(CACHE_KEYS.ENROLLMENTS);
                     if (cached) {
-                        console.log("📦 استخدام الكاش للتسجيلات");
                         enrollments = cached;
                         return enrollments;
                     }
@@ -428,7 +505,6 @@
                 
                 if (window.CacheManager) {
                     CacheManager.set(CACHE_KEYS.ENROLLMENTS, enrollments);
-                    localStorage.setItem(CACHE_KEYS.ENROLLMENTS + '_time', Date.now().toString());
                 }
                 
                 console.log('✅ تم تحميل ' + enrollments.length + ' تسجيل');
@@ -447,7 +523,6 @@
                 loadSessionsFromFirebase(forceRefresh),
                 loadEnrollmentsFromFirebase(forceRefresh)
             ]);
-            console.log('📊 إجمالي البيانات: ' + courses.length + ' كورس, ' + sessions.length + ' جلسة, ' + enrollments.length + ' تسجيل, ' + employees.length + ' موظف');
         }
 
         // ========== تحميل الأقسام ==========
@@ -487,6 +562,8 @@
         function onCourseChange() {
             const courseCode = document.getElementById('courseSelect').value;
             const filtersSection = document.getElementById('filtersSection');
+            const excludeNewHireSection = document.getElementById('excludeNewHireSection');
+            const newHireOnlySection = document.getElementById('newHireOnlySection');
             
             if (!courseCode) {
                 if (filtersSection) filtersSection.style.display = 'none';
@@ -499,6 +576,16 @@
             const examRequired = course && isExamRequired(course.course_name);
             const scoreSection = document.getElementById('scoreSection');
             const examNote = document.getElementById('examNote');
+            
+            // ✅ إخفاء/إظهار تشيك بوكس New Hire
+            const isNewHireCourse = (course?.course_name || '').toLowerCase().includes('new hire') || 
+                                    (course?.course_name || '').toLowerCase().includes('تعريف الموظفين');
+            if (excludeNewHireSection) {
+                excludeNewHireSection.style.display = isNewHireCourse ? 'none' : 'flex';
+            }
+            if (newHireOnlySection) {
+                newHireOnlySection.style.display = isNewHireCourse ? 'none' : 'flex';
+            }
             
             if (scoreSection) {
                 scoreSection.style.display = examRequired ? 'block' : 'none';
@@ -516,8 +603,6 @@
             
             const courseSessions = sessions.filter(s => String(s.course_code).trim() === targetCourseCode);
             const sessionCodes = courseSessions.map(s => String(s.session_code).trim());
-            
-            console.log('📊 جلسات الكورس: ' + sessionCodes.length);
             
             const employeeAttendance = new Map();
             const employeeScores = new Map();
@@ -543,7 +628,6 @@
                 }
             });
             
-            console.log('📊 الموظفين الذين حضروا هذا الكورس: ' + employeeAttendance.size);
             return { employeeAttendance, employeeScores, examRequired };
         }
 
@@ -552,6 +636,10 @@
             const courseCode = document.getElementById('courseSelect')?.value;
             const minScoreStr = document.getElementById('minScore')?.value;
             const minScore = minScoreStr ? parseFloat(minScoreStr) : 75;
+            
+            // ✅ قراءة التشيك بوكسات
+            const excludeNewHire = document.getElementById('excludeNewHireCheckbox')?.checked || false;
+            const newHireOnly = document.getElementById('newHireOnlyCheckbox')?.checked || false;
             
             const selectedLevels = Array.from(document.querySelectorAll('.level-cb:checked')).map(cb => cb.value.trim().toLowerCase());
             const selectedDepts = Array.from(document.querySelectorAll('.dept-cb:checked')).map(cb => cb.value.trim().toLowerCase());
@@ -563,6 +651,13 @@
             const course = courses.find(c => String(c.course_code).trim() === String(courseCode).trim());
             const { employeeAttendance, employeeScores, examRequired } = getEmployeesWhoAttendedCourse(courseCode);
             
+            const isNewHireCourse = (course?.course_name || '').toLowerCase().includes('new hire') || 
+                                    (course?.course_name || '').toLowerCase().includes('تعريف الموظفين');
+            
+            let excludedByNewHireCount = 0;
+            let newHireOnlyCount = 0;
+            let totalEmployeesCount = 0;
+            
             const requiredEmployees = employees.filter(emp => {
                 const empDept = String(emp.department || '').trim().toLowerCase();
                 const empLevel = String(emp.level || '').trim().toLowerCase();
@@ -570,6 +665,23 @@
 
                 if (!selectedDepts.includes(empDept)) return false;
                 if (!selectedLevels.includes(empLevel)) return false;
+                
+                totalEmployeesCount++;
+                
+                // ✅ فلترة الموظفين الجدد فقط (السنة الحالية)
+                if (newHireOnly && !isNewHireCourse) {
+                    if (!isNewHire(emp)) {
+                        return false;
+                    }
+                    newHireOnlyCount++;
+                }
+                
+                // ✅ استبعاد خريجي New Hire Induction
+                if (excludeNewHire && !isNewHireCourse && hasAttendedNewHireInduction(empIdStr)) {
+                    excludedByNewHireCount++;
+                    console.log('🆕 استبعاد: ' + empIdStr + ' - ' + emp.fullName);
+                    return false;
+                }
 
                 const hasAttended = employeeAttendance.get(empIdStr) === true;
                 const score = employeeScores.get(empIdStr);
@@ -578,6 +690,11 @@
                 if (examRequired && (score === undefined || score < minScore)) return true;
                 return false;
             });
+            
+            console.log('📊 إجمالي الموظفين المطابقين للفلاتر: ' + totalEmployeesCount);
+            if (excludeNewHire) console.log('🆕 تم استبعاد ' + excludedByNewHireCount + ' موظف (حضروا New Hire Induction)');
+            if (newHireOnly) console.log('🆕 تم فلترة ' + newHireOnlyCount + ' موظف جديد فقط (' + currentYear + ')');
+            console.log('📊 إجمالي الموظفين المطلوبين: ' + requiredEmployees.length);
             
             displayResults(requiredEmployees, course, minScore, employeeScores, employeeAttendance, examRequired);
         }
@@ -590,7 +707,6 @@
             const selectedCountSpan = document.getElementById('selectedCount');
             
             if (!resultsDiv || !tbody) {
-                console.error("Results card or table body not found - waiting for DOM");
                 setTimeout(function() {
                     displayResults(employeesList, course, minScore, employeeScores, employeeAttendance, examRequired);
                 }, 100);
@@ -602,7 +718,7 @@
             }
 
             if (employeesList.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">🎉 جميع الموظفين في الأقسام والفئات المحددة أكملوا هذا التدريب بنجاح</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">🎉 جميع الموظفين في الأقسام والفئات المحددة أكملوا هذا التدريب بنجاح</td></tr>';
                 resultsDiv.style.display = 'block';
                 return;
             }
@@ -613,14 +729,13 @@
                 var empIdStr = String(emp.id).trim();
                 var hasAttended = employeeAttendance.get(empIdStr) === true;
                 var score = employeeScores.get(empIdStr);
+                var hireDateFormatted = formatHireDate(emp.hireDate);
                 
                 var statusBadge = '';
                 if (!hasAttended) {
                     statusBadge = '<span class="status-badge-not-attended">❌ لم يحضر</span>';
                 } else if (hasAttended && examRequired && (score === undefined || score < minScore)) {
                     statusBadge = '<span class="status-badge-failed">⚠️ رسب (' + (score || 'لا توجد درجة') + ' < ' + minScore + ')</span>';
-                } else if (hasAttended && !examRequired) {
-                    statusBadge = '<span class="status-badge-passed">✅ حضر واكتمل</span>';
                 } else {
                     statusBadge = '<span class="status-badge-passed">✅ ناجح</span>';
                 }
@@ -633,7 +748,7 @@
                         scoreBadge = '<span style="background:#c6f6d5; color:#22543d; padding:4px 12px; border-radius:20px; font-weight:bold;">' + score + '</span>';
                     }
                 }
-
+                
                 html += '<tr>';
                 html += '<td class="checkbox-col"><input type="checkbox" class="employee-select" data-id="' + emp.id + '" data-name="' + emp.fullName + '" data-dept="' + (emp.department || '-') + '" data-position="' + (emp.position || '-') + '" data-level="' + (emp.level || '-') + '" data-score="' + (score !== undefined ? score : '') + '"></td>';
                 html += '<td>' + (i + 1) + '</td>';
@@ -642,6 +757,7 @@
                 html += '<td>' + (emp.department || '-') + '</td>';
                 html += '<td>' + (emp.position || '-') + '</td>';
                 html += '<td><span style="background:#e2e8f0; padding:4px 8px; border-radius:4px;">' + (emp.level || '-') + '</span></td>';
+                html += '<td>' + hireDateFormatted + '</td>';
                 html += '<td>' + scoreBadge + '</td>';
                 html += '<td>' + statusBadge + '</td>';
                 html += '</tr>';
@@ -683,6 +799,28 @@
             updateSelectedCount();
         }
 
+        // ========== تنسيق التاريخ ==========
+        function formatHireDate(dateValue) {
+            if (!dateValue) return '-';
+            
+            if (typeof dateValue === 'number') {
+                var utcDays = dateValue - 25569;
+                var date = new Date(utcDays * 86400000);
+                return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+            }
+            
+            return dateValue.toString().split('T')[0];
+        }
+
+        // ========== تغيير السنة ==========
+        function changeYear() {
+            currentYear = parseInt(document.getElementById('yearSelect').value);
+            // تحديث عدد الموظفين الجدد
+            const newHiresCount = employees.filter(e => isNewHire(e)).length;
+            document.getElementById('newHireCount').textContent = newHiresCount;
+            console.log('📅 تم تغيير السنة إلى: ' + currentYear + ' (الموظفين الجدد: ' + newHiresCount + ')');
+        }
+
         // ========== تصدير إلى Excel ==========
         function exportToExcel() {
             var selectedRows = document.querySelectorAll('.employee-select:checked');
@@ -710,7 +848,7 @@
             var wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Required Employees');
             XLSX.writeFile(wb, 'Required_Employees_' + new Date().toISOString().slice(0,10) + '.xlsx');
-            alert('✅ تم تصدير ' + exportData.length + ' موظف بنجاح');
+            showToast('✅ تم تصدير ' + exportData.length + ' موظف بنجاح');
         }
 
         function logout() {
@@ -729,10 +867,16 @@
         async function loadPage(forceRefresh) {
             await loadAllData(forceRefresh);
             
-            var monthOptions = '';
-            for (var i = 0; i < monthNames.length; i++) {
-                monthOptions += '<option value="' + i + '">' + monthNames[i] + '</option>';
+            // ✅ توليد قائمة السنوات
+            const currentFullYear = new Date().getFullYear();
+            const startYear = 2024;
+            var yearOptionsHTML = '';
+            for (var y = startYear; y <= currentFullYear + 1; y++) {
+                yearOptionsHTML += '<option value="' + y + '" ' + (currentYear === y ? 'selected' : '') + '>' + y + '</option>';
             }
+            
+            // ✅ عدد الموظفين الجدد
+            const newHiresCount = employees.filter(e => isNewHire(e)).length;
             
             document.getElementById('app').innerHTML = `
                 <div class="navbar">
@@ -760,6 +904,13 @@
                                     <option value="">-- اختر الكورس --</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label>📅 سنة التوظيف (للموظفين الجدد)</label>
+                                <select id="yearSelect" class="filter-select" onchange="changeYear()" style="padding: 0.8rem; border: 2px solid #e2e8f0; border-radius: 0.8rem; font-size: 1rem;">
+                                    ${yearOptionsHTML}
+                                </select>
+                                <span style="font-size:0.75rem; color:#718096;">🆕 عدد الموظفين الجدد: <strong id="newHireCount">${newHiresCount}</strong></span>
+                            </div>
                             <div class="form-group" id="scoreSection" style="display:none;">
                                 <label>الحد الأدنى لدرجة الاختبار (للنجاح)</label>
                                 <input type="number" id="minScore" value="75" min="0" max="100" placeholder="75%">
@@ -772,6 +923,24 @@
                         <div id="filtersSection" style="display:none;">
                             <div id="examNote" style="background:#e2e8f0; padding:0.5rem 1rem; border-radius:0.8rem; margin-bottom:1rem; font-size:0.8rem; display:none;">
                                 📝 <strong>ملاحظة:</strong> هذا الكورس يتطلب اختبار. الموظفين الذين حصلوا على درجة أقل من 75% سيظهرون في القائمة.
+                            </div>
+
+                            <!-- ✅ تشيك بوكس استبعاد خريجي New Hire Induction -->
+                            <div id="excludeNewHireSection" style="background:#fef5e7; padding:0.8rem 1rem; border-radius:0.8rem; margin-bottom:0.5rem; display:flex; align-items:center; gap:0.8rem;">
+                                <input type="checkbox" id="excludeNewHireCheckbox" style="width:20px; height:20px; cursor:pointer;">
+                                <label for="excludeNewHireCheckbox" style="cursor:pointer; font-weight:bold; color:#dd6b20;">
+                                    🆕 استبعاد الموظفين الذين حضروا تدريب "تعريف الموظفين الجدد" (New Hire Induction)
+                                </label>
+                                <span style="font-size:0.7rem; color:#718096;">(هؤلاء الموظفين ليسوا مطالبين بحضور هذا التدريب)</span>
+                            </div>
+
+                            <!-- ✅ تشيك بوكس الموظفين الجدد فقط -->
+                            <div id="newHireOnlySection" style="background:#e0e7ff; padding:0.8rem 1rem; border-radius:0.8rem; margin-bottom:1rem; display:flex; align-items:center; gap:0.8rem;">
+                                <input type="checkbox" id="newHireOnlyCheckbox" style="width:20px; height:20px; cursor:pointer;">
+                                <label for="newHireOnlyCheckbox" style="cursor:pointer; font-weight:bold; color:#3730a3;">
+                                    🆕 إظهار الموظفين الجدد فقط (المعينين في ${currentYear})
+                                </label>
+                                <span style="font-size:0.7rem; color:#718096;">(عددهم: ${newHiresCount} موظف)</span>
                             </div>
 
                             <label style="font-weight: bold; color: #4a5568; display: block; margin-bottom: 0.8rem;">🏢 الأقسام المستهدفة *</label>
@@ -809,11 +978,11 @@
                                     <tr>
                                         <th class="checkbox-col"></th><th>#</th><th>كود الموظف</th>
                                         <th>اسم الموظف</th><th>القسم</th><th>الوظيفة</th>
-                                        <th>الفئة</th><th>الدرجة</th><th>الحالة</th>
+                                        <th>الفئة</th><th>تاريخ التعيين</th><th>الدرجة</th><th>الحالة</th>
                                     </tr>
                                 </thead>
                                 <tbody id="resultsTableBody">
-                                    <tr><td colspan="9" style="text-align:center;">يرجى اختيار الكورس والأقسام والفئات</span></td>
+                                    <tr><td colspan="10" style="text-align:center;">يرجى اختيار الكورس والأقسام والفئات</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -831,6 +1000,7 @@
 
         var monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 
+        // ========== دوال عامة ==========
         window.onCourseChange = onCourseChange;
         window.findRequiredEmployees = findRequiredEmployees;
         window.toggleSelectAll = toggleSelectAll;
@@ -839,6 +1009,7 @@
         window.exportToExcel = exportToExcel;
         window.logout = logout;
         window.refreshAllData = refreshAllData;
+        window.changeYear = changeYear;
 
         // ========== بدء التشغيل ==========
         auth.onAuthStateChanged(async function(user) {
