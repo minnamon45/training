@@ -1097,8 +1097,6 @@ async function loadPage(forceRefresh) {
             <div id="chartsContainer">${renderCharts(deptStats)}</div>
             <div class="data-table-card"><h3>👥 الموظفين المشاركين (${monthName} ${currentYear})</h3>${renderDepartmentFilter(employeesDetails)}<div id="employeesTableContainer" style="margin-top:1rem;">${renderEmployeesTable(employeesDetails, 'all')}</div></div>
             <div class="data-table-card"><h3>📚 التدريبات المنفذة خلال ${monthName} ${currentYear}</h3><div id="coursesTableContainer">${renderCoursesTable(coursesStats)}</div></div>
-        </div>
-        <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير</p></div>
     `;
     
     updateCacheInfo();
