@@ -321,8 +321,7 @@
     <script type="module">
         import { auth, db } from "./firebase.js";
         import { onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { collection, getDocs, doc, setDoc, deleteDoc, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-        
+import { collection, getDocs, getDoc, doc, setDoc, deleteDoc, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";        
         // ========== المتغيرات العامة ==========
         let isAdmin = false;
         let currentData = null;
@@ -349,23 +348,55 @@
             return div.innerHTML;
         }
         
- // ========== التحقق من صلاحية الأدمن من Firebase فقط ==========
+// ========== التحقق من صلاحية الأدمن - تشخيص كامل ==========
 async function checkAdminStatus(user) {
     try {
-        // ✅ التحقق من مجموعة admins في Firebase فقط
-        const adminDoc = await getDocs(query(collection(db, "admins"), where("uid", "==", user.uid)));
+        console.log("🔍 ========== بدء التحقق من الصلاحيات ==========");
+        console.log("👤 user.uid:", user.uid);
+        console.log("👤 user.email:", user.email);
         
-        if (!adminDoc.empty) {
+        // ✅ الطريقة 1: Document ID = uid
+        const adminDocById = await getDoc(doc(db, "admins", user.uid));
+        console.log("📋 الطريقة 1 (Document ID = uid):", adminDocById.exists() ? "موجود ✅" : "غير موجود ❌");
+        
+        if (adminDocById.exists()) {
             isAdmin = true;
-            console.log("✅ أدمن مصرح له:", user.email);
+            console.log("✅ أدمن مصرح له - طريقة Document ID");
             return true;
         }
+        
+        // ✅ الطريقة 2: حقل uid داخل الوثيقة
+        const adminByField = await getDocs(query(collection(db, "admins"), where("uid", "==", user.uid)));
+        console.log("📋 الطريقة 2 (حقل uid):", adminByField.empty ? "غير موجود ❌" : "موجود ✅");
+        
+        if (!adminByField.empty) {
+            isAdmin = true;
+            console.log("✅ أدمن مصرح له - طريقة حقل uid");
+            return true;
+        }
+        
+        // ✅ الطريقة 3: حقل email داخل الوثيقة
+        const adminByEmail = await getDocs(query(collection(db, "admins"), where("email", "==", user.email)));
+        console.log("📋 الطريقة 3 (حقل email):", adminByEmail.empty ? "غير موجود ❌" : "موجود ✅");
+        
+        if (!adminByEmail.empty) {
+            isAdmin = true;
+            console.log("✅ أدمن مصرح له - طريقة الإيميل");
+            return true;
+        }
+        
+        // ✅ الطريقة 4: كل الوثائق في admins
+        const allAdmins = await getDocs(collection(db, "admins"));
+        console.log("📋 كل الأدمنز في Firebase:");
+        allAdmins.forEach(doc => {
+            console.log("   - Document ID:", doc.id, "| Data:", JSON.stringify(doc.data()));
+        });
         
         console.log("❌ غير مصرح له:", user.email);
         isAdmin = false;
         return false;
     } catch (error) {
-        console.error("❌ فشل التحقق من الصلاحيات:", error);
+        console.error("❌ فشل التحقق:", error);
         isAdmin = false;
         return false;
     }
