@@ -921,6 +921,7 @@ async function loadPage(forceRefresh) {
         <div class="navbar">
             <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
             <div class="nav-links">
+                <div class="filter-group"><button class="refresh-btn" onclick="refreshAllData()">🔄 تحديث البيانات</button></div>
                 <a href="index.html" class="home">🏠 الرئيسية</a>
                 <a href="#" onclick="logout()" class="logout">🚪 تسجيل خروج</a>
             </div>
@@ -942,7 +943,6 @@ async function loadPage(forceRefresh) {
                     </select>
                 </div>
                 <div class="filter-group"><span>📊 عرض بيانات ${monthName} ${currentYear}</span></div>
-                <div class="filter-group"><button class="refresh-btn" onclick="refreshAllData()">🔄 تحديث البيانات</button></div>
             </div>
             ${renderStats(stats)}
             <div class="data-table-card"><h3>🏆 أكثر الأقسام مشاركة</h3><div id="deptStatsContainer">${renderDepartmentStats(deptStats)}</div></div>
