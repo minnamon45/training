@@ -261,7 +261,6 @@
         let sessions = [];
         let enrollments = [];
         let employees = [];
-        let currentMonth = -1;
         let employeeDeptMap = new Map();
 
         const monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
@@ -830,6 +829,74 @@
                 '</div>';
         }
 
+        Chart.register(ChartDataLabels);
+
+        const chartOptionsWithLabels = {
+            responsive: true,
+            maintainAspectRatio: true,
+            layout: { 
+                padding: { top: 40, bottom: 20, left: 20, right: 20 } 
+            },
+            plugins: {
+                legend: { 
+                    position: 'top', 
+                    labels: { font: { size: 11 } } 
+                },
+                tooltip: { 
+                    titleFont: { size: 11 }, 
+                    bodyFont: { size: 10 } 
+                },
+                datalabels: { 
+                    display: true, 
+                    color: '#1e3a5f',
+                    backgroundColor: 'rgba(255,255,255,0.95)',
+                    borderRadius: 8,
+                    padding: { left: 6, right: 6, top: 4, bottom: 4 },
+                    anchor: 'end',
+                    align: 'top',
+                    offset: 10,
+                    textAlign: 'center',
+                    font: { 
+                        weight: 'bold', 
+                        size: 12,
+                        family: 'Tajawal'
+                    },
+                    formatter: function(value) {
+                        return value;
+                    }
+                }
+            },
+scales: { 
+                y: { 
+                    beginAtZero: true, 
+                    title: { display: true, text: 'العدد', font: { weight: 'bold', size: 11 } },
+                    ticks: { 
+                        autoSkip: true, 
+                        maxTicksLimit: 10, 
+                        font: { size: 10 } 
+                    }
+                },
+                x: { 
+                    ticks: { font: { size: 10 } },
+                    grid: { offset: true }
+                }
+            }
+        };
+
+        const chartOptionsWithLabelsHours = {
+            ...chartOptionsWithLabels,
+            plugins: {
+                ...chartOptionsWithLabels.plugins,
+                datalabels: {
+                    ...chartOptionsWithLabels.plugins.datalabels,
+                    formatter: function(value) {
+                        return value.toFixed(1);
+                    }
+                }
+            }
+        };
+
+
         function renderCharts(deptStats) {
             var hoursSorted = [...deptStats].sort(function(a, b) { return b.hours - a.hours; });
             var deptNamesHours = hoursSorted.map(function(d) { return d.department; });
@@ -934,90 +1001,141 @@
                 '</div>';
         }
 
-        function changeMonth() { 
-            currentMonth = parseInt(document.getElementById('monthSelect').value); 
-            loadPage(); 
-        }
+// ========== تحديث المتغيرات العامة ==========
+var currentMonth = new Date().getMonth(); // ✅ الشهر الحالي (0-11) بدل -1
+var currentYear = new Date().getFullYear();
 
-        function logout() { 
-            if (window.CacheManager) {
-                for (var key in CACHE_KEYS) {
-                    CacheManager.remove(CACHE_KEYS[key]);
-                    localStorage.removeItem(CACHE_KEYS[key] + '_time');
-                }
-            }
-            auth.signOut().then(function() {
-                sessionStorage.removeItem('loggedUser'); 
-                window.location.href = 'login.html';
-            });
-        }
-
-        async function loadPage(forceRefresh) {
-            await Promise.all([
-                loadEmployeesData(forceRefresh),
-                loadCourses(forceRefresh),
-                loadSessions(forceRefresh),
-                loadEnrollments(forceRefresh)
-            ]);
-            
-            var filteredSessions = filterSessionsByMonth();
-            
-            var stats = calculateStats(filteredSessions);
-            var deptStats = calculateDepartmentStats(filteredSessions);
-            var coursesStats = calculateCoursesStats(filteredSessions);
-            var employeesDetails = getEmployeesDetails(filteredSessions);
-            
-            window.currentEmployeesDetails = employeesDetails;
-            var monthName = currentMonth === -1 ? "كل الشهور" : monthNames[currentMonth];
-            
-            document.getElementById('app').innerHTML = `
-                <div class="navbar">
-                    <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
-                    <div class="nav-links">
-                        <a href="index.html" class="home">🏠 الرئيسية</a>
-                        <a href="#" onclick="logout()" class="logout">🚪 تسجيل خروج</a>
-                    </div>
-                </div>
-                <div class="container">
-                    <div class="page-header"><h1>📊 تقارير التدريب (Off Job)</h1><p>تحليل شامل للتدريبات الخارجية</p></div>
-                    <div class="filter-bar">
-                        <div class="filter-group"><label>📅 اختر الشهر:</label>
-                        <select id="monthSelect" class="month-select" onchange="changeMonth()">
-                            <option value="-1" ${currentMonth===-1?'selected':''}>كل الشهور</option>
-                            ${monthNames.map(function(m,i){ return '<option value="' + i + '" ' + (currentMonth===i?'selected':'') + '>' + m + '</option>'; }).join('')}
-                        </select></div>
-                        <div class="filter-group"><span>📊 عرض بيانات ${monthName}</span></div>
-                        <div class="filter-group"><button class="refresh-btn" onclick="refreshAllData()">🔄 تحديث البيانات</button></div>
-                    </div>
-                    ${renderStats(stats)}
-                    <div class="data-table-card"><h3>🏆 أكثر الأقسام مشاركة</h3>${renderDepartmentStats(deptStats)}</div>
-                    ${renderCharts(deptStats)}
-                    <div class="data-table-card"><h3>👥 الموظفين المشاركين (${monthName})</h3>${renderDepartmentFilter(employeesDetails)}<div id="employeesTableContainer" style="margin-top:1rem;">${renderEmployeesTable(employeesDetails, 'all')}</div></div>
-                    <div class="data-table-card"><h3>📚 التدريبات المنفذة خلال ${monthName}</h3>${renderCoursesTable(coursesStats)}</div>
-                </div>
-                <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير</p></div>
-            `;
-            
-            updateCacheInfo();
-            window.filterEmployeesTable = filterEmployeesTable;
-            window.showEmployeeDetails = showEmployeeDetails;
-        }
-
-        auth.onAuthStateChanged(async function(user) {
-            if (user) {
-                await loadPage(false);
-                window.changeMonth = changeMonth;
-                window.logout = logout;
-                window.refreshAllData = refreshAllData;
-            } else {
-                var loggedUser = JSON.parse(sessionStorage.getItem('loggedUser'));
-                if (loggedUser) {
-                    await loadPage(false);
-                } else {
-                    window.location.href = 'login.html';
-                }
-            }
+// ========== دالة فلترة الجلسات حسب الشهر (نسخة واحدة فقط) ==========
+function filterSessionsByMonth() {
+    if (currentMonth === -1) {
+        return sessions.filter(function(session) {
+            if (!session.session_date) return false;
+            var dateObj = getDateObject(session.session_date);
+            return dateObj && !isNaN(dateObj.getTime()) && 
+                   dateObj.getFullYear() === currentYear;
         });
-    </script>
+    }
+    
+    return sessions.filter(function(session) {
+        if (!session.session_date) return false;
+        var dateObj = getDateObject(session.session_date);
+        return dateObj && !isNaN(dateObj.getTime()) && 
+               dateObj.getMonth() === currentMonth && 
+               dateObj.getFullYear() === currentYear;
+    });
+}
+// ========== دالة تغيير الشهر (نسخة واحدة فقط) ==========
+function changeMonth() { 
+    currentMonth = parseInt(document.getElementById('monthSelect').value); 
+    loadPage(); 
+}
+
+// ✅ أضف هذه الدالة
+function changeYear() {
+    currentYear = parseInt(document.getElementById('yearSelect').value);
+    loadPage();
+}
+
+// ========== دالة loadPage المعدلة ==========
+async function loadPage(forceRefresh) {
+    await Promise.all([
+        loadEmployeesData(forceRefresh),
+        loadCourses(forceRefresh),
+        loadSessions(forceRefresh),
+        loadEnrollments(forceRefresh)
+    ]);
+    
+    var filteredSessions = filterSessionsByMonth();
+    
+    var stats = calculateStats(filteredSessions);
+    var deptStats = calculateDepartmentStats(filteredSessions);
+    var coursesStats = calculateCoursesStats(filteredSessions);
+    var employeesDetails = getEmployeesDetails(filteredSessions);
+    
+    window.currentEmployeesDetails = employeesDetails;
+    var monthName = currentMonth === -1 ? "كل الشهور" : monthNames[currentMonth];
+    
+    // ✅ توليد قائمة السنوات تلقائياً
+    var currentFullYear = new Date().getFullYear();
+    var startYear = 2025;
+    var yearOptionsHTML = '';
+    for (var y = startYear; y <= currentFullYear + 1; y++) {
+        yearOptionsHTML += '<option value="' + y + '" ' + (currentYear === y ? 'selected' : '') + '>' + y + '</option>';
+    }
+    
+    document.getElementById('app').innerHTML = `
+        <div class="navbar">
+            <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
+            <div class="nav-links">
+                <a href="index.html" class="home">🏠 الرئيسية</a>
+                <a href="#" onclick="logout()" class="logout">🚪 تسجيل خروج</a>
+            </div>
+        </div>
+        <div class="container">
+            <div class="page-header"><h1>📊 تقارير التدريب (Off Job)</h1><p>تحليل شامل للتدريبات الخارجية - ${monthName} ${currentYear}</p></div>
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label>📅 السنة:</label>
+                    <select id="yearSelect" class="month-select" onchange="changeYear()">
+                        ${yearOptionsHTML}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>📅 الشهر:</label>
+                    <select id="monthSelect" class="month-select" onchange="changeMonth()">
+                        <option value="-1" ${currentMonth === -1 ? 'selected' : ''}>كل الشهور</option>
+                        ${monthNames.map(function(m, i) { 
+                            return '<option value="' + i + '" ' + (currentMonth === i ? 'selected' : '') + '>' + m + '</option>'; 
+                        }).join('')}
+                    </select>
+                </div>
+                <div class="filter-group"><span>📊 عرض بيانات ${monthName} ${currentYear}</span></div>
+                <div class="filter-group"><button class="refresh-btn" onclick="refreshAllData()">🔄 تحديث البيانات</button></div>
+            </div>
+            <div id="statsContainer">${renderStats(stats)}</div>
+            <div class="data-table-card"><h3>🏆 أكثر الأقسام مشاركة</h3><div id="deptStatsContainer">${renderDepartmentStats(deptStats)}</div></div>
+            <div id="chartsContainer">${renderCharts(deptStats)}</div>
+            <div class="data-table-card"><h3>👥 الموظفين المشاركين (${monthName} ${currentYear})</h3>${renderDepartmentFilter(employeesDetails)}<div id="employeesTableContainer" style="margin-top:1rem;">${renderEmployeesTable(employeesDetails, 'all')}</div></div>
+            <div class="data-table-card"><h3>📚 التدريبات المنفذة خلال ${monthName} ${currentYear}</h3><div id="coursesTableContainer">${renderCoursesTable(coursesStats)}</div></div>
+        </div>
+        <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير</p></div>
+    `;
+    
+    updateCacheInfo();
+    window.filterEmployeesTable = filterEmployeesTable;
+    window.showEmployeeDetails = showEmployeeDetails;
+}
+
+function logout() { 
+    if (window.CacheManager) {
+        for (var key in CACHE_KEYS) {
+            CacheManager.remove(CACHE_KEYS[key]);
+            localStorage.removeItem(CACHE_KEYS[key] + '_time');
+        }
+    }
+    auth.signOut().then(function() {
+        sessionStorage.removeItem('loggedUser'); 
+        window.location.href = 'login.html';
+    });
+}
+
+auth.onAuthStateChanged(async function(user) {
+    if (user) {
+        await loadPage(false);
+        window.changeMonth = changeMonth;
+                window.changeYear = changeYear;   // ✅ أضف هذا السطر
+
+        window.logout = logout;
+        window.refreshAllData = refreshAllData;
+    } else {
+        var loggedUser = JSON.parse(sessionStorage.getItem('loggedUser'));
+        if (loggedUser) {
+            await loadPage(false);
+        } else {
+            window.location.href = 'login.html';
+        }
+    }
+});
+</script>
 </body>
 </html>
