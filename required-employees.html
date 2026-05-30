@@ -334,50 +334,71 @@
             return null;
         }
 
-        function isNewHire(employee) {
-            const hireYear = getHireYear(employee);
-            if (!hireYear) return false;
-            return hireYear === currentYear;
-        }
+function isNewHire(employee) {
+    const hireYear = getHireYear(employee);
+    if (!hireYear) {
+        console.log('⚠️ الموظف ' + employee.id + ' ليس له تاريخ تعيين');
+        return false;
+    }
+    const isNew = hireYear === currentYear;
+    if (isNew) {
+        console.log('🆕 الموظف ' + employee.id + ' (' + employee.fullName + ') معين في ' + hireYear);
+    }
+    return isNew;
+}
 
-        // ========== فحص حضور New Hire Induction ==========
-        function hasAttendedNewHireInduction(employeeId) {
-            const newHireCourseNames = [
-                'new hire induction', 
-                'تعريف الموظفين الجدد',
-                'new hire',
-                'employee induction'
-            ];
-            
-            const newHireCourse = courses.find(c => {
-                const courseName = (c.course_name || '').toLowerCase();
-                return newHireCourseNames.some(name => courseName.includes(name));
-            });
-            
-            if (!newHireCourse) {
-                console.log('⚠️ لم يتم العثور على كورس تعريف الموظفين الجدد');
-                return false;
-            }
-            
-            const newHireSessions = sessions.filter(s => 
-                String(s.course_code).trim() === String(newHireCourse.course_code).trim()
-            );
-            
-            if (newHireSessions.length === 0) return false;
-            
-            const newHireSessionCodes = newHireSessions.map(s => String(s.session_code).trim());
-            
-            const hasAttended = enrollments.some(e => {
-                const empIdMatch = String(e.employee_id).trim() === String(employeeId).trim();
-                const sessionMatch = newHireSessionCodes.includes(String(e.session_code).trim());
-                const status = String(e.enrollment_status || '').trim().toLowerCase();
-                const isCompleted = (status === 'completed' || status === 'مكتمل' || status === 'pass');
-                
-                return empIdMatch && sessionMatch && isCompleted;
-            });
-            
-            return hasAttended;
-        }
+function hasAttendedNewHireInduction(employeeId) {
+    const newHireCourseNames = [
+        'new hire induction', 
+        'تعريف الموظفين الجدد',
+        'new hire',
+        'employee induction',
+        'induction'
+    ];
+    
+    // ✅ البحث عن كورس تعريف الموظفين الجدد
+    const newHireCourse = courses.find(c => {
+        const courseName = (c.course_name || '').toLowerCase();
+        const courseCode = String(c.course_code || '').toLowerCase();
+        return newHireCourseNames.some(name => 
+            courseName.includes(name) || courseCode.includes(name)
+        );
+    });
+    
+    if (!newHireCourse) {
+        console.warn('⚠️ لم يتم العثور على كورس تعريف الموظفين الجدد في offjob_courses');
+        return false;
+    }
+    
+    console.log('📚 كورس تعريف الموظفين الجدد:', newHireCourse.course_name, '(code:', newHireCourse.course_code, ')');
+    
+    // ✅ البحث عن جلسات هذا الكورس
+    const newHireSessions = sessions.filter(s => 
+        String(s.course_code).trim() === String(newHireCourse.course_code).trim()
+    );
+    
+    console.log('📊 عدد جلسات تعريف الموظفين الجدد:', newHireSessions.length);
+    
+    if (newHireSessions.length === 0) return false;
+    
+    const newHireSessionCodes = newHireSessions.map(s => String(s.session_code).trim());
+    
+    // ✅ فحص إذا كان الموظف حضر أي من هذه الجلسات
+    const hasAttended = enrollments.some(e => {
+        const empIdMatch = String(e.employee_id).trim() === String(employeeId).trim();
+        const sessionMatch = newHireSessionCodes.includes(String(e.session_code).trim());
+        const status = String(e.enrollment_status || '').trim().toLowerCase();
+        const isCompleted = (status === 'completed' || status === 'مكتمل' || status === 'pass');
+        
+        return empIdMatch && sessionMatch && isCompleted;
+    });
+    
+    if (hasAttended) {
+        console.log('✅ الموظف ' + employeeId + ' حضر تعريف الموظفين الجدد');
+    }
+    
+    return hasAttended;
+}
 
         // ========== تحميل البيانات ==========
         async function loadEmployeesFromFirebase(forceRefresh = false) {
@@ -631,73 +652,89 @@
             return { employeeAttendance, employeeScores, examRequired };
         }
 
-        // ========== البحث عن الموظفين المطلوبين ==========
-        function findRequiredEmployees() {
-            const courseCode = document.getElementById('courseSelect')?.value;
-            const minScoreStr = document.getElementById('minScore')?.value;
-            const minScore = minScoreStr ? parseFloat(minScoreStr) : 75;
-            
-            // ✅ قراءة التشيك بوكسات
-            const excludeNewHire = document.getElementById('excludeNewHireCheckbox')?.checked || false;
-            const newHireOnly = document.getElementById('newHireOnlyCheckbox')?.checked || false;
-            
-            const selectedLevels = Array.from(document.querySelectorAll('.level-cb:checked')).map(cb => cb.value.trim().toLowerCase());
-            const selectedDepts = Array.from(document.querySelectorAll('.dept-cb:checked')).map(cb => cb.value.trim().toLowerCase());
+// ========== البحث عن الموظفين المطلوبين ==========
+function findRequiredEmployees() {
+    const courseCode = document.getElementById('courseSelect')?.value;
+    const minScoreStr = document.getElementById('minScore')?.value;
+    const minScore = minScoreStr ? parseFloat(minScoreStr) : 75;
+    
+    const excludeNewHire = document.getElementById('excludeNewHireCheckbox')?.checked || false;
+    const newHireOnly = document.getElementById('newHireOnlyCheckbox')?.checked || false;
+    
+    const selectedLevels = Array.from(document.querySelectorAll('.level-cb:checked')).map(cb => cb.value.trim().toLowerCase());
+    const selectedDepts = Array.from(document.querySelectorAll('.dept-cb:checked')).map(cb => cb.value.trim().toLowerCase());
 
-            if (!courseCode) return alert('❌ الرجاء اختيار الكورس');
-            if (selectedDepts.length === 0) return alert('❌ الرجاء اختيار قسم واحد على الأقل');
-            if (selectedLevels.length === 0) return alert('❌ الرجاء اختيار فئة واحدة على الأقل');
-            
-            const course = courses.find(c => String(c.course_code).trim() === String(courseCode).trim());
-            const { employeeAttendance, employeeScores, examRequired } = getEmployeesWhoAttendedCourse(courseCode);
-            
-            const isNewHireCourse = (course?.course_name || '').toLowerCase().includes('new hire') || 
-                                    (course?.course_name || '').toLowerCase().includes('تعريف الموظفين');
-            
-            let excludedByNewHireCount = 0;
-            let newHireOnlyCount = 0;
-            let totalEmployeesCount = 0;
-            
-            const requiredEmployees = employees.filter(emp => {
-                const empDept = String(emp.department || '').trim().toLowerCase();
-                const empLevel = String(emp.level || '').trim().toLowerCase();
-                const empIdStr = String(emp.id).trim();
+    if (!courseCode) return alert('❌ الرجاء اختيار الكورس');
+    if (selectedDepts.length === 0) return alert('❌ الرجاء اختيار قسم واحد على الأقل');
+    if (selectedLevels.length === 0) return alert('❌ الرجاء اختيار فئة واحدة على الأقل');
+    
+    const course = courses.find(c => String(c.course_code).trim() === String(courseCode).trim());
+    const { employeeAttendance, employeeScores, examRequired } = getEmployeesWhoAttendedCourse(courseCode);
+    
+    const courseNameLower = (course?.course_name || '').toLowerCase();
+    const isNewHireCourse = courseNameLower.includes('new hire') || 
+                            courseNameLower.includes('تعريف الموظفين');
+    
+    console.log('🔍 ========== بدء البحث ==========');
+    console.log('📋 الكورس المختار:', course?.course_name);
+    console.log('📋 هو كورس تعريف موظفين جدد؟:', isNewHireCourse);
+    console.log('📋 السنة الحالية:', currentYear);
+    
+    // ✅ لما الكورس يكون New Hire Induction، نجيب الموظفين الجدد فقط تلقائياً
+    const effectiveNewHireOnly = isNewHireCourse ? true : newHireOnly;
+    console.log('📋 فلترة الموظفين الجدد فقط:', effectiveNewHireOnly);
+    
+    let excludedByNewHireCount = 0;
+    let newHireCount = 0;
+    let notNewHireCount = 0;
+    let totalFilteredCount = 0;
+    
+    const requiredEmployees = employees.filter(emp => {
+        const empDept = String(emp.department || '').trim().toLowerCase();
+        const empLevel = String(emp.level || '').trim().toLowerCase();
+        const empIdStr = String(emp.id).trim();
 
-                if (!selectedDepts.includes(empDept)) return false;
-                if (!selectedLevels.includes(empLevel)) return false;
-                
-                totalEmployeesCount++;
-                
-                // ✅ فلترة الموظفين الجدد فقط (السنة الحالية)
-                if (newHireOnly && !isNewHireCourse) {
-                    if (!isNewHire(emp)) {
-                        return false;
-                    }
-                    newHireOnlyCount++;
-                }
-                
-                // ✅ استبعاد خريجي New Hire Induction
-                if (excludeNewHire && !isNewHireCourse && hasAttendedNewHireInduction(empIdStr)) {
-                    excludedByNewHireCount++;
-                    console.log('🆕 استبعاد: ' + empIdStr + ' - ' + emp.fullName);
-                    return false;
-                }
-
-                const hasAttended = employeeAttendance.get(empIdStr) === true;
-                const score = employeeScores.get(empIdStr);
-                
-                if (!hasAttended) return true;
-                if (examRequired && (score === undefined || score < minScore)) return true;
+        // ✅ فلترة القسم والفئة
+        if (!selectedDepts.includes(empDept)) return false;
+        if (!selectedLevels.includes(empLevel)) return false;
+        
+        totalFilteredCount++;
+        
+        // ✅ فلترة الموظفين الجدد فقط (لما يكون كورس New Hire أو المستخدم يختار)
+        if (effectiveNewHireOnly) {
+            const isNew = isNewHire(emp);
+            if (!isNew) {
+                notNewHireCount++;
                 return false;
-            });
-            
-            console.log('📊 إجمالي الموظفين المطابقين للفلاتر: ' + totalEmployeesCount);
-            if (excludeNewHire) console.log('🆕 تم استبعاد ' + excludedByNewHireCount + ' موظف (حضروا New Hire Induction)');
-            if (newHireOnly) console.log('🆕 تم فلترة ' + newHireOnlyCount + ' موظف جديد فقط (' + currentYear + ')');
-            console.log('📊 إجمالي الموظفين المطلوبين: ' + requiredEmployees.length);
-            
-            displayResults(requiredEmployees, course, minScore, employeeScores, employeeAttendance, examRequired);
+            }
+            newHireCount++;
         }
+        
+        // ✅ استبعاد اللي حضروا New Hire Induction (للكورسات التانية فقط)
+        if (excludeNewHire && !isNewHireCourse) {
+            if (hasAttendedNewHireInduction(empIdStr)) {
+                excludedByNewHireCount++;
+                return false;
+            }
+        }
+
+        // ✅ فحص حضور الكورس المطلوب
+        const hasAttended = employeeAttendance.get(empIdStr) === true;
+        const score = employeeScores.get(empIdStr);
+        
+        if (!hasAttended) return true;
+        if (examRequired && (score === undefined || score < minScore)) return true;
+        return false;
+    });
+    
+    console.log('📊 إجمالي الموظفين بعد فلترة القسم والفئة:', totalFilteredCount);
+    console.log('📊 الموظفين الجدد:', newHireCount);
+    console.log('📊 الموظفين القدامى (تم استبعادهم):', notNewHireCount);
+    if (excludeNewHire) console.log('📊 تم استبعادهم (حضروا New Hire):', excludedByNewHireCount);
+    console.log('📊 إجمالي الموظفين المطلوبين:', requiredEmployees.length);
+    
+    displayResults(requiredEmployees, course, minScore, employeeScores, employeeAttendance, examRequired);
+}
 
         // ========== عرض النتائج ==========
         function displayResults(employeesList, course, minScore, employeeScores, employeeAttendance, examRequired) {
