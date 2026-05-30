@@ -349,23 +349,27 @@
             return div.innerHTML;
         }
         
-        // ========== التحقق من صلاحية الأدمن ==========
-        async function checkAdminStatus(user) {
-            try {
-                const adminUIDs = ["rAvzMQ7ixeP2oPreQZPSedKxQFu1"];
-                if (adminUIDs.includes(user.uid)) { isAdmin = true; return true; }
-                const adminDoc = await getDocs(query(collection(db, "admins"), where("uid", "==", user.uid)));
-                if (!adminDoc.empty) { isAdmin = true; return true; }
-                const adminEmails = ["admin@test.com", "mina@test.com"];
-                if (adminEmails.includes(user.email)) { isAdmin = true; return true; }
-                isAdmin = false;
-                return false;
-            } catch (error) {
-                console.error(error);
-                isAdmin = false;
-                return false;
-            }
+ // ========== التحقق من صلاحية الأدمن من Firebase فقط ==========
+async function checkAdminStatus(user) {
+    try {
+        // ✅ التحقق من مجموعة admins في Firebase فقط
+        const adminDoc = await getDocs(query(collection(db, "admins"), where("uid", "==", user.uid)));
+        
+        if (!adminDoc.empty) {
+            isAdmin = true;
+            console.log("✅ أدمن مصرح له:", user.email);
+            return true;
         }
+        
+        console.log("❌ غير مصرح له:", user.email);
+        isAdmin = false;
+        return false;
+    } catch (error) {
+        console.error("❌ فشل التحقق من الصلاحيات:", error);
+        isAdmin = false;
+        return false;
+    }
+}
         
         // ========== إحصائيات المواد ==========
         async function loadMaterialsStats() {
