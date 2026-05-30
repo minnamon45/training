@@ -555,9 +555,10 @@ db.enablePersistence()
         let onJobEnrollments = [];
         let employees = [];
         let employeeDeptMap = new Map();
-        
-        let currentMonth = -1;
-        let currentType = "all";
+        let currentMonth = new Date().getMonth(); // الشهر الحالي (0-11)
+        let currentYear = new Date().getFullYear(); // ✅ السنة الحالية (2026) - وممكن تتغير
+        let currentType = "offjob";
+
         
         const monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 
@@ -815,28 +816,64 @@ db.enablePersistence()
             }
         }
 
-        // ========== تصفية حسب الشهر ==========
-        function filterSessionsByMonth(sessions) {
-            if (currentMonth === -1) return sessions;
-            return sessions.filter(session => {
-                if (!session.session_date) return false;
-                let dateObj = getDateObject(session.session_date);
-                return dateObj && dateObj.getMonth() === currentMonth;
-            });
-        }
-
-        function calculateSessionHoursFromTime(startTime, endTime) {
-            if (!startTime || !endTime) return 0;
-            const startParts = startTime.toString().split(':');
-            const endParts = endTime.toString().split(':');
-            const startHour = parseInt(startParts[0]) || 0;
-            const startMin = parseInt(startParts[1]) || 0;
-            const endHour = parseInt(endParts[0]) || 0;
-            const endMin = parseInt(endParts[1]) || 0;
-            let hours = (endHour - startHour) + (endMin - startMin) / 60;
-            if (hours < 0) hours = 24 + hours;
-            return hours;
-        }
+// ========== تصفية حسب الشهر والسنة ==========
+function filterSessionsByMonth(sessions) {
+    if (currentMonth === -1) {
+        // ✅ لو "كل الشهور"، نرجع جلسات السنة المختارة فقط
+        return sessions.filter(session => {
+            if (!session.session_date) return false;
+            let dateObj = getDateObject(session.session_date);
+            return dateObj && 
+                   !isNaN(dateObj.getTime()) && 
+                   dateObj.getFullYear() === currentYear;
+        });
+    }
+    
+    return sessions.filter(session => {
+        if (!session.session_date) return false;
+        let dateObj = getDateObject(session.session_date);
+        return dateObj && 
+               !isNaN(dateObj.getTime()) && 
+               dateObj.getMonth() === currentMonth && 
+               dateObj.getFullYear() === currentYear;
+    });
+}
+function calculateSessionHoursFromTime(startTime, endTime) {
+    if (!startTime || !endTime) return 0;
+    
+    // ✅ تحويل لقيم نصية
+    let startStr = String(startTime);
+    let endStr = String(endTime);
+    
+    // ✅ لو القيم أرقام (Excel time)
+    if (typeof startTime === 'number') {
+        const totalSeconds = Math.round(startTime * 86400);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        startStr = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
+    }
+    if (typeof endTime === 'number') {
+        const totalSeconds = Math.round(endTime * 86400);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        endStr = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0');
+    }
+    
+    const startParts = startStr.split(':');
+    const endParts = endStr.split(':');
+    
+    const startHour = parseInt(startParts[0]) || 0;
+    const startMin = parseInt(startParts[1]) || 0;
+    const endHour = parseInt(endParts[0]) || 0;
+    const endMin = parseInt(endParts[1]) || 0;
+    
+    let hours = (endHour - startHour) + (endMin - startMin) / 60;
+    if (hours < 0) hours = 24 + hours;
+    
+    console.log(`⏰ حساب الوقت: ${startStr} -> ${endStr} = ${hours.toFixed(2)} ساعة`);
+    
+    return parseFloat(hours.toFixed(2));
+}
 
         function getActiveData() {
             let courses = [];
@@ -892,214 +929,286 @@ db.enablePersistence()
             });
         }
 
-        // ========== حساب إحصائيات الأقسام ==========
-        function calculateDepartmentStats() {
-            const { sessions: filteredSessions, courses, enrollments: allEnrollments } = getActiveData();
-            
-            const filteredSessionsList = filterSessionsByMonth(filteredSessions);
-            const deptStats = new Map();
-            
-            const coursesMap = new Map();
-            courses.forEach(c => { if (c.course_code) coursesMap.set(c.course_code.toString(), c); });
-            
-            console.log('📊 عدد الجلسات للتحليل: ' + filteredSessionsList.length);
-            
-            filteredSessionsList.forEach(session => {
-                const sessionCode = session.session_code;
-                const attendees = allEnrollments.filter(e => e.session_code == sessionCode && e.enrollment_status === 'Completed');
-                const course = coursesMap.get(session.course_code);
-                
-                let sessionHours = getSessionHours(session, course);
-                
-                attendees.forEach(attendee => {
-                    const empId = attendee.employee_id?.toString();
-                    let dept = employeeDeptMap.get(empId);
-                    
-                    if (!dept) {
-                        const employee = employees.find(e => e.id == empId);
-                        if (employee && employee.department) {
-                            dept = employee.department;
-                            employeeDeptMap.set(empId, dept);
-                        }
-                    }
-                    
-                    if (!dept) {
-                        dept = 'قسم غير محدد';
-                    }
-                    
-                    if (!deptStats.has(dept)) {
-                        deptStats.set(dept, { 
-                            sessions: new Set(), 
-                            uniqueEmployees: new Set(), 
-                            hours: 0
-                        });
-                    }
-                    const stats = deptStats.get(dept);
-                    if (empId) stats.uniqueEmployees.add(empId);
-                    stats.hours += sessionHours;
-                    if (!stats.sessions.has(sessionCode)) {
-                        stats.sessions.add(sessionCode);
-                    }
-                });
-            });
-            
-            const result = Array.from(deptStats.keys()).map(dept => ({
-                department: dept,
-                sessions: deptStats.get(dept).sessions.size,
-                uniqueEmployees: deptStats.get(dept).uniqueEmployees.size,
-                hours: parseFloat(deptStats.get(dept).hours.toFixed(1))
-            }));
-            
-            return result.sort((a, b) => b.uniqueEmployees - a.uniqueEmployees);
+// ========== حساب إحصائيات الأقسام ==========
+function calculateDepartmentStats() {
+    const { sessions: filteredSessions, courses, enrollments: allEnrollments } = getActiveData();
+    
+    const filteredSessionsList = filterSessionsByMonth(filteredSessions);
+    const deptStats = new Map();
+    
+    const coursesMap = new Map();
+    courses.forEach(c => { if (c.course_code) coursesMap.set(c.course_code.toString(), c); });
+    
+    console.log('📊 عدد الجلسات للتحليل: ' + filteredSessionsList.length);
+    
+    filteredSessionsList.forEach(session => {
+        const sessionCode = session.session_code;
+        const attendees = allEnrollments.filter(e => 
+            String(e.session_code) === String(sessionCode) && 
+            e.enrollment_status === 'Completed'
+        );
+        const course = coursesMap.get(String(session.course_code));
+        
+        // ✅ حساب ساعات الجلسة
+        let sessionHours = 0;
+        if (course && course.duration_hours && course.duration_hours > 0) {
+            sessionHours = Number(course.duration_hours);
+        } else if (session.start_time && session.end_time) {
+            sessionHours = calculateSessionHoursFromTime(session.start_time, session.end_time);
         }
+        
+        // ✅ لو لسه 0، نجرب نجيبها من الكورس
+        if (sessionHours === 0 && course) {
+            sessionHours = Number(course.duration_hours) || 0;
+        }
+        
+        attendees.forEach(attendee => {
+            const empId = String(attendee.employee_id || '');
+            if (!empId) return;
+            
+            let dept = employeeDeptMap.get(empId);
+            
+            if (!dept) {
+                const employee = employees.find(e => String(e.id) === empId);
+                if (employee && employee.department) {
+                    dept = employee.department;
+                    employeeDeptMap.set(empId, dept);
+                }
+            }
+            
+            if (!dept) {
+                dept = 'قسم غير محدد';
+            }
+            
+            if (!deptStats.has(dept)) {
+                deptStats.set(dept, { 
+                    sessions: new Set(), 
+                    uniqueEmployees: new Set(), 
+                    hours: 0
+                });
+            }
+            const stats = deptStats.get(dept);
+            stats.uniqueEmployees.add(empId);
+            stats.hours += sessionHours;
+            stats.sessions.add(String(sessionCode));
+        });
+    });
+    
+    // ✅ تحويل النتيجة لمصفوفة مع التأكد من القيم
+    const result = [];
+    deptStats.forEach((stats, dept) => {
+        result.push({
+            department: dept,
+            sessions: stats.sessions.size || 0,
+            uniqueEmployees: stats.uniqueEmployees.size || 0,
+            hours: parseFloat((stats.hours || 0).toFixed(1))
+        });
+    });
+    
+    // ✅ طباعة النتيجة للتحقق
+    console.log('📊 إحصائيات الأقسام النهائية:');
+    result.forEach(r => {
+        console.log(`  ${r.department}: ${r.uniqueEmployees} موظف, ${r.sessions} جلسة, ${r.hours} ساعة`);
+    });
+    
+    return result.sort((a, b) => b.uniqueEmployees - a.uniqueEmployees);
+}
 
-        // ========== حساب إحصائيات الشهور ==========
-        function calculateMonthlyStats() {
-            const { courses, sessions, enrollments: allEnrollments } = getActiveData();
-            
-            const monthlyStats = new Map();
-            for (let i = 0; i < 12; i++) {
-                monthlyStats.set(i, { uniqueEmployees: new Set(), sessions: 0, hours: 0 });
+// ========== حساب إحصائيات الشهور ==========
+function calculateMonthlyStats() {
+    const { courses, sessions, enrollments: allEnrollments } = getActiveData();
+    
+    const monthlyStats = new Map();
+    for (let i = 0; i < 12; i++) {
+        monthlyStats.set(i, { uniqueEmployees: new Set(), sessions: 0, hours: 0 });
+    }
+    
+    const coursesMap = new Map();
+    courses.forEach(c => { if (c.course_code) coursesMap.set(String(c.course_code), c); });
+    
+    // ✅ تجميع الجلسات حسب الشهر للسنة المختارة فقط
+    const sessionsByMonth = new Map();
+    for (let i = 0; i < 12; i++) sessionsByMonth.set(i, []);
+    
+    sessions.forEach(session => {
+        if (!session.session_date) return;
+        let dateObj = getDateObject(session.session_date);
+        if (dateObj && !isNaN(dateObj.getTime())) {
+            // ✅ فلترة حسب السنة المختارة
+            if (dateObj.getFullYear() === currentYear) {
+                const month = dateObj.getMonth();
+                sessionsByMonth.get(month).push(session);
             }
-            
-            const coursesMap = new Map();
-            courses.forEach(c => { if (c.course_code) coursesMap.set(c.course_code.toString(), c); });
-            
-            const sessionsByMonth = new Map();
-            for (let i = 0; i < 12; i++) sessionsByMonth.set(i, []);
-            
-            sessions.forEach(session => {
-                if (!session.session_date) return;
-                let dateObj = getDateObject(session.session_date);
-                if (dateObj) {
-                    const month = dateObj.getMonth();
-                    sessionsByMonth.get(month).push(session);
-                }
-            });
-            
-            const enrollmentsBySession = new Map();
-            allEnrollments.forEach(e => {
-                if (e.enrollment_status === 'Completed') {
-                    const key = e.session_code?.toString();
-                    if (!enrollmentsBySession.has(key)) enrollmentsBySession.set(key, []);
-                    enrollmentsBySession.get(key).push(e.employee_id?.toString());
-                }
-            });
-            
-            for (let month = 0; month < 12; month++) {
-                const monthSessions = sessionsByMonth.get(month);
-                const stats = monthlyStats.get(month);
-                stats.sessions = monthSessions.length;
-                
-                const uniqueEmpSet = new Set();
-                let totalHours = 0;
-                
-                monthSessions.forEach(session => {
-                    const sessionCode = session.session_code?.toString();
-                    const attendees = enrollmentsBySession.get(sessionCode) || [];
-                    attendees.forEach(empId => uniqueEmpSet.add(empId));
-                    
-                    const course = coursesMap.get(session.course_code?.toString());
-                    let hoursPerAttendee = course?.duration_hours || 0;
-                    if (hoursPerAttendee === 0 && session.start_time && session.end_time) {
-                        hoursPerAttendee = calculateSessionHoursFromTime(session.start_time, session.end_time);
-                    }
-                    totalHours += hoursPerAttendee * attendees.length;
-                });
-                
-                stats.uniqueEmployees = uniqueEmpSet.size;
-                stats.hours = parseFloat(totalHours.toFixed(1));
-            }
-            
-            const result = [];
-            for (let i = 0; i < 12; i++) {
-                const stats = monthlyStats.get(i);
-                result.push({
-                    month: i,
-                    monthName: monthNames[i],
-                    uniqueEmployees: stats.uniqueEmployees,
-                    sessions: stats.sessions,
-                    hours: stats.hours
-                });
-            }
-            return result;
         }
+    });
+    
+    const enrollmentsBySession = new Map();
+    allEnrollments.forEach(e => {
+        if (e.enrollment_status === 'Completed') {
+            const key = String(e.session_code);
+            if (!enrollmentsBySession.has(key)) enrollmentsBySession.set(key, []);
+            enrollmentsBySession.get(key).push(String(e.employee_id || ''));
+        }
+    });
+    
+    for (let month = 0; month < 12; month++) {
+        const monthSessions = sessionsByMonth.get(month);
+        const stats = monthlyStats.get(month);
+        stats.sessions = monthSessions.length;
+        
+        const uniqueEmpSet = new Set();
+        let totalHours = 0;
+        
+        monthSessions.forEach(session => {
+            const sessionCode = String(session.session_code);
+            const attendees = enrollmentsBySession.get(sessionCode) || [];
+            attendees.forEach(empId => uniqueEmpSet.add(empId));
+            
+            const course = coursesMap.get(String(session.course_code));
+            let hoursPerAttendee = Number(course?.duration_hours) || 0;
+            if (hoursPerAttendee === 0 && session.start_time && session.end_time) {
+                hoursPerAttendee = calculateSessionHoursFromTime(session.start_time, session.end_time);
+            }
+            if (hoursPerAttendee === 0) hoursPerAttendee = 1; // ساعة افتراضية
+            totalHours += hoursPerAttendee * attendees.length;
+        });
+        
+        stats.uniqueEmployees = uniqueEmpSet.size;
+        stats.hours = parseFloat(totalHours.toFixed(1));
+    }
+    
+    const result = [];
+    for (let i = 0; i < 12; i++) {
+        const stats = monthlyStats.get(i);
+        result.push({
+            month: i,
+            monthName: monthNames[i],
+            uniqueEmployees: stats.uniqueEmployees,
+            sessions: stats.sessions,
+            hours: stats.hours
+        });
+    }
+    return result;
+}
 
         // ========== حساب أفضل الموظفين ==========
-        function calculateTopEmployees() {
-            const { sessions: allSessions, courses, enrollments: allEnrollments } = getActiveData();
-            
-            const filteredSessions = filterSessionsByMonth(allSessions);
-            
-            const excludedCourseNames = ['تعريف الموظفين الجدد', 'الهاسب', 'New Hire Induction', 'HACCP'];
-            const excludedCourseCodes = new Set();
-            
-            courses.forEach(course => {
-                const courseName = course.course_name?.toLowerCase() || '';
-                const isExcluded = excludedCourseNames.some(excluded => 
-                    courseName.includes(excluded.toLowerCase())
-                );
-                if (isExcluded && course.course_code) {
-                    excludedCourseCodes.add(course.course_code.toString());
-                }
-            });
-            
-            const filteredSessionsWithoutExcluded = filteredSessions.filter(session => 
-                !excludedCourseCodes.has(session.course_code?.toString())
-            );
-            
-            const coursesMap = new Map();
-            courses.forEach(c => { if (c.course_code) coursesMap.set(c.course_code.toString(), c); });
-            
-            const sessionsMap = new Map();
-            filteredSessionsWithoutExcluded.forEach(s => { if (s.session_code) sessionsMap.set(s.session_code.toString(), s); });
-            
-            const employeeStats = new Map();
-            
-            filteredSessionsWithoutExcluded.forEach(session => {
-                const sessionCode = session.session_code;
-                const attendees = allEnrollments.filter(e => e.session_code == sessionCode && e.enrollment_status === 'Completed');
-                const course = coursesMap.get(session.course_code);
-                
-                let sessionHours = getSessionHours(session, course);
-                
-                attendees.forEach(attendee => {
-                    const empId = attendee.employee_id?.toString();
-                    if (!empId) return;
-                    
-                    if (!employeeStats.has(empId)) {
-                        employeeStats.set(empId, { sessions: 0, hours: 0 });
-                    }
-                    const stats = employeeStats.get(empId);
-                    stats.sessions++;
-                    stats.hours += sessionHours;
-                });
-            });
-            
-            let employeeArray = Array.from(employeeStats.keys()).map(empId => {
-                const emp = employees.find(e => e.id == empId);
-                return {
-                    id: empId,
-                    name: emp && emp.fullName ? emp.fullName : 'غير معروف',
-                    department: employeeDeptMap.get(empId) || (emp && emp.department ? emp.department : '-'),
-                    position: emp && emp.position ? emp.position : '-',
-                    level: emp && emp.level ? emp.level : '-',
-                    sessions: employeeStats.get(empId).sessions,
-                    hours: parseFloat(employeeStats.get(empId).hours.toFixed(1))
-                };
-            });
-            
-            let filteredIds = excludeSpecialEmployees(employeeArray.map(e => e.id));
-            employeeArray = employeeArray.filter(e => filteredIds.includes(e.id));
-            
-            const topByHours = [...employeeArray].sort((a, b) => b.hours - a.hours).slice(0, 3);
-            const topBySessions = [...employeeArray].sort((a, b) => b.sessions - a.sessions).slice(0, 3);
-            
-            console.log("🏆 أفضل الموظفين حسب الساعات:", topByHours);
-            console.log("🏆 أفضل الموظفين حسب الجلسات:", topBySessions);
-            
-            return { topBySessions, topByHours };
+// ========== حساب أفضل الموظفين ==========
+function calculateTopEmployees() {
+    const { sessions: allSessions, courses, enrollments: allEnrollments } = getActiveData();
+    
+    const filteredSessions = filterSessionsByMonth(allSessions);
+    
+    const excludedCourseNames = ['تعريف الموظفين الجدد', 'الهاسب', 'New Hire Induction', 'HACCP'];
+    const excludedCourseCodes = new Set();
+    
+    courses.forEach(course => {
+        const courseName = (course.course_name || '').toLowerCase();
+        const isExcluded = excludedCourseNames.some(excluded => 
+            courseName.includes(excluded.toLowerCase())
+        );
+        if (isExcluded && course.course_code) {
+            excludedCourseCodes.add(String(course.course_code));
         }
+    });
+    
+    const filteredSessionsWithoutExcluded = filteredSessions.filter(session => 
+        !excludedCourseCodes.has(String(session.course_code))
+    );
+    
+    const coursesMap = new Map();
+    courses.forEach(c => { 
+        if (c.course_code) coursesMap.set(String(c.course_code), c); 
+    });
+    
+    const employeeStats = new Map();
+    
+    console.log('📊 جلسات لحساب أفضل الموظفين: ' + filteredSessionsWithoutExcluded.length);
+    
+    filteredSessionsWithoutExcluded.forEach(session => {
+        const sessionCode = String(session.session_code);
+        const attendees = allEnrollments.filter(e => 
+            String(e.session_code) === sessionCode && 
+            e.enrollment_status === 'Completed'
+        );
+        const course = coursesMap.get(String(session.course_code));
+        
+        // ✅ حساب ساعات الجلسة بطريقة مضمونة
+        let sessionHours = 0;
+        
+        // الطريقة 1: من duration_hours في الكورس
+        if (course && course.duration_hours) {
+            sessionHours = Number(course.duration_hours);
+        }
+        
+        // الطريقة 2: من وقت البداية والنهاية
+        if (sessionHours === 0 && session.start_time && session.end_time) {
+            sessionHours = calculateSessionHoursFromTime(session.start_time, session.end_time);
+        }
+        
+        // ✅ لو لسه 0، نحط قيمة افتراضية 1 عشان يظهر في التقرير
+        if (sessionHours === 0) {
+            sessionHours = 1; // ساعة افتراضية
+            console.warn('⚠️ الجلسة ' + sessionCode + ' ليس لها ساعات محددة، تم تعيين ساعة واحدة');
+        }
+        
+        attendees.forEach(attendee => {
+            const empId = String(attendee.employee_id || '');
+            if (!empId) return;
+            
+            if (!employeeStats.has(empId)) {
+                employeeStats.set(empId, { sessions: 0, hours: 0 });
+            }
+            const stats = employeeStats.get(empId);
+            stats.sessions++;
+            stats.hours += sessionHours;
+        });
+    });
+    
+    // ✅ تحويل النتائج مع التأكد من القيم
+    let employeeArray = [];
+    employeeStats.forEach((stats, empId) => {
+        const emp = employees.find(e => String(e.id) === empId);
+        employeeArray.push({
+            id: empId,
+            name: emp && emp.fullName ? emp.fullName : 'غير معروف',
+            department: employeeDeptMap.get(empId) || (emp && emp.department ? emp.department : '-'),
+            position: emp && emp.position ? emp.position : '-',
+            level: emp && emp.level ? emp.level : '-',
+            sessions: stats.sessions || 0,
+            hours: parseFloat((stats.hours || 0).toFixed(1))
+        });
+    });
+    
+    // ✅ استبعاد المدراء
+    let filteredIds = excludeSpecialEmployees(employeeArray.map(e => e.id));
+    employeeArray = employeeArray.filter(e => filteredIds.includes(e.id));
+    
+    // ✅ ترتيب تنازلي حسب الساعات
+    const topByHours = [...employeeArray]
+        .filter(e => e.hours > 0) // الموظفين اللي عندهم ساعات فقط
+        .sort((a, b) => b.hours - a.hours)
+        .slice(0, 3);
+    
+    // ✅ ترتيب تنازلي حسب الجلسات
+    const topBySessions = [...employeeArray]
+        .filter(e => e.sessions > 0) // الموظفين اللي عندهم جلسات فقط
+        .sort((a, b) => b.sessions - a.sessions)
+        .slice(0, 3);
+    
+    console.log("🏆 أفضل الموظفين حسب الساعات:", topByHours);
+    console.log("🏆 أفضل الموظفين حسب الجلسات:", topBySessions);
+    
+    // ✅ لو مفيش نتائج، نرجع كل الموظفين
+    if (topByHours.length === 0 && employeeArray.length > 0) {
+        console.warn('⚠️ لا يوجد موظفين بساعات، جاري عرض كل الموظفين');
+        return {
+            topBySessions: employeeArray.slice(0, 3),
+            topByHours: employeeArray.slice(0, 3)
+        };
+    }
+    
+    return { topBySessions, topByHours };
+}
 
         // ========== إعدادات الرسوم البيانية ==========
         Chart.register(ChartDataLabels);
@@ -1173,69 +1282,92 @@ scales: {
         let deptEmployeesChart = null, deptSessionsChart = null, deptHoursChart = null;
         let monthlyEmployeesChart = null, monthlySessionsChart = null, monthlyHoursChart = null;
 
-        function initDeptCharts(deptStats) {
-            const employeesSorted = [...deptStats].sort((a, b) => b.uniqueEmployees - a.uniqueEmployees);
-            const sessionsSorted = [...deptStats].sort((a, b) => b.sessions - a.sessions);
-            const hoursSorted = [...deptStats].sort((a, b) => b.hours - a.hours);
-            
-            const ctx1 = document.getElementById('deptEmployeesChart')?.getContext('2d');
-            if (ctx1) {
-                if (deptEmployeesChart) deptEmployeesChart.destroy();
-                deptEmployeesChart = new Chart(ctx1, {
-                    type: 'bar',
-                    data: { 
-                        labels: employeesSorted.map(d => d.department), 
-                        datasets: [{ 
-                            label: '👥 عدد المتدربين', 
-                            data: employeesSorted.map(d => d.uniqueEmployees), 
-                            backgroundColor: '#4299e1', 
-                            borderRadius: 8,
-                            barPercentage: 0.7
-                        }] 
-                    },
-                    options: chartOptionsWithLabels
-                });
-            }
-            
-            const ctx2 = document.getElementById('deptSessionsChart')?.getContext('2d');
-            if (ctx2) {
-                if (deptSessionsChart) deptSessionsChart.destroy();
-                deptSessionsChart = new Chart(ctx2, {
-                    type: 'bar',
-                    data: { 
-                        labels: sessionsSorted.map(d => d.department), 
-                        datasets: [{ 
-                            label: '🎯 عدد الجلسات', 
-                            data: sessionsSorted.map(d => d.sessions), 
-                            backgroundColor: '#ed8936', 
-                            borderRadius: 8,
-                            barPercentage: 0.7
-                        }] 
-                    },
-                    options: chartOptionsWithLabels
-                });
-            }
-            
-            const ctx3 = document.getElementById('deptHoursChart')?.getContext('2d');
-            if (ctx3) {
-                if (deptHoursChart) deptHoursChart.destroy();
-                deptHoursChart = new Chart(ctx3, {
-                    type: 'bar',
-                    data: { 
-                        labels: hoursSorted.map(d => d.department), 
-                        datasets: [{ 
-                            label: '⏰ عدد الساعات', 
-                            data: hoursSorted.map(d => d.hours), 
-                            backgroundColor: '#2b7a4b', 
-                            borderRadius: 8,
-                            barPercentage: 0.7
-                        }] 
-                    },
-                    options: chartOptionsWithLabelsHours
-                });
-            }
-        }
-
+function initDeptCharts(deptStats) {
+    // ✅ التأكد من وجود بيانات
+    if (!deptStats || deptStats.length === 0) {
+        console.warn('⚠️ لا توجد بيانات إحصائيات الأقسام');
+        return;
+    }
+    
+    const employeesSorted = [...deptStats].sort((a, b) => b.uniqueEmployees - a.uniqueEmployees);
+    const sessionsSorted = [...deptStats].sort((a, b) => b.sessions - a.sessions);
+    const hoursSorted = [...deptStats].sort((a, b) => b.hours - a.hours);
+    
+    // ✅ طباعة البيانات للتحقق
+    console.log('📊 بيانات الرسم البياني للساعات:');
+    hoursSorted.forEach(d => {
+        console.log(`  ${d.department}: ${d.hours} ساعة (نوع البيانات: ${typeof d.hours})`);
+    });
+    
+    // ✅ رسم الموظفين
+    const ctx1 = document.getElementById('deptEmployeesChart')?.getContext('2d');
+    if (ctx1) {
+        if (deptEmployeesChart) deptEmployeesChart.destroy();
+        deptEmployeesChart = new Chart(ctx1, {
+            type: 'bar',
+            data: { 
+                labels: employeesSorted.map(d => d.department), 
+                datasets: [{ 
+                    label: '👥 عدد المتدربين', 
+                    data: employeesSorted.map(d => d.uniqueEmployees), 
+                    backgroundColor: '#4299e1', 
+                    borderRadius: 8,
+                    barPercentage: 0.7
+                }] 
+            },
+            options: chartOptionsWithLabels
+        });
+    }
+    
+    // ✅ رسم الجلسات
+    const ctx2 = document.getElementById('deptSessionsChart')?.getContext('2d');
+    if (ctx2) {
+        if (deptSessionsChart) deptSessionsChart.destroy();
+        deptSessionsChart = new Chart(ctx2, {
+            type: 'bar',
+            data: { 
+                labels: sessionsSorted.map(d => d.department), 
+                datasets: [{ 
+                    label: '🎯 عدد الجلسات', 
+                    data: sessionsSorted.map(d => d.sessions), 
+                    backgroundColor: '#ed8936', 
+                    borderRadius: 8,
+                    barPercentage: 0.7
+                }] 
+            },
+            options: chartOptionsWithLabels
+        });
+    }
+    
+    // ✅ رسم الساعات - مع التأكد من القيم
+    const ctx3 = document.getElementById('deptHoursChart')?.getContext('2d');
+    if (ctx3) {
+        if (deptHoursChart) deptHoursChart.destroy();
+        
+        // ✅ التأكد من أن القيم أرقام صحيحة
+        const hoursData = hoursSorted.map(d => {
+            const val = parseFloat(d.hours);
+            return isNaN(val) ? 0 : val;
+        });
+        
+        console.log('📊 قيم الساعات النهائية للرسم:', hoursData);
+        
+        deptHoursChart = new Chart(ctx3, {
+            type: 'bar',
+            data: { 
+                labels: hoursSorted.map(d => d.department), 
+                datasets: [{ 
+                    label: '⏰ عدد الساعات', 
+                    data: hoursData, 
+                    backgroundColor: '#2b7a4b', 
+                    borderRadius: 8,
+                    barPercentage: 0.7
+                }] 
+            },
+            options: chartOptionsWithLabelsHours
+        });
+    }
+}
         function initMonthlyCharts(monthlyStats) {
             const months = monthlyStats.map(m => m.monthName);
             const employeesCount = monthlyStats.map(m => m.uniqueEmployees);
@@ -1374,8 +1506,15 @@ scales: {
             return html;
         }
 
+        // ========== تغيير الشهر ==========
         function changeMonth() {
             currentMonth = parseInt(document.getElementById('monthSelect').value);
+            loadPage(false);
+        }
+
+        // ✅ دالة جديدة لتغيير السنة
+        function changeYear() {
+            currentYear = parseInt(document.getElementById('yearSelect').value);
             loadPage(false);
         }
 
@@ -1397,85 +1536,97 @@ scales: {
             });
         }
 
-        async function loadPage(forceRefresh) {
-            await loadEmployeesData(forceRefresh);
-            await loadOffJobData(forceRefresh);
-            await loadOnJobData(forceRefresh);
-            
-            const deptStats = calculateDepartmentStats();
-            const monthlyStats = calculateMonthlyStats();
-            const { topBySessions, topByHours } = calculateTopEmployees();
-            
-            const monthName = currentMonth === -1 ? "كل الشهور" : monthNames[currentMonth];
-            const typeName = currentType === 'offjob' ? 'Off Job' : (currentType === 'onjob' ? 'On Job' : 'جميع التدريبات');
-            
-            document.getElementById('app').innerHTML = `
-                <div class="navbar">
-                    <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
-                    <div class="nav-links">
-                        <a href="index.html" class="home">🏠 الرئيسية</a>
-                        <a href="#" onclick="logout()" class="logout">🚪 تسجيل خروج</a>
-                    </div>
+async function loadPage(forceRefresh) {
+    await loadEmployeesData(forceRefresh);
+    await loadOffJobData(forceRefresh);
+    await loadOnJobData(forceRefresh);
+    
+    const deptStats = calculateDepartmentStats();
+    const monthlyStats = calculateMonthlyStats();
+    const { topBySessions, topByHours } = calculateTopEmployees();
+    
+    const monthName = currentMonth === -1 ? "كل الشهور" : monthNames[currentMonth];
+    const yearText = " " + currentYear; // ✅ دائماً نظهر السنة
+    const typeName = currentType === 'offjob' ? 'Off Job' : (currentType === 'onjob' ? 'On Job' : 'جميع التدريبات');
+    
+    // ✅ إنشاء قائمة السنوات (من 2025 لـ 2027)
+    const yearOptions = [ 2025, 2026, 2027].map(y => 
+        `<option value="${y}" ${currentYear === y ? 'selected' : ''}>${y}</option>`
+    ).join('');
+    
+    document.getElementById('app').innerHTML = `
+        <div class="navbar">
+            <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
+            <div class="nav-links">
+                <a href="index.html" class="home">🏠 الرئيسية</a>
+                <a href="#" onclick="logout()" class="logout">🚪 تسجيل خروج</a>
+            </div>
+        </div>
+
+        <div class="container">
+            <div class="page-header">
+                <h1>🏆 تحليل الأداء - الأقسام والموظفين والشهور</h1>
+                <p>تحليل شامل لمشاركة الأقسام والموظفين والتوزيع الشهري للتدريبات - ${monthName}${yearText}</p>
+            </div>
+
+            <div class="filter-bar">
+                <div class="filter-group">
+                    <label>📅 السنة:</label>
+                    <select id="yearSelect" class="filter-select" onchange="changeYear()">
+                        ${yearOptions}
+                    </select>
                 </div>
-
-                <div class="container">
-                    <div class="page-header">
-                        <h1>🏆 تحليل الأداء - الأقسام والموظفين والشهور</h1>
-                        <p>تحليل شامل لمشاركة الأقسام والموظفين والتوزيع الشهري للتدريبات</p>
-                    </div>
-
-                    <div class="filter-bar">
-                        <div class="filter-group">
-                            <label>📅 الشهر:</label>
-                            <select id="monthSelect" class="filter-select" onchange="changeMonth()">
-                                <option value="-1" ${currentMonth === -1 ? 'selected' : ''}>كل الشهور</option>
-                                ${monthNames.map((m, i) => `<option value="${i}" ${currentMonth === i ? 'selected' : ''}>${m}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label>📚 نوع التدريب:</label>
-                            <select id="typeSelect" class="filter-select" onchange="changeType()">
-                                <option value="all" ${currentType === 'all' ? 'selected' : ''}>جميع التدريبات</option>
-                                <option value="offjob" ${currentType === 'offjob' ? 'selected' : ''}>Off Job</option>
-                                <option value="onjob" ${currentType === 'onjob' ? 'selected' : ''}>On Job</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <span>📊 عرض بيانات ${monthName} - ${typeName}</span>
-                            <button class="refresh-btn" onclick="refreshAllData()">🔄 تحديث البيانات</button>
-                        </div>
-                    </div>
-
-                    <div class="section-title">📊 تحليل الأقسام (${monthName})</div>
-                    <div class="charts-container">
-                        <div class="chart-card"><h3>👥 عدد المتدربين حسب القسم</h3><div class="chart-wrapper"><canvas id="deptEmployeesChart"></canvas></div></div>
-                        <div class="chart-card"><h3>🎯 عدد الجلسات حسب القسم</h3><div class="chart-wrapper"><canvas id="deptSessionsChart"></canvas></div></div>
-                        <div class="chart-card"><h3>⏰ عدد الساعات حسب القسم</h3><div class="chart-wrapper"><canvas id="deptHoursChart"></canvas></div></div>
-                    </div>
-
-                    <div class="section-title">🏅 أفضل الموظفين (${monthName})</div>
-                    ${renderTopEmployees(topBySessions, topByHours)}
-
-                    <div class="section-title">📅 التحليل الشهري (جميع الشهور)</div>
-                    <div class="charts-container">
-                        <div class="chart-card"><h3>👥 عدد المتدربين حسب الشهر</h3><div class="chart-wrapper"><canvas id="monthlyEmployeesChart"></canvas></div></div>
-                        <div class="chart-card"><h3>🎯 عدد الجلسات حسب الشهر</h3><div class="chart-wrapper"><canvas id="monthlySessionsChart"></canvas></div></div>
-                        <div class="chart-card"><h3>⏰ عدد الساعات حسب الشهر</h3><div class="chart-wrapper"><canvas id="monthlyHoursChart"></canvas></div></div>
-                    </div>
+                <div class="filter-group">
+                    <label>📅 الشهر:</label>
+                    <select id="monthSelect" class="filter-select" onchange="changeMonth()">
+                        <option value="-1" ${currentMonth === -1 ? 'selected' : ''}>كل الشهور</option>
+                        ${monthNames.map((m, i) => `<option value="${i}" ${currentMonth === i ? 'selected' : ''}>${m}</option>`).join('')}
+                    </select>
                 </div>
-
-                <div class="footer">
-                    <p>© 2025 نظام إدارة التعليم والتطوير - جميع الحقوق محفوظة</p>
+                <div class="filter-group">
+                    <label>📚 نوع التدريب:</label>
+                    <select id="typeSelect" class="filter-select" onchange="changeType()">
+                        <option value="offjob" ${currentType === 'offjob' ? 'selected' : ''}>📘 Off Job</option>
+                        <option value="onjob" ${currentType === 'onjob' ? 'selected' : ''}>📗 On Job</option>
+                        <option value="all" ${currentType === 'all' ? 'selected' : ''}>📚 جميع التدريبات</option>
+                    </select>
                 </div>
-            `;
-            
-            updateCacheInfo();
-            
-            setTimeout(() => {
-                initDeptCharts(deptStats);
-                initMonthlyCharts(monthlyStats);
-            }, 100);
-        }
+                <div class="filter-group">
+                    <span>📊 عرض بيانات ${monthName}${yearText} - ${typeName}</span>
+                    <button class="refresh-btn" onclick="refreshAllData()">🔄 تحديث البيانات</button>
+                </div>
+            </div>
+
+            <div class="section-title">📊 تحليل الأقسام (${monthName}${yearText})</div>
+            <div class="charts-container">
+                <div class="chart-card"><h3>👥 عدد المتدربين حسب القسم</h3><div class="chart-wrapper"><canvas id="deptEmployeesChart"></canvas></div></div>
+                <div class="chart-card"><h3>🎯 عدد الجلسات حسب القسم</h3><div class="chart-wrapper"><canvas id="deptSessionsChart"></canvas></div></div>
+                <div class="chart-card"><h3>⏰ عدد الساعات حسب القسم</h3><div class="chart-wrapper"><canvas id="deptHoursChart"></canvas></div></div>
+            </div>
+
+            <div class="section-title">🏅 أفضل الموظفين (${monthName}${yearText})</div>
+            ${renderTopEmployees(topBySessions, topByHours)}
+
+            <div class="section-title">📅 التحليل الشهري (${currentYear})</div>
+            <div class="charts-container">
+                <div class="chart-card"><h3>👥 عدد المتدربين حسب الشهر</h3><div class="chart-wrapper"><canvas id="monthlyEmployeesChart"></canvas></div></div>
+                <div class="chart-card"><h3>🎯 عدد الجلسات حسب الشهر</h3><div class="chart-wrapper"><canvas id="monthlySessionsChart"></canvas></div></div>
+                <div class="chart-card"><h3>⏰ عدد الساعات حسب الشهر</h3><div class="chart-wrapper"><canvas id="monthlyHoursChart"></canvas></div></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 نظام إدارة التعليم والتطوير - جميع الحقوق محفوظة</p>
+        </div>
+    `;
+    
+    updateCacheInfo();
+    
+    setTimeout(() => {
+        initDeptCharts(deptStats);
+        initMonthlyCharts(monthlyStats);
+    }, 100);
+}
 
         // ========== بدء التشغيل ==========
         auth.onAuthStateChanged(async (user) => {
@@ -1495,6 +1646,24 @@ scales: {
                 }
             }
         });
+        auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        console.log("✅ مستخدم مسجل دخول:", user.email);
+        await loadPage(false);
+        window.changeMonth = changeMonth;
+        window.changeYear = changeYear;   // ✅ إضافة
+        window.changeType = changeType;
+        window.logout = logout;
+        window.refreshAllData = refreshAllData;
+    } else {
+        const loggedUser = JSON.parse(sessionStorage.getItem('loggedUser'));
+        if (loggedUser) {
+            await loadPage(false);
+        } else {
+            window.location.href = 'login.html';
+        }
+    }
+});
     </script>
 </body>
 </html>
