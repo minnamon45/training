@@ -653,7 +653,7 @@ var onJobEnrollments = [];
 
 var currentEmployee = null;
 var currentTrainings = [];
-var selectedType = "all";
+var selectedType = "offjob";
 
 function formatDate(dateValue) {
     if (!dateValue) return '-';
@@ -811,6 +811,14 @@ function printTable() {
     }, 300);
 }
 
+// ========== معالجة ضغط Enter ==========
+function handleKeyPress(event) {
+    if (event.key === 'Enter' || event.keyCode === 13) {
+        event.preventDefault();
+        searchEmployee();
+    }
+}
+
 function renderPage() {
     var typeText = (selectedType === "all") ? "جميع التدريبات" : (selectedType === "offjob" ? "Off Job" : "On Job");
     var empIdValue = currentEmployee ? currentEmployee.id : "";
@@ -856,8 +864,7 @@ function renderPage() {
     html += '<div class="search-card">';
     html += '<h3>أدخل كود الموظف</h3>';
     html += '<div class="search-box">';
-    html += '<input type="text" id="employeeId" placeholder="مثال: 12" value="' + empIdValue + '">';
-    html += '<button onclick="searchEmployee()">عرض السجل التدريبي</button>';
+html += '<input type="text" id="employeeId" placeholder="مثال: 12" value="' + empIdValue + '" onkeypress="handleKeyPress(event)">';    html += '<button onclick="searchEmployee()">عرض السجل التدريبي</button>';
     html += '</div></div>';
     
     if (currentEmployee) {
@@ -927,6 +934,7 @@ Promise.all([
     loadOnJobData(false)
 ]).then(function() {
     renderPage();
+        window.handleKeyPress = handleKeyPress;  
 }).catch(function(err) {
     console.error("Initialization Error:", err);
 });
