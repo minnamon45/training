@@ -707,3 +707,46 @@ tr:hover {
         font-size: 0.65rem;
     }
 }
+
+.certificate-intro-text {
+    position: absolute;
+    top: 52%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 10;
+    padding: 0 60px;
+}
+.certificate-intro-text span {
+    font-size: 16px;
+    font-weight: bold;
+    color: #1e3a5f;
+    line-height: 1.8;
+}
+.certificate-course-name {
+    position: absolute;
+    top: 60%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 10;
+}
+.certificate-course-name span {
+    font-size: 26px;
+    font-weight: bold;
+    color: #2b7a4b;
+}
+.certificate-date-text {
+    position: absolute;
+    top: 68%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 10;
+}
+.certificate-date-text span {
+    font-size: 16px;
+    font-weight: bold;
+    color: #4a5568;
+    line-height: 1.8;
+}
