@@ -21,7 +21,7 @@
         }
         .logo h2 { color: #1e3a5f; }
         .logo span { color: #2b7a4b; }
-        .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
         .nav-links a, .nav-links button {
             text-decoration: none;
             padding: 0.5rem 1rem;
@@ -35,11 +35,31 @@
         .nav-links a:hover, .nav-links button:hover { transform: translateY(-2px); opacity: 0.9; }
         .nav-links .home { background: #2b7a4b; }
         .nav-links .logout { background: #e53e3e; }
+        .refresh-btn {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: 'Tajawal', sans-serif;
+        }
 
         .container { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; }
-        .page-header { margin-bottom: 2rem; }
+        .page-header { margin-bottom: 1rem; }
         .page-header h1 { color: #1e3a5f; font-size: 2rem; }
         .page-header p { color: #718096; }
+
+        .cache-info {
+            font-size: 0.75rem;
+            color: #718096;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: #e2e8f0;
+            padding: 0.5rem;
+            border-radius: 1rem;
+        }
 
         .selection-card {
             background: white;
@@ -52,7 +72,7 @@
         .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
         .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
         .form-group label { font-weight: bold; color: #4a5568; }
-        .form-group select, .form-group input, .form-group textarea {
+        .form-group select, .form-group input {
             padding: 0.8rem;
             border: 2px solid #e2e8f0;
             border-radius: 0.8rem;
@@ -67,6 +87,7 @@
             font-weight: bold;
             cursor: pointer;
             transition: 0.3s;
+            font-family: 'Tajawal', sans-serif;
         }
         .btn-primary { background: #2b7a4b; color: white; }
         .btn-primary:hover { background: #1e5a38; }
@@ -113,7 +134,82 @@
             margin-bottom: 1rem;
         }
         .action-buttons { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
-        .preview-card { background: #f0f4f8; border-radius: 1.5rem; padding: 1.5rem; margin-bottom: 2rem; display: none; }
+
+        /* ========== كلاسات الشهادة ========== */
+        .certificate-wrapper {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .certificate-bg-image {
+            width: 100%;
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .certificate-employee-name {
+            position: absolute;
+            top: 42%;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 10;
+        }
+        .certificate-employee-name span {
+            font-size: 36px;
+            font-weight: bold;
+            color: #1e3a5f;
+        }
+        .certificate-intro-text {
+            position: absolute;
+            top: 55%;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 10;
+        }
+        .certificate-intro-text span {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1e3a5f;
+        }
+        .certificate-course-name {
+            position: absolute;
+            top: 63%;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 10;
+        }
+        .certificate-course-name span {
+            font-size: 26px;
+            font-weight: bold;
+            color: #2b7a4b;
+        }
+        .certificate-date-text {
+            position: absolute;
+            top: 72%;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 10;
+        }
+        .certificate-date-text span {
+            font-size: 16px;
+            font-weight: bold;
+            color: #4a5568;
+        }
+
+        .preview-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            display: none;
+        }
+        .preview-card h3 { color: #1e3a5f; margin-bottom: 1rem; border-right: 4px solid #2b7a4b; padding-right: 1rem; }
 
         .toast-msg {
             position: fixed;
@@ -126,6 +222,7 @@
             z-index: 1000;
             animation: slideIn 0.3s ease;
         }
+        .toast-msg.error { background: #e53e3e; }
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
@@ -135,11 +232,13 @@
         @media (max-width: 768px) {
             .form-row { grid-template-columns: 1fr; }
             .employees-grid { grid-template-columns: 1fr; }
+            .certificate-employee-name span { font-size: 24px; }
+            .certificate-course-name span { font-size: 18px; }
         }
     </style>
 </head>
 <body>
-    <div id="app"></div>
+    <div id="app">⏳ جاري التحميل...</div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -163,6 +262,18 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        // ========== مفاتيح التخزين المحلي ==========
+        const STORAGE_KEYS = {
+            EMPLOYEES: 'cert_employees_data',
+            OFFJOB_COURSES: 'cert_offjob_courses',
+            OFFJOB_SESSIONS: 'cert_offjob_sessions',
+            OFFJOB_ENROLLMENTS: 'cert_offjob_enrollments',
+            ONJOB_COURSES: 'cert_onjob_courses',
+            ONJOB_SESSIONS: 'cert_onjob_sessions',
+            ONJOB_ENROLLMENTS: 'cert_onjob_enrollments',
+            LAST_UPDATE: 'cert_last_update'
+        };
+
         // ========== بيانات النظام ==========
         let offJobCourses = [];
         let offJobSessions = [];
@@ -174,9 +285,51 @@
 
         const CERTIFICATE_BG = 'certificate-bg.png';
 
-        // ========== تحميل البيانات من Firebase ==========
-        async function loadAllData() {
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-msg' + (isError ? ' error' : '');
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ========== حفظ في localStorage ==========
+        function saveToLocalStorage() {
+            localStorage.setItem(STORAGE_KEYS.EMPLOYEES, JSON.stringify(employees));
+            localStorage.setItem(STORAGE_KEYS.OFFJOB_COURSES, JSON.stringify(offJobCourses));
+            localStorage.setItem(STORAGE_KEYS.OFFJOB_SESSIONS, JSON.stringify(offJobSessions));
+            localStorage.setItem(STORAGE_KEYS.OFFJOB_ENROLLMENTS, JSON.stringify(offJobEnrollments));
+            localStorage.setItem(STORAGE_KEYS.ONJOB_COURSES, JSON.stringify(onJobCourses));
+            localStorage.setItem(STORAGE_KEYS.ONJOB_SESSIONS, JSON.stringify(onJobSessions));
+            localStorage.setItem(STORAGE_KEYS.ONJOB_ENROLLMENTS, JSON.stringify(onJobEnrollments));
+            localStorage.setItem(STORAGE_KEYS.LAST_UPDATE, Date.now().toString());
+        }
+
+        // ========== تحميل من localStorage ==========
+        function loadFromLocalStorage() {
+            const lastUpdate = localStorage.getItem(STORAGE_KEYS.LAST_UPDATE);
+            if (!lastUpdate) return false;
+
             try {
+                employees = JSON.parse(localStorage.getItem(STORAGE_KEYS.EMPLOYEES) || '[]');
+                offJobCourses = JSON.parse(localStorage.getItem(STORAGE_KEYS.OFFJOB_COURSES) || '[]');
+                offJobSessions = JSON.parse(localStorage.getItem(STORAGE_KEYS.OFFJOB_SESSIONS) || '[]');
+                offJobEnrollments = JSON.parse(localStorage.getItem(STORAGE_KEYS.OFFJOB_ENROLLMENTS) || '[]');
+                onJobCourses = JSON.parse(localStorage.getItem(STORAGE_KEYS.ONJOB_COURSES) || '[]');
+                onJobSessions = JSON.parse(localStorage.getItem(STORAGE_KEYS.ONJOB_SESSIONS) || '[]');
+                onJobEnrollments = JSON.parse(localStorage.getItem(STORAGE_KEYS.ONJOB_ENROLLMENTS) || '[]');
+                return true;
+            } catch (e) {
+                console.error('❌ فشل تحميل البيانات من localStorage:', e);
+                return false;
+            }
+        }
+
+        // ========== تحميل من Firebase ==========
+        async function loadFromFirebase() {
+            try {
+                showToast('☁️ جاري تحميل البيانات من Firebase...');
+                
                 const [
                     employeesSnap,
                     offjobCoursesSnap, offjobSessionsSnap, offjobEnrollmentsSnap,
@@ -191,16 +344,12 @@
                     db.collection('onjob_enrollments').get()
                 ]);
 
-                // ✅ الموظفين
                 employees = [];
                 employeesSnap.forEach(doc => {
                     const emp = { id: doc.id, ...doc.data() };
-                    if (emp.status !== 'Left') {
-                        employees.push(emp);
-                    }
+                    if (emp.status !== 'Left') employees.push(emp);
                 });
 
-                // ✅ Off Job
                 offJobCourses = [];
                 offjobCoursesSnap.forEach(doc => offJobCourses.push(doc.data()));
                 offJobSessions = [];
@@ -208,7 +357,6 @@
                 offJobEnrollments = [];
                 offjobEnrollmentsSnap.forEach(doc => offJobEnrollments.push(doc.data()));
 
-                // ✅ On Job
                 onJobCourses = [];
                 onjobCoursesSnap.forEach(doc => onJobCourses.push(doc.data()));
                 onJobSessions = [];
@@ -216,16 +364,73 @@
                 onJobEnrollments = [];
                 onjobEnrollmentsSnap.forEach(doc => onJobEnrollments.push(doc.data()));
 
-                console.log('✅ تم تحميل البيانات من Firebase');
+                // ✅ حفظ في localStorage
+                saveToLocalStorage();
+
+                console.log('✅ تم تحميل وحفظ البيانات');
                 console.log('📊 الموظفين:', employees.length);
                 console.log('📊 Off Job:', offJobCourses.length, 'كورس,', offJobSessions.length, 'جلسة,', offJobEnrollments.length, 'تسجيل');
                 console.log('📊 On Job:', onJobCourses.length, 'كورس,', onJobSessions.length, 'جلسة,', onJobEnrollments.length, 'تسجيل');
+                
+                return true;
             } catch (error) {
-                console.error('❌ فشل تحميل البيانات:', error);
-                showToast('❌ فشل تحميل البيانات من Firebase');
+                console.error('❌ فشل تحميل البيانات من Firebase:', error);
+                return false;
             }
         }
 
+        // ========== تحميل البيانات (كاش أو Firebase) ==========
+        async function loadAllData(forceRefresh = false) {
+            if (!forceRefresh) {
+                // ✅ جرب تحميل من localStorage أولاً
+                const loadedFromCache = loadFromLocalStorage();
+                if (loadedFromCache && employees.length > 0) {
+                    console.log('📦 تم تحميل البيانات من localStorage');
+                    updateCacheInfo();
+                    return true;
+                }
+            }
+
+            // ✅ تحميل من Firebase
+            const success = await loadFromFirebase();
+            updateCacheInfo();
+            return success;
+        }
+
+        // ========== تحديث بيانات الكاش ==========
+        async function refreshData() {
+            const success = await loadFromFirebase();
+            if (success) {
+                showToast('✅ تم تحديث البيانات من Firebase بنجاح');
+                loadSessionsByType();
+            } else {
+                showToast('❌ فشل تحديث البيانات', true);
+            }
+        }
+
+        // ========== عرض معلومات الكاش ==========
+        function updateCacheInfo() {
+            const cacheInfo = document.getElementById('cacheInfo');
+            if (!cacheInfo) return;
+            
+            const lastUpdate = localStorage.getItem(STORAGE_KEYS.LAST_UPDATE);
+            if (lastUpdate) {
+                const date = new Date(parseInt(lastUpdate));
+                cacheInfo.innerHTML = `
+                    📦 البيانات محملة محلياً - آخر تحديث: ${date.toLocaleString('ar-EG')} 
+                    &nbsp;|&nbsp; 
+                    <a href="#" onclick="refreshData(); return false;" style="color:#4299e1; font-weight:bold;">🔄 تحديث من Firebase</a>
+                `;
+            } else {
+                cacheInfo.innerHTML = `
+                    ☁️ البيانات من Firebase 
+                    &nbsp;|&nbsp; 
+                    <a href="#" onclick="refreshData(); return false;" style="color:#4299e1; font-weight:bold;">🔄 تحديث</a>
+                `;
+            }
+        }
+
+        // ========== دوال البحث عن البيانات ==========
         function getCourseByCode(courseCode) {
             const offJobCourse = offJobCourses.find(c => c.course_code == courseCode);
             if (offJobCourse) return offJobCourse;
@@ -265,14 +470,7 @@
             return Array.from(uniqueSessions.values());
         }
 
-        function showToast(message) {
-            const toast = document.createElement('div');
-            toast.className = 'toast-msg';
-            toast.textContent = message;
-            document.body.appendChild(toast);
-            setTimeout(() => toast.remove(), 3000);
-        }
-
+        // ========== تحميل الجلسات حسب النوع ==========
         function loadSessionsByType() {
             const trainingType = document.getElementById('trainingTypeSelect').value;
             const sessions = getAllSessionsByType(trainingType);
@@ -285,7 +483,6 @@
                 return;
             }
 
-            // ترتيب حسب التاريخ (الأحدث أولاً)
             sessions.sort((a, b) => {
                 const dateA = a.session_date ? new Date(a.session_date) : 0;
                 const dateB = b.session_date ? new Date(b.session_date) : 0;
@@ -362,10 +559,11 @@
             document.querySelectorAll('.employee-check').forEach(cb => cb.checked = selectAll.checked);
         }
 
+        // ========== معاينة الشهادة ==========
         function previewCertificate() {
             const selectedEmployees = Array.from(document.querySelectorAll('.employee-check:checked'));
             if (selectedEmployees.length === 0) {
-                showToast('❌ الرجاء اختيار موظف واحد على الأقل');
+                showToast('❌ الرجاء اختيار موظف واحد على الأقل', true);
                 return;
             }
 
@@ -373,7 +571,6 @@
             const session = getSessionByCode(sessionCode);
             const course = getCourseByCode(session?.course_code);
             const certificateDate = document.getElementById('certificateDate').value || new Date().toISOString().split('T')[0];
-            const customText = document.getElementById('customText').value || '';
             const firstEmployee = selectedEmployees[0];
             const courseName = course?.course_name || session?.session_code;
 
@@ -381,31 +578,23 @@
             previewDiv.innerHTML = `
                 <div class="preview-card" style="display:block;">
                     <h3>🎓 معاينة الشهادة</h3>
-                    <div style="width:100%; max-width:900px; margin:0 auto; position:relative;">
-                        <img src="${CERTIFICATE_BG}" alt="Certificate" style="width:100%; display:block; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.2);" onerror="this.src='https://via.placeholder.com/800x600?text=Certificate'">
-                        <div style="position:absolute; top:49%; left:0; right:0; text-align:center; z-index:10;">
-                            <div style="font-size:32px; font-weight:bold; color:#1e3a5f;">${firstEmployee.dataset.name}</div>
-                        </div>
-                        <div style="position:absolute; top:59%; left:0; right:0; text-align:center; z-index:10;">
-                            <div style="font-size:16px; font-weight:bold; color:#1e3a5f;">In recognition of active participation and successful completion of the training course</div>
-                        </div>
-                        <div style="position:absolute; top:66%; left:0; right:0; text-align:center; z-index:10;">
-                            <div style="font-size:24px; font-weight:bold; color:#2b7a4b;">"${courseName}"</div>
-                        </div>
-                        <div style="position:absolute; top:74%; left:0; right:0; text-align:center; z-index:10;">
-                            <div style="font-size:16px; font-weight:bold; color:#4a5568;">Held on ${certificateDate} at Long Beach Resort Hurghada.</div>
-                        </div>
-                        ${customText ? `<div style="position:absolute; top:80%; left:0; right:0; text-align:center; z-index:10;"><div style="font-size:14px; font-weight:bold; color:#718096;">${customText}</div></div>` : ''}
+                    <div class="certificate-wrapper">
+                        <img src="${CERTIFICATE_BG}" class="certificate-bg-image" alt="Certificate" onerror="this.src='https://via.placeholder.com/800x600?text=Certificate'">
+                        <div class="certificate-employee-name"><span>${firstEmployee.dataset.name}</span></div>
+                        <div class="certificate-intro-text"><span>In recognition of active participation and successful completion of the training course</span></div>
+                        <div class="certificate-course-name"><span>"${courseName}"</span></div>
+                        <div class="certificate-date-text"><span>Held on ${certificateDate} at Long Beach Resort Hurghada.</span></div>
                     </div>
                 </div>
             `;
             previewDiv.style.display = 'block';
         }
 
+        // ========== طباعة الشهادات ==========
         function generateCertificates() {
             const selectedEmployees = Array.from(document.querySelectorAll('.employee-check:checked'));
             if (selectedEmployees.length === 0) {
-                showToast('❌ الرجاء اختيار موظفين لطباعة الشهادات');
+                showToast('❌ الرجاء اختيار موظفين لطباعة الشهادات', true);
                 return;
             }
 
@@ -413,7 +602,6 @@
             const session = getSessionByCode(sessionCode);
             const course = getCourseByCode(session?.course_code);
             const certificateDate = document.getElementById('certificateDate').value || new Date().toISOString().split('T')[0];
-            const customText = document.getElementById('customText').value || '';
             const courseName = course?.course_name || session?.session_code;
 
             const printWindow = window.open('', '_blank');
@@ -425,23 +613,21 @@
                     * { margin:0; padding:0; box-sizing:border-box; }
                     @page { size: A4 landscape; margin: 0; }
                     .certificate-page { width:297mm; height:210mm; position:relative; page-break-after:always; overflow:hidden; }
-                    .certificate-bg { width:100%; height:100%; position:absolute; top:0; left:0; z-index:1; }
-                    .name-pos { position:absolute; top:102mm; left:0; width:100%; text-align:center; z-index:10; font-size:36px; font-weight:bold; color:#1e3a5f; }
-                    .intro-pos { position:absolute; top:122mm; left:0; width:100%; text-align:center; z-index:10; font-size:18px; font-weight:bold; color:#1e3a5f; }
-                    .course-pos { position:absolute; top:138mm; left:0; width:100%; text-align:center; z-index:10; font-size:28px; font-weight:bold; color:#2b7a4b; }
-                    .date-pos { position:absolute; top:154mm; left:0; width:100%; text-align:center; z-index:10; font-size:18px; font-weight:bold; color:#4a5568; }
-                    .custom-pos { position:absolute; top:164mm; left:0; width:100%; text-align:center; z-index:10; font-size:16px; font-weight:bold; color:#718096; }
+                    .certificate-bg-image { width:100%; height:100%; position:absolute; top:0; left:0; z-index:1; }
+                    .certificate-employee-name { position:absolute; top:38%; left:0; width:100%; text-align:center; z-index:10; font-size:38px; font-weight:bold; color:#1e3a5f; }
+                    .certificate-intro-text { position:absolute; top:52%; left:0; width:100%; text-align:center; z-index:10; font-size:17px; font-weight:bold; color:#1e3a5f; }
+                    .certificate-course-name { position:absolute; top:60%; left:0; width:100%; text-align:center; z-index:10; font-size:28px; font-weight:bold; color:#2b7a4b; }
+                    .certificate-date-text { position:absolute; top:70%; left:0; width:100%; text-align:center; z-index:10; font-size:17px; font-weight:bold; color:#4a5568; }
                     @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } .certificate-page { box-shadow:none; } }
                 </style></head>
                 <body>
                     ${selectedEmployees.map(emp => `
                         <div class="certificate-page">
-                            <img src="${CERTIFICATE_BG}" class="certificate-bg" onerror="this.src='https://via.placeholder.com/800x600?text=Certificate'">
-                            <div class="name-pos">${emp.dataset.name}</div>
-                            <div class="intro-pos">In recognition of active participation and successful completion of the training course</div>
-                            <div class="course-pos">"${courseName}"</div>
-                            <div class="date-pos">Held on ${certificateDate} at Long Beach Resort Hurghada.</div>
-                            ${customText ? `<div class="custom-pos">${customText}</div>` : ''}
+                            <img src="${CERTIFICATE_BG}" class="certificate-bg-image" onerror="this.src='https://via.placeholder.com/800x600?text=Certificate'">
+                            <div class="certificate-employee-name">${emp.dataset.name}</div>
+                            <div class="certificate-intro-text">In recognition of active participation and successful completion of the training course</div>
+                            <div class="certificate-course-name">"${courseName}"</div>
+                            <div class="certificate-date-text">Held on ${certificateDate} at Long Beach Resort Hurghada.</div>
                         </div>
                     `).join('')}
                     <script>window.onload=function(){window.print();setTimeout(()=>window.close(),500);}<\/script>
@@ -458,12 +644,14 @@
             });
         }
 
+        // ========== تحميل الصفحة ==========
         async function loadPage() {
             document.getElementById('app').innerHTML = `
                 <div class="navbar">
                     <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
                     <div class="nav-links">
                         <a href="index.html" class="home">🏠 الرئيسية</a>
+                        <button class="refresh-btn" onclick="refreshData()">🔄 تحديث البيانات</button>
                         <a href="#" onclick="logout()" class="logout">🚪 تسجيل خروج</a>
                     </div>
                 </div>
@@ -472,6 +660,7 @@
                         <h1>🎓 توليد شهادات تقدير</h1>
                         <p>اختر نوع التدريب، ثم اختر التدريب والتاريخ، ثم اختر الموظفين لطباعة شهادات التقدير</p>
                     </div>
+                    <div id="cacheInfo" class="cache-info">⏳ جاري تحميل البيانات...</div>
                     <div class="selection-card">
                         <h3>📋 اختيار التدريب</h3>
                         <div class="form-row">
@@ -494,10 +683,6 @@
                                 <input type="date" id="certificateDate" value="${new Date().toISOString().split('T')[0]}">
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label>✏️ نص إضافي</label>
-                            <textarea id="customText" rows="2" placeholder="مثال: بتقدير امتياز" style="resize:vertical;"></textarea>
-                        </div>
                     </div>
                     <div id="employeesList"></div>
                     <div id="previewCard"></div>
@@ -505,7 +690,8 @@
                 <div class="footer"><p>© 2025 نظام إدارة التعليم والتطوير</p></div>
             `;
 
-            await loadAllData();
+            // ✅ تحميل البيانات
+            await loadAllData(false);
             loadSessionsByType();
 
             window.onSessionChange = onSessionChange;
@@ -513,6 +699,7 @@
             window.previewCertificate = previewCertificate;
             window.generateCertificates = generateCertificates;
             window.loadSessionsByType = loadSessionsByType;
+            window.refreshData = refreshData;
             window.logout = logout;
         }
 
