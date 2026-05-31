@@ -1,10 +1,9 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="ar">
+<html dir="ltr" lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>تحليل الأداء - الأقسام والموظفين والشهور</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Performance Analysis - Departments, Employees & Months</title>    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -511,7 +510,7 @@
     </style>
 </head>
 <body>
-    <div id="app">⏳ جاري التحميل...</div>
+    <div id="app">⏳ Loading...</div>
 
     <script>
 // ========== Firebase Configuration ==========
@@ -560,8 +559,20 @@ db.enablePersistence()
         let currentType = "offjob";
 
         
-        const monthNames = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
-
+const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+];
         const EXCLUDED_COURSES = ['تعريف الموظفين الجدد', 'الهاسب'];
 
         // مفاتيح الكاش
@@ -1008,7 +1019,7 @@ function calculateDepartmentStats() {
     // ✅ طباعة النتيجة للتحقق
     console.log('📊 إحصائيات الأقسام النهائية:');
     result.forEach(r => {
-        console.log(`  ${r.department}: ${r.uniqueEmployees} موظف, ${r.sessions} جلسة, ${r.hours} ساعة`);
+        console.log(`  ${r.department}: ${r.uniqueEmployees} موظف, ${r.sessions} Sessions, ${r.hours} ساعة`);
     });
     
     return result.sort((a, b) => b.uniqueEmployees - a.uniqueEmployees);
@@ -1251,7 +1262,7 @@ function calculateTopEmployees() {
 scales: { 
                 y: { 
                     beginAtZero: true, 
-                    title: { display: true, text: 'العدد', font: { weight: 'bold', size: 11 } },
+                    title: { display: true, text: '', font: { weight: 'bold', size: 11 } },
                     ticks: { 
                         autoSkip: true, 
                         maxTicksLimit: 10, 
@@ -1308,7 +1319,7 @@ function initDeptCharts(deptStats) {
             data: { 
                 labels: employeesSorted.map(d => d.department), 
                 datasets: [{ 
-                    label: '👥 عدد المتدربين', 
+                    label: '👥 Number of employees', 
                     data: employeesSorted.map(d => d.uniqueEmployees), 
                     backgroundColor: '#4299e1', 
                     borderRadius: 8,
@@ -1328,7 +1339,7 @@ function initDeptCharts(deptStats) {
             data: { 
                 labels: sessionsSorted.map(d => d.department), 
                 datasets: [{ 
-                    label: '🎯 عدد الجلسات', 
+                    label: '🎯 Number of sessions', 
                     data: sessionsSorted.map(d => d.sessions), 
                     backgroundColor: '#ed8936', 
                     borderRadius: 8,
@@ -1357,7 +1368,7 @@ function initDeptCharts(deptStats) {
             data: { 
                 labels: hoursSorted.map(d => d.department), 
                 datasets: [{ 
-                    label: '⏰ عدد الساعات', 
+                    label: '⏰ Number of hours', 
                     data: hoursData, 
                     backgroundColor: '#2b7a4b', 
                     borderRadius: 8,
@@ -1382,7 +1393,7 @@ function initDeptCharts(deptStats) {
                     data: { 
                         labels: months, 
                         datasets: [{ 
-                            label: '👥 عدد المتدربين', 
+                            label: '👥 Number of employees', 
                             data: employeesCount, 
                             backgroundColor: '#4299e1', 
                             borderRadius: 8,
@@ -1401,7 +1412,7 @@ function initDeptCharts(deptStats) {
                     data: { 
                         labels: months, 
                         datasets: [{ 
-                            label: '🎯 عدد الجلسات', 
+                            label: '🎯Number of sessions', 
                             data: sessionsCount, 
                             backgroundColor: '#ed8936', 
                             borderRadius: 8,
@@ -1420,7 +1431,7 @@ function initDeptCharts(deptStats) {
                     data: { 
                         labels: months, 
                         datasets: [{ 
-                            label: '⏰ عدد الساعات', 
+                            label: '⏰ Number of hours', 
                             data: hoursCount, 
                             backgroundColor: '#2b7a4b', 
                             borderRadius: 8,
@@ -1442,7 +1453,7 @@ function initDeptCharts(deptStats) {
             let html = '<div class="top-employees">';
             
             html += '<div class="top-card">';
-            html += '<h3>🏆 أكثر الموظفين مشاركة - حسب عدد الجلسات</h3>';
+            html += '<h3>🏆 Most participating employees - by number of sessions </h3>';
             html += '<div class="top-list">';
             
             if (topBySessions.length === 0) {
@@ -1456,7 +1467,7 @@ function initDeptCharts(deptStats) {
                     html += '<div class="top-name">' + (emp.name || '-') + '</div>';
                     html += '<div class="top-dept">' + (emp.department || '-') + ' | ' + (emp.position || '-') + '</div>';
                     html += '</div>';
-                    html += '<div class="top-value">' + emp.sessions + ' جلسة</div>';
+                    html += '<div class="top-value">' + emp.sessions + ' Sessions</div>';
                     html += '</div>';
                 }
             }
@@ -1464,7 +1475,7 @@ function initDeptCharts(deptStats) {
             html += '</div></div>';
             
             html += '<div class="top-card">';
-            html += '<h3>🏆 أكثر الموظفين مشاركة - حسب عدد الساعات</h3>';
+            html += '<h3>🏆 Most active employees - by number of hours</h3>';
             html += '<div class="top-list">';
             
             if (topByHours.length === 0) {
@@ -1478,7 +1489,7 @@ function initDeptCharts(deptStats) {
                     html += '<div class="top-name">' + (emp.name || '-') + '</div>';
                     html += '<div class="top-dept">' + (emp.department || '-') + ' | ' + (emp.position || '-') + '</div>';
                     html += '</div>';
-                    html += '<div class="top-value">' + emp.hours + ' ساعة</div>';
+                    html += '<div class="top-value">' + emp.hours + ' Hours</div>';
                     html += '</div>';
                 }
             }
@@ -1545,7 +1556,7 @@ async function loadPage(forceRefresh) {
     const monthlyStats = calculateMonthlyStats();
     const { topBySessions, topByHours } = calculateTopEmployees();
     
-    const monthName = currentMonth === -1 ? "كل الشهور" : monthNames[currentMonth];
+    const monthName = currentMonth === -1 ? "All months" : monthNames[currentMonth];
     const yearText = " " + currentYear; // ✅ دائماً نظهر السنة
     const typeName = currentType === 'offjob' ? 'Off Job' : (currentType === 'onjob' ? 'On Job' : 'جميع التدريبات');
     
@@ -1556,62 +1567,61 @@ async function loadPage(forceRefresh) {
     
     document.getElementById('app').innerHTML = `
         <div class="navbar">
-            <div class="logo"><h2>🎓 <span>نظام</span> إدارة التعليم والتطوير</h2></div>
+            <div class="logo"><h2>🎓 <span>Learning </span> & Development Management System</h2></div>
             <div class="nav-links">
-                <a href="index.html" class="home">🏠 الرئيسية</a>
-                <a href="#" onclick="logout()" class="logout">🚪 تسجيل خروج</a>
+                <a href="index.html" class="home">🏠 Home </a>
+                <a href="#" onclick="logout()" class="logout">🚪 Log out</a>
             </div>
         </div>
 
         <div class="container">
             <div class="page-header">
-                <h1>🏆 تحليل الأداء - الأقسام والموظفين والشهور</h1>
-                <p>تحليل شامل لمشاركة الأقسام والموظفين والتوزيع الشهري للتدريبات - ${monthName}${yearText}</p>
+                <h1>🏆 Performance Analysis - Departments, Employees, and Months</h1>
             </div>
 
             <div class="filter-bar">
                 <div class="filter-group">
-                    <label>📅 السنة:</label>
+                    <label>📅 Year:</label>
                     <select id="yearSelect" class="filter-select" onchange="changeYear()">
                         ${yearOptions}
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label>📅 الشهر:</label>
+                    <label>📅 Month:</label>
                     <select id="monthSelect" class="filter-select" onchange="changeMonth()">
-                        <option value="-1" ${currentMonth === -1 ? 'selected' : ''}>كل الشهور</option>
+                        <option value="-1" ${currentMonth === -1 ? 'selected' : ''}>All months</option>
                         ${monthNames.map((m, i) => `<option value="${i}" ${currentMonth === i ? 'selected' : ''}>${m}</option>`).join('')}
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label>📚 نوع التدريب:</label>
+                    <label>📚 Type of training:</label>
                     <select id="typeSelect" class="filter-select" onchange="changeType()">
                         <option value="offjob" ${currentType === 'offjob' ? 'selected' : ''}>📘 Off Job</option>
                         <option value="onjob" ${currentType === 'onjob' ? 'selected' : ''}>📗 On Job</option>
-                        <option value="all" ${currentType === 'all' ? 'selected' : ''}>📚 جميع التدريبات</option>
+                        <option value="all" ${currentType === 'all' ? 'selected' : ''}>📚 All training</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <span>📊 عرض بيانات ${monthName}${yearText} - ${typeName}</span>
-                    <button class="refresh-btn" onclick="refreshAllData()">🔄 تحديث البيانات</button>
+                    <span>📊  Training Reports ${monthName}${yearText} - ${typeName}</span>
+                    <button class="refresh-btn" onclick="refreshAllData()">🔄  Data update</button>
                 </div>
             </div>
 
-            <div class="section-title">📊 تحليل الأقسام (${monthName}${yearText})</div>
+            <div class="section-title">📊 Analysis of the departments(${monthName}${yearText})</div>
             <div class="charts-container">
-                <div class="chart-card"><h3>👥 عدد المتدربين حسب القسم</h3><div class="chart-wrapper"><canvas id="deptEmployeesChart"></canvas></div></div>
-                <div class="chart-card"><h3>🎯 عدد الجلسات حسب القسم</h3><div class="chart-wrapper"><canvas id="deptSessionsChart"></canvas></div></div>
-                <div class="chart-card"><h3>⏰ عدد الساعات حسب القسم</h3><div class="chart-wrapper"><canvas id="deptHoursChart"></canvas></div></div>
+                <div class="chart-card"><h3>👥 Number of employees by department </h3><div class="chart-wrapper"><canvas id="deptEmployeesChart"></canvas></div></div>
+                <div class="chart-card"><h3>🎯Number of sessions by department </h3><div class="chart-wrapper"><canvas id="deptSessionsChart"></canvas></div></div>
+                <div class="chart-card"><h3>⏰ Number of hours by department</h3><div class="chart-wrapper"><canvas id="deptHoursChart"></canvas></div></div>
             </div>
 
-            <div class="section-title">🏅 أفضل الموظفين (${monthName}${yearText})</div>
+            <div class="section-title">🏅 Best employees(${monthName}${yearText})</div>
             ${renderTopEmployees(topBySessions, topByHours)}
 
-            <div class="section-title">📅 التحليل الشهري (${currentYear})</div>
+            <div class="section-title">📅  Monthly Analysis (${currentYear})</div>
             <div class="charts-container">
-                <div class="chart-card"><h3>👥 عدد المتدربين حسب الشهر</h3><div class="chart-wrapper"><canvas id="monthlyEmployeesChart"></canvas></div></div>
-                <div class="chart-card"><h3>🎯 عدد الجلسات حسب الشهر</h3><div class="chart-wrapper"><canvas id="monthlySessionsChart"></canvas></div></div>
-                <div class="chart-card"><h3>⏰ عدد الساعات حسب الشهر</h3><div class="chart-wrapper"><canvas id="monthlyHoursChart"></canvas></div></div>
+                <div class="chart-card"><h3>👥 Number of employees per month </h3><div class="chart-wrapper"><canvas id="monthlyEmployeesChart"></canvas></div></div>
+                <div class="chart-card"><h3>🎯 Number of sessions per month </h3><div class="chart-wrapper"><canvas id="monthlySessionsChart"></canvas></div></div>
+                <div class="chart-card"><h3>⏰ Number of hours per month </h3><div class="chart-wrapper"><canvas id="monthlyHoursChart"></canvas></div></div>
             </div>
         </div>
 
