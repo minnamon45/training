@@ -1443,62 +1443,66 @@ function initDeptCharts(deptStats) {
             }
         }
 
-        function renderTopEmployees(topBySessions, topByHours) {
-            const getRankClass = (index) => {
-                if (index === 0) return 'gold';
-                if (index === 1) return 'silver';
-                return 'bronze';
-            };
-            
-            let html = '<div class="top-employees">';
-            
-            html += '<div class="top-card">';
-            html += '<h3>🏆 Most participating employees - by number of sessions </h3>';
-            html += '<div class="top-list">';
-            
-            if (topBySessions.length === 0) {
-                html += '<div style="text-align:center; padding:1rem;">لا توجد بيانات</div>';
-            } else {
-                for (let i = 0; i < topBySessions.length; i++) {
-                    const emp = topBySessions[i];
-                    html += '<div class="top-item">';
-                    html += '<div class="top-rank ' + getRankClass(i) + '">' + (i + 1) + '</div>';
-                    html += '<div class="top-info">';
-                    html += '<div class="top-name">' + (emp.name || '-') + '</div>';
-                    html += '<div class="top-dept">' + (emp.department || '-') + ' | ' + (emp.position || '-') + '</div>';
-                    html += '</div>';
-                    html += '<div class="top-value">' + emp.sessions + ' Sessions</div>';
-                    html += '</div>';
-                }
-            }
-            
-            html += '</div></div>';
-            
-            html += '<div class="top-card">';
-            html += '<h3>🏆 Most active employees - by number of hours</h3>';
-            html += '<div class="top-list">';
-            
-            if (topByHours.length === 0) {
-                html += '<div style="text-align:center; padding:1rem;">لا توجد بيانات</div>';
-            } else {
-                for (let i = 0; i < topByHours.length; i++) {
-                    const emp = topByHours[i];
-                    html += '<div class="top-item">';
-                    html += '<div class="top-rank ' + getRankClass(i) + '">' + (i + 1) + '</div>';
-                    html += '<div class="top-info">';
-                    html += '<div class="top-name">' + (emp.name || '-') + '</div>';
-                    html += '<div class="top-dept">' + (emp.department || '-') + ' | ' + (emp.position || '-') + '</div>';
-                    html += '</div>';
-                    html += '<div class="top-value">' + emp.hours + ' Hours</div>';
-                    html += '</div>';
-                }
-            }
-            
-            html += '</div></div>';
+function renderTopEmployees(topBySessions, topByHours) {
+    const getRankClass = (index) => {
+        if (index === 0) return 'gold';
+        if (index === 1) return 'silver';
+        return 'bronze';
+    };
+    
+    let html = '<div class="top-employees">';
+    
+    // ✅ بطاقة أفضل الموظفين حسب الجلسات
+    html += '<div class="top-card">';
+    html += '<h3>🏆 Most participating employees - by number of sessions </h3>';
+    html += '<div class="top-list">';
+    
+    if (topBySessions.length === 0) {
+        html += '<div style="text-align:center; padding:1rem;">No data available</div>';
+    } else {
+        for (let i = 0; i < topBySessions.length; i++) {
+            const emp = topBySessions[i];
+            html += '<div class="top-item">';
+            html += '<div class="top-rank ' + getRankClass(i) + '">' + (i + 1) + '</div>';
+            html += '<div class="top-info">';
+            html += '<div class="top-name">' + (emp.name || '-') + '</div>';
+            // ✅ إضافة الرقم الوظيفي
+            html += '<div class="top-dept">🆔 ' + (emp.id || '-') + ' | ' + (emp.department || '-') + '</div>';
             html += '</div>';
-            
-            return html;
+            html += '<div class="top-value">' + emp.sessions + ' Sessions</div>';
+            html += '</div>';
         }
+    }
+    
+    html += '</div></div>';
+    
+    // ✅ بطاقة أفضل الموظفين حسب الساعات
+    html += '<div class="top-card">';
+    html += '<h3>🏆 Most active employees - by number of hours</h3>';
+    html += '<div class="top-list">';
+    
+    if (topByHours.length === 0) {
+        html += '<div style="text-align:center; padding:1rem;">No data available</div>';
+    } else {
+        for (let i = 0; i < topByHours.length; i++) {
+            const emp = topByHours[i];
+            html += '<div class="top-item">';
+            html += '<div class="top-rank ' + getRankClass(i) + '">' + (i + 1) + '</div>';
+            html += '<div class="top-info">';
+            html += '<div class="top-name">' + (emp.name || '-') + '</div>';
+            // ✅ إضافة الرقم الوظيفي
+            html += '<div class="top-dept">🆔 ' + (emp.id || '-') + ' | ' + (emp.department || '-') + '</div>';
+            html += '</div>';
+            html += '<div class="top-value">' + emp.hours + ' Hours</div>';
+            html += '</div>';
+        }
+    }
+    
+    html += '</div></div>';
+    html += '</div>';
+    
+    return html;
+}
 
         function renderDepartmentStats(deptStats) {
             if (deptStats.length === 0) return '<div style="text-align:center; padding:2rem;">لا توجد بيانات</div>';
