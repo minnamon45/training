@@ -1466,8 +1466,8 @@ function renderTopEmployees(topBySessions, topByHours) {
             html += '<div class="top-rank ' + getRankClass(i) + '">' + (i + 1) + '</div>';
             html += '<div class="top-info">';
             html += '<div class="top-name">' + (emp.name || '-') + '</div>';
-            // ✅ إضافة الرقم الوظيفي
-            html += '<div class="top-dept">🆔 ' + (emp.id || '-') + ' | ' + (emp.department || '-') + '</div>';
+            // ✅ رقم وظيفي + قسم + مسمى وظيفي
+            html += '<div class="top-dept">🆔 ' + (emp.id || '-') + ' | ' + (emp.department || '-') + ' | ' + (emp.position || '-') + '</div>';
             html += '</div>';
             html += '<div class="top-value">' + emp.sessions + ' Sessions</div>';
             html += '</div>';
@@ -1490,8 +1490,8 @@ function renderTopEmployees(topBySessions, topByHours) {
             html += '<div class="top-rank ' + getRankClass(i) + '">' + (i + 1) + '</div>';
             html += '<div class="top-info">';
             html += '<div class="top-name">' + (emp.name || '-') + '</div>';
-            // ✅ إضافة الرقم الوظيفي
-            html += '<div class="top-dept">🆔 ' + (emp.id || '-') + ' | ' + (emp.department || '-') + '</div>';
+            // ✅ رقم وظيفي + قسم + مسمى وظيفي
+            html += '<div class="top-dept">🆔 ' + (emp.id || '-') + ' | ' + (emp.department || '-') + ' | ' + (emp.position || '-') + '</div>';
             html += '</div>';
             html += '<div class="top-value">' + emp.hours + ' Hours</div>';
             html += '</div>';
