@@ -298,7 +298,7 @@
         }
 
         const EXAM_REQUIRED_COURSES = [
-            'food safety', 'سلامة الغذاء', 'haccp', 'fire fighting', 'السلامة والصحة المهنية'
+            'food safety', 'سلامة الغذاء', 'haccp'
         ];
 
         function isExamRequired(courseName) {
@@ -617,40 +617,63 @@ function hasAttendedNewHireInduction(employeeId) {
         }
 
         // ========== الحصول على الموظفين الذين حضروا الكورس ==========
-        function getEmployeesWhoAttendedCourse(courseCode) {
-            const targetCourseCode = String(courseCode).trim();
-            const course = courses.find(c => String(c.course_code).trim() === targetCourseCode);
-            const examRequired = course && isExamRequired(course.course_name);
+function getEmployeesWhoAttendedCourse(courseCode, requiredYear = null) {
+    const targetCourseCode = String(courseCode).trim();
+    const course = courses.find(c => String(c.course_code).trim() === targetCourseCode);
+    const examRequired = course && isExamRequired(course.course_name);
+    
+    const courseSessions = sessions.filter(s => String(s.course_code).trim() === targetCourseCode);
+    const sessionCodes = courseSessions.map(s => String(s.session_code).trim());
+    
+    const employeeAttendance = new Map();
+    const employeeScores = new Map();
+    
+    enrollments.forEach(e => {
+        const empIdStr = String(e.employee_id).trim();
+        const sessionCodeStr = String(e.session_code).trim();
+        
+        if (sessionCodes.includes(sessionCodeStr)) {
             
-            const courseSessions = sessions.filter(s => String(s.course_code).trim() === targetCourseCode);
-            const sessionCodes = courseSessions.map(s => String(s.session_code).trim());
-            
-            const employeeAttendance = new Map();
-            const employeeScores = new Map();
-            
-            enrollments.forEach(e => {
-                const empIdStr = String(e.employee_id).trim();
-                const sessionCodeStr = String(e.session_code).trim();
+            // ✅ فلتر التدريب السنوي (تجاهل السنوات السابقة)
+            if (requiredYear) {
+                const sessionObj = courseSessions.find(s => String(s.session_code).trim() === sessionCodeStr);
+                // ابحث عن حقل التاريخ في الجلسة (قد يكون date أو session_date)
+                const sessionDateVal = sessionObj?.date || sessionObj?.session_date; 
                 
-                if (sessionCodes.includes(sessionCodeStr)) {
-                    const status = String(e.enrollment_status || '').trim().toLowerCase();
-                    const isCompleted = (status === 'completed' || status === 'مكتمل' || status === 'pass');
-                    
-                    if (isCompleted) {
-                        employeeAttendance.set(empIdStr, true);
+                if (sessionDateVal) {
+                    let sessionYear = null;
+                    if (typeof sessionDateVal === 'number') {
+                        // لو التاريخ قادم من إكسيل كرقم
+                        const utcDays = sessionDateVal - 25569;
+                        sessionYear = new Date(utcDays * 86400000).getFullYear();
+                    } else if (typeof sessionDateVal === 'string') {
+                        sessionYear = new Date(sessionDateVal).getFullYear();
                     }
                     
-                    if (e.score !== undefined && e.score !== null && e.score !== "") {
-                        const currentScore = parseFloat(e.score);
-                        if (!employeeScores.has(empIdStr) || currentScore > employeeScores.get(empIdStr)) {
-                            employeeScores.set(empIdStr, currentScore);
-                        }
+                    if (sessionYear !== null && sessionYear !== requiredYear) {
+                        return; // ⛔ تخطي هذا التسجيل لأنه في سنة سابقة ولن يحسب له
                     }
                 }
-            });
+            }
+
+            const status = String(e.enrollment_status || '').trim().toLowerCase();
+            const isCompleted = (status === 'completed' || status === 'مكتمل' || status === 'pass');
             
-            return { employeeAttendance, employeeScores, examRequired };
+            if (isCompleted) {
+                employeeAttendance.set(empIdStr, true);
+            }
+            
+            if (e.score !== undefined && e.score !== null && e.score !== "") {
+                const currentScore = parseFloat(e.score);
+                if (!employeeScores.has(empIdStr) || currentScore > employeeScores.get(empIdStr)) {
+                    employeeScores.set(empIdStr, currentScore);
+                }
+            }
         }
+    });
+    
+    return { employeeAttendance, employeeScores, examRequired };
+}
 
 // ========== البحث عن الموظفين المطلوبين ==========
 function findRequiredEmployees() {
@@ -660,6 +683,7 @@ function findRequiredEmployees() {
     
     const excludeNewHire = document.getElementById('excludeNewHireCheckbox')?.checked || false;
     const newHireOnly = document.getElementById('newHireOnlyCheckbox')?.checked || false;
+    const isAnnualTraining = document.getElementById('annualTrainingCheckbox')?.checked || false;
     
     const selectedLevels = Array.from(document.querySelectorAll('.level-cb:checked')).map(cb => cb.value.trim().toLowerCase());
     const selectedDepts = Array.from(document.querySelectorAll('.dept-cb:checked')).map(cb => cb.value.trim().toLowerCase());
@@ -669,8 +693,9 @@ function findRequiredEmployees() {
     if (selectedLevels.length === 0) return alert('❌ الرجاء اختيار فئة واحدة على الأقل');
     
     const course = courses.find(c => String(c.course_code).trim() === String(courseCode).trim());
-    const { employeeAttendance, employeeScores, examRequired } = getEmployeesWhoAttendedCourse(courseCode);
     
+    const { employeeAttendance, employeeScores, examRequired } = getEmployeesWhoAttendedCourse(courseCode, isAnnualTraining ? currentYear : null);
+        
     const courseNameLower = (course?.course_name || '').toLowerCase();
     const isNewHireCourse = courseNameLower.includes('new hire') || 
                             courseNameLower.includes('تعريف الموظفين');
@@ -694,13 +719,43 @@ function findRequiredEmployees() {
         const empLevel = String(emp.level || '').trim().toLowerCase();
         const empIdStr = String(emp.id).trim();
 
-        // ✅ فلترة القسم والفئة
+        // 1. فلترة القسم والفئة (من اختيارات الواجهة)
         if (!selectedDepts.includes(empDept)) return false;
         if (!selectedLevels.includes(empLevel)) return false;
         
+        // 2. استثناء سلامة الغذاء
+        const isFoodSafetyCourse = courseNameLower.includes('food safety') || 
+                                   courseNameLower.includes('سلامة الغذاء') || 
+                                   courseNameLower.includes('haccp');
+                                   
+        if (isFoodSafetyCourse) {
+            const empPosition = String(emp.position || '').trim().toLowerCase();
+            
+            const allowedDepts = ['f&b', 'kit', 'stew'];
+            const allowedPositions = [
+                'shift leader team rest.',
+                'team rest. supervisor',
+                'team res. att.',
+                'head store keeper',
+                'porter',
+                'receving clerk',
+                'store keeper',
+                'stors manager',
+                'asst .cost controller mgr.'
+            ];
+            
+            const isAllowedDept = allowedDepts.includes(empDept);
+            const isAllowedPosition = allowedPositions.includes(empPosition);
+            
+            if (!isAllowedDept && !isAllowedPosition) {
+                return false; 
+            }
+        }
+
+        // زيادة العداد للموظفين الذين اجتازوا فلاتر القسم والوظيفة
         totalFilteredCount++;
         
-        // ✅ فلترة الموظفين الجدد فقط (لما يكون كورس New Hire أو المستخدم يختار)
+        // 3. فلترة الموظفين الجدد فقط
         if (effectiveNewHireOnly) {
             const isNew = isNewHire(emp);
             if (!isNew) {
@@ -710,7 +765,7 @@ function findRequiredEmployees() {
             newHireCount++;
         }
         
-        // ✅ استبعاد اللي حضروا New Hire Induction (للكورسات التانية فقط)
+        // 4. استبعاد اللي حضروا New Hire Induction (للكورسات التانية فقط)
         if (excludeNewHire && !isNewHireCourse) {
             if (hasAttendedNewHireInduction(empIdStr)) {
                 excludedByNewHireCount++;
@@ -718,7 +773,7 @@ function findRequiredEmployees() {
             }
         }
 
-        // ✅ فحص حضور الكورس المطلوب
+        // 5. فحص حضور الكورس المطلوب
         const hasAttended = employeeAttendance.get(empIdStr) === true;
         const score = employeeScores.get(empIdStr);
         
@@ -733,6 +788,23 @@ function findRequiredEmployees() {
     if (excludeNewHire) console.log('📊 تم استبعادهم (حضروا New Hire):', excludedByNewHireCount);
     console.log('📊 إجمالي الموظفين المطلوبين:', requiredEmployees.length);
     
+// ✅ ترتيب الموظفين حسب القسم، ثم حسب كود الموظف
+    requiredEmployees.sort(function(a, b) {
+        const deptA = String(a.department || '').trim();
+        const deptB = String(b.department || '').trim();
+        
+        if (deptA === deptB) {
+            // إذا كانوا في نفس القسم، رتبهم حسب كود الموظف
+            const idA = String(a.id || '').trim();
+            const idB = String(b.id || '').trim();
+            
+            // استخدام numeric: true لضمان ترتيب الأرقام بشكل صحيح (مثلاً 10 يأتي بعد 2 وليس قبله)
+            return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
+        }
+        return deptA.localeCompare(deptB, 'ar');
+    });
+
+    // عرض النتائج
     displayResults(requiredEmployees, course, minScore, employeeScores, employeeAttendance, examRequired);
 }
 
@@ -906,7 +978,7 @@ function findRequiredEmployees() {
             
             // ✅ توليد قائمة السنوات
             const currentFullYear = new Date().getFullYear();
-            const startYear = 2024;
+            const startYear = 2025;
             var yearOptionsHTML = '';
             for (var y = startYear; y <= currentFullYear + 1; y++) {
                 yearOptionsHTML += '<option value="' + y + '" ' + (currentYear === y ? 'selected' : '') + '>' + y + '</option>';
@@ -979,7 +1051,12 @@ function findRequiredEmployees() {
                                 </label>
                                 <span style="font-size:0.7rem; color:#718096;">(عددهم: ${newHiresCount} موظف)</span>
                             </div>
-
+                            <div style="background:#e6fffa; padding:0.8rem 1rem; border-radius:0.8rem; margin-bottom:1rem; display:flex; align-items:center; gap:0.8rem;">
+                                <input type="checkbox" id="annualTrainingCheckbox" style="width:20px; height:20px; cursor:pointer;">
+                                <label for="annualTrainingCheckbox" style="cursor:pointer; font-weight:bold; color:#2c7a7b;">
+                                    📅 تدريب سنوي إلزامي (استبعاد الحضور في السنوات السابقة وطلب التجديد لعام ${currentYear})
+                                </label>
+                            </div>
                             <label style="font-weight: bold; color: #4a5568; display: block; margin-bottom: 0.8rem;">🏢 الأقسام المستهدفة *</label>
                             <div class="levels-group" id="deptContainer"></div>
                             
