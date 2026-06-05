@@ -610,65 +610,66 @@
         }
 
 function calculateStats(filteredSessions) {
-    var sessionCodes = new Set();
-    for (var i = 0; i < filteredSessions.length; i++) {
-        sessionCodes.add(filteredSessions[i].session_code);
-    }
+    const sessionCodes = new Set(filteredSessions.map(s => s.session_code));
     
-    var filteredEnrollments = [];
-    for (var j = 0; j < enrollments.length; j++) {
-        if (sessionCodes.has(enrollments[j].session_code)) {
-            filteredEnrollments.push(enrollments[j]);
-        }
-    }
+    // تم تصحيح trainingData.enrollments إلى enrollments
+    const filteredEnrollments = enrollments.filter(e => sessionCodes.has(e.session_code));
+    const completedEnrollments = filteredEnrollments.filter(e => e.enrollment_status === 'Completed');
+    const uniqueEmployees = new Set();
+    filteredEnrollments.forEach(e => { if (e.employee_id) uniqueEmployees.add(e.employee_id); });
     
-    var completedEnrollments = [];
-    for (var k = 0; k < filteredEnrollments.length; k++) {
-        if (filteredEnrollments[k].enrollment_status === 'Completed') {
-            completedEnrollments.push(filteredEnrollments[k]);
-        }
-    }
+    let totalHours = 0;
+    const executedCourses = new Set();
     
-    var uniqueEmployees = new Set();
-    for (var l = 0; l < filteredEnrollments.length; l++) {
-        if (filteredEnrollments[l].employee_id) {
-            uniqueEmployees.add(filteredEnrollments[l].employee_id);
-        }
-    }
-    
-    var totalHours = 0;
-    var executedCourses = new Set();
-    for (var m = 0; m < filteredSessions.length; m++) {
-        var session = filteredSessions[m];
-        var course = getCourseByCode(session.course_code);
-        var sessionHours = course ? course.duration_hours : 0;
-        var attendanceCount = 0;
-        for (var n = 0; n < enrollments.length; n++) {
-            if (enrollments[n].session_code === session.session_code && enrollments[n].enrollment_status === 'Completed') {
-                attendanceCount++;
-            }
-        }
+    let plannedSessionsCount = 0;
+    let completedSessionsCount = 0;
+
+    filteredSessions.forEach(session => {
+        // تم تصحيح trainingData.courses إلى courses
+        const course = courses.find(c => c.course_code == session.course_code);
+        
+        // تم استبدال الدالة غير المعرفة بحساب الساعات المباشر
+        const sessionHours = course ? course.duration_hours : 0;
+        
+        // تم تصحيح trainingData.enrollments إلى enrollments
+        const attendanceCount = enrollments.filter(e => 
+            e.session_code == session.session_code && e.enrollment_status === 'Completed'
+        ).length;
+        
         totalHours += sessionHours * attendanceCount;
         if (attendanceCount > 0 && course) executedCourses.add(course.course_name);
-    }
+
+        const status = session.session_status || session.status;
+        
+        if (status) {
+            if (status.toString().toLowerCase().includes('plan') || status.toString().toLowerCase().includes('sched')) {
+                plannedSessionsCount++;
+            } else {
+                completedSessionsCount++;
+            }
+        } else {
+            if (attendanceCount > 0) {
+                completedSessionsCount++;
+            } else {
+                plannedSessionsCount++;
+            }
+        }
+    });
     
-    var hoursPerEmployee = uniqueEmployees.size > 0 ? (totalHours / uniqueEmployees.size).toFixed(1) : 0;
-    var completionRate = filteredEnrollments.length > 0 ? (completedEnrollments.length / filteredEnrollments.length * 100).toFixed(1) : 0;
-    
-    // حساب الجلسات المخطط لها
-    var plannedSessionsCount = getPlannedSessionsCount();
+    const hoursPerEmployee = uniqueEmployees.size > 0 ? (totalHours / uniqueEmployees.size).toFixed(1) : 0;
     
     return {
-        totalCoursesAll: courses.length,
+        totalCoursesAll: courses.length, // تم تصحيح المتغير هنا أيضاً
         totalCoursesExecuted: executedCourses.size,
-        totalSessions: filteredSessions.length,
+        totalPlannedSessions: plannedSessionsCount,        
+        totalCompletedSessions: completedSessionsCount,    
+        totalSessions: filteredSessions.length,            
         totalEnrollments: filteredEnrollments.length,
         completedEnrollments: completedEnrollments.length,
         uniqueEmployees: uniqueEmployees.size,
         totalHours: parseFloat(totalHours.toFixed(1)),
         hoursPerEmployee: hoursPerEmployee,
-        completionRate: completionRate,
-        plannedSessions: plannedSessionsCount
+        completionRate: filteredEnrollments.length > 0 ? (completedEnrollments.length / filteredEnrollments.length * 100).toFixed(1) : 0
     };
 }
 
@@ -896,17 +897,16 @@ function getPlannedSessionsCount() {
         }
 
 function renderStats(stats) {
-    return '<div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem;">' +
-        '<div class="stat-card"><div class="stat-value">' + stats.totalCoursesAll + '</div><div class="stat-label">📚 Total Courses</div></div>' +
-        '<div class="stat-card"><div class="stat-value">' + stats.totalCoursesExecuted + '</div><div class="stat-label">✅ Executed Courses</div></div>' +
-        '<div class="stat-card"><div class="stat-value">' + stats.plannedSessions + '</div><div class="stat-label">📅 Planned Sessions</div></div>' +
-        '<div class="stat-card"><div class="stat-value">' + stats.totalSessions + '</div><div class="stat-label">🎯 Completed Sessions</div></div>' +
-        '<div class="stat-card"><div class="stat-value">' + stats.uniqueEmployees + '</div><div class="stat-label">👥 Employees Trained</div></div>' +
-        '<div class="stat-card"><div class="stat-value">' + stats.totalHours + '</div><div class="stat-label">⏰ Total Hours</div></div>' +
-        '<div class="stat-card"><div class="stat-value">' + stats.completionRate + '%</div><div class="stat-label">✅ Completion Rate</div></div>' +
-        '<div class="stat-card"><div class="stat-value">' + stats.hoursPerEmployee + '</div><div class="stat-label">📊 Avg Hours/Employee</div></div>' +
-
-        '</div>';
+    return `<div class="stats-grid">
+        <div class="stat-card"><div class="stat-value">${stats.totalCoursesAll}</div><div class="stat-label">📚 Total Plans</div></div>
+        <div class="stat-card"><div class="stat-value">${stats.totalCoursesExecuted}</div><div class="stat-label">✅ Active Plans</div></div>
+        <div class="stat-card"><div class="stat-value">${stats.totalCompletedSessions}</div><div class="stat-label">📅 Planned Sessions</div></div>
+        <div class="stat-card"><div class="stat-value">${stats.totalPlannedSessions}</div><div class="stat-label">🎯 Completed Sessions</div></div>
+        <div class="stat-card"><div class="stat-value">${stats.uniqueEmployees}</div><div class="stat-label">👥 Employees Trained</div></div>
+        <div class="stat-card"><div class="stat-value">${stats.totalHours}</div><div class="stat-label">⏰ Total Hours</div></div>
+        <div class="stat-card"><div class="stat-value">${stats.hoursPerEmployee}</div><div class="stat-label">📊 Avg Hours/Employee</div></div>
+        <div class="stat-card"><div class="stat-value">${stats.completionRate}%</div><div class="stat-label">✅ Completion Rate</div></div>
+    </div>`;
 }
 
         Chart.register(ChartDataLabels);
