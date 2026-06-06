@@ -245,7 +245,7 @@
         .stats-item .icon { font-size: 1.5rem; }
         .stats-item .info { display: flex; flex-direction: column; }
         .stats-item .label { font-size: 0.7rem; opacity: 0.9; }
-        .stats-item .value { font-size: 1.4rem; font-weight: bold; }
+        .stats-item .value { font-size: 1.4rem; font-weight: bold;     text-align: center;}
         .stats-actions { display: flex; gap: 1rem; align-items: center; }
         .btn-export-white {
             background: white;
@@ -255,6 +255,8 @@
             border: none;
             font-weight: bold;
             cursor: pointer;
+            margin-right: 600px;
+            margin-bottom: 27px;
         }
         .btn-export-white:hover { transform: scale(1.05); background: #f0f4f8; }
         .table-wrapper { overflow-x: auto; }
@@ -1124,7 +1126,9 @@
                             <canvas id="departmentChart"></canvas>
                         </div>
                     </div>
-
+                            <div class="stats-actions">
+                                <button class="btn-export-white" onclick="exportToExcel()">📥 تصدير إلى Excel</button>
+                            </div>
                     <div id="resultsCard" class="results-card">
                         <div class="stats-summary">
                             <div class="stats-item">
@@ -1142,15 +1146,20 @@
                                 </div>
                             </div>
                             <div class="stats-item">
-                                <div class="icon">👥</div>
+                                <div class="icon">✅</div>
                                 <div class="info">
                                     <div class="label">إجمالي عدد الحضور</div>
                                     <div class="value" id="attendeesCount">0</div>
                                 </div>
                             </div>
-                            <div class="stats-actions">
-                                <button class="btn-export-white" onclick="exportToExcel()">📥 تصدير إلى Excel</button>
+                                <div class="stats-item">
+                                <div class="icon">👥</div>
+                                <div class="info">
+                                    <div class="label">إجمالي المطلوب للحضور</div>
+                                    <div class="value" id="attendeesCount">0</div>
+                                </div>
                             </div>
+
                         </div>
                         <div class="table-wrapper">
                             <table>
@@ -1205,6 +1214,8 @@
                 }
             }
         });
+
+
     </script>
 </body>
 </html>
