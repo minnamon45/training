@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Analysis - Departments & Employees</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48x48.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <meta name="theme-color" content="#0B3B82">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    
+    <!-- مكتبة XLSX لمعالجة تواريخ الإكسيل المتسلسلة -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    
+    <!-- تحويل السكريبتات لتعمل بنظام Modules لـ Firebase -->
+    <script type="module" src="auth-guard.js"></script>
+    <script type="module" src="database.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+        body { background: #f0f4f8; overflow-x: hidden; }
+
+        .navbar { background: white; padding: 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; position: sticky; top: 0; z-index: 100; }
+        .logo h2 { color: #1e3a5f; font-size: clamp(1.2rem, 3vw, 1.8rem); }
+        .logo span { color: #2b7a4b; }
+        .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .nav-links a, .nav-links button { text-decoration: none; padding: 0.5rem 1rem; border-radius: 2rem; font-weight: 500; cursor: pointer; border: none; font-size: clamp(0.8rem, 1.5vw, 0.9rem); transition: 0.3s; }
+        .nav-links a:hover, .nav-links button:hover { transform: translateY(-2px); opacity: 0.9; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .nav-links .home { background: #2b7a4b; color: white; }
+        .nav-links .diagnose { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        .nav-links .refresh { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+        .nav-links .logout { background: #e53e3e; color: white; }
+
+        .container { max-width: 1400px; margin: 2rem auto; padding: 0 clamp(1rem, 3vw, 1.5rem); }
+        .page-header { margin-bottom: 2rem; }
+        .page-header h1 { color: #1e3a5f; font-size: clamp(1.5rem, 4vw, 2rem); }
+        .page-header p { color: #718096; font-size: clamp(0.9rem, 1.5vw, 1rem); }
+        .section-title { font-size: clamp(1.2rem, 2.5vw, 1.5rem); color: #1e3a5f; margin: 3rem 0 1.5rem 0; border-left: 5px solid #2b7a4b; padding-left: 10px; }
+
+        .diagnostic-box { background: white; border-radius: 1.5rem; padding: clamp(1rem, 2vw, 1.5rem); margin-bottom: 2rem; border: 2px solid #f59e0b; box-shadow: 0 5px 20px rgba(245, 158, 11, 0.15); display: none; }
+        .diagnostic-box.show { display: block; }
+        .diagnostic-box h3 { color: #d97706; margin-bottom: 1rem; font-size: clamp(1.1rem, 2vw, 1.3rem); }
+        .diagnostic-box .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+        .diagnostic-box .stat-item { background: #fffbeb; padding: clamp(0.8rem, 1.5vw, 1rem); border-radius: 1rem; text-align: center; }
+        .diagnostic-box .stat-value { font-size: clamp(1.2rem, 2.5vw, 1.5rem); font-weight: bold; color: #d97706; }
+        .diagnostic-box .stat-label { font-size: clamp(0.7rem, 1.2vw, 0.8rem); color: #92400e; margin-top: 0.3rem; }
+        .diagnostic-box .mismatch-list { max-height: 200px; overflow-y: auto; background: #fef2f2; padding: 1rem; border-radius: 1rem; font-size: clamp(0.8rem, 1.2vw, 0.85rem); color: #991b1b; margin-top: 1rem; }
+        .diagnostic-box .mismatch-list div { padding: 0.3rem 0; border-bottom: 1px solid #fecaca; }
+
+        .filter-bar { background: white; border-radius: 1rem; padding: clamp(0.8rem, 1.5vw, 1rem) clamp(1rem, 2vw, 1.5rem); margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .filter-group { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+        .filter-group label { font-weight: bold; color: #1e3a5f; font-size: clamp(0.85rem, 1.2vw, 0.95rem); }
+        .filter-select { padding: 0.5rem 1rem; border: 2px solid #e2e8f0; border-radius: 2rem; font-size: clamp(0.85rem, 1.2vw, 1rem); background: white; cursor: pointer; min-width: 120px; outline: none; transition: 0.3s; flex: 1 1 auto; max-width: 200px; }
+        .filter-select:focus { border-color: #2b7a4b; box-shadow: 0 0 0 3px rgba(43,122,75,0.1); }
+
+        .cache-badge { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.8rem; border-radius: 1rem; font-size: 0.75rem; font-weight: bold; background: #e6fffa; color: #234e52; border: 1px solid #b2f5ea; }
+        .cache-badge.loading { background: #ebf8ff; color: #2b6cb0; border-color: #bee3f8; }
+        .cache-badge.firebase { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+        .cache-badge.cache { background: #e6fffa; color: #234e52; border-color: #b2f5ea; }
+
+        /* حالة عدم وجود بيانات */
+        .no-data-message {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: #f8fafc;
+            border-radius: 1.5rem;
+            border: 2px dashed #cbd5e1;
+        }
+        .no-data-message h3 {
+            color: #475569;
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+        }
+        .no-data-message p {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        .charts-container { display: flex; flex-direction: column; gap: 2rem; margin-bottom: 2rem; }
+        .chart-card { background: white; border-radius: 1.5rem; padding: clamp(1rem, 2vw, 1.5rem); box-shadow: 0 5px 15px rgba(0,0,0,0.05); width: 100%; margin-top: 20px; }
+        .chart-card h3 { color: #1e3a5f; margin-bottom: 1rem; border-left: 4px solid #2b7a4b; padding-left: 1rem; font-weight: 700; transition: font-size 0.3s ease; }
+        
+        .chart-wrapper { position: relative; width: 100%; height: 400px; display: block; }
+        @media (max-width: 768px) { .chart-wrapper { height: 450px; } }
+        @media (max-width: 576px) { .chart-wrapper { height: 500px; } }
+
+        .charts-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(clamp(280px, 30vw, 450px), 1fr)); gap: 2rem; margin-bottom: 2rem; }
+
+        .toast-msg { position: fixed; bottom: 2rem; right: 2rem; background: #2b7a4b; color: white; padding: 0.8rem 1.5rem; border-radius: 2rem; z-index: 3000; animation: slideIn 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .toast-msg.error { background: #e53e3e; }
+        .toast-msg.info { background: #3b82f6; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* شاشة التحميل */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+        .loading-overlay.show {
+            display: flex;
+        }
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #e2e8f0;
+            border-top: 6px solid #2b7a4b;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+        .loading-text {
+            font-size: 1.2rem;
+            color: #1e3a5f;
+            font-weight: 500;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer { text-align: center; padding: 2rem; color: #718096; margin-top: 2rem; font-size: clamp(0.8rem, 1.2vw, 0.9rem); }
+
+        @media (max-width: 992px) {
+            .container { max-width: 720px; }
+            .filter-bar { flex-direction: column; align-items: stretch; gap: 1rem; }
+            .filter-group { flex-direction: column; align-items: stretch; width: 100%; text-align: center; }
+            .filter-select { width: 100%; min-width: 100%; max-width: 100%; }
+            .charts-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .navbar { flex-direction: column; text-align: center; padding: 1rem; }
+            .nav-links { justify-content: center; width: 100%; margin-top: 0.5rem; }
+            .nav-links a, .nav-links button { width: 100%; text-align: center; }
+            .container { max-width: 100%; padding: 0 1rem; }
+            .page-header h1 { font-size: 1.6rem; }
+            .diagnostic-box .stats-row { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 576px) {
+            .diagnostic-box .stats-row { grid-template-columns: 1fr; }
+            .stat-card, .chart-card, .diagnostic-box { padding: 1rem; border-radius: 1rem; }
+            .charts-row { gap: 1rem; }
+            .charts-container { gap: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- شاشة التحميل -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loader"></div>
+        <div class="loading-text">⏳ جاري تحميل البيانات من السيرفر...</div>
+    </div>
+
+    <div id="app">
+        <div style="text-align:center; padding:100px 20px; font-size:1.5rem; color:#1e3a5f;">
+            جاري تحميل البيانات ... ⏳
+        </div>
+    </div>
+
+    <script type="module">
+        import { auth, DB } from './database.js';
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+        import { getApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+        import { 
+            getFirestore, 
+            collection, 
+            query, 
+            where, 
+            getDocs 
+        } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+        const firestoreDb = getFirestore(getApp());
+
+        let chartInstances = [];
+
+        // ⭐ تغيير: بيانات منفصلة لكل نوع تدريب
+        let trainingData = {
+            offjob: {
+                courses: [],
+                sessions: [],
+                enrollments: []
+            },
+            onjob: {
+                courses: [],
+                sessions: [],
+                enrollments: []
+            }
+        };
+
+        let allEmployees = [];
+        let activeEmployees = [];
+        let availableYears = [];
+        let isRefreshing = false;
+        let lastLoadSource = "memory";
+
+        // الفلاتر
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth();
+        let currentQuarter = -1;
+        let currentType = "offjob"; // offjob, onjob, all
+        
+        const monthNames = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+        const quarterNames = ['Q1 (Jan-Mar)', 'Q2 (Apr-Jun)', 'Q3 (Jul-Sep)', 'Q4 (Oct-Dec)'];
+        const quarterMonths = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [9, 10, 11]
+        ];
+
+        const START_YEAR = 2025;
+        const END_YEAR = 2028;
+
+        const EXCLUDED_COURSES = ['new hire induction', 'تعريف الموظفين الجدد', 'الهاسب'];
+        function isExcludedCourse(courseName) {
+            if (!courseName) return false;
+            return EXCLUDED_COURSES.some(ex => courseName.toString().toLowerCase().includes(ex.toLowerCase()));
+        }
+
+        // ================= نظام التخزين المحلي عبر IndexedDB =================
+        const IDB_CONFIG = {
+            name: 'LDMS_Performance_IndexedDB_Final_V2',
+            version: 2,
+            store: 'perf_cache'
+        };
+        const CACHE_TTL = 72 * 60 * 60 * 1000;
+
+        const memoryCache = {
+            employees: null,
+            courses: null,
+            // ⭐ تغيير: تخزين منفصل لكل نوع تدريب
+            months: {
+                offjob: new Map(),
+                onjob: new Map()
+            }
+        };
+
+        function openCacheDB() {
+            return new Promise((resolve) => {
+                if (!window.indexedDB) { resolve(null); return; }
+                const request = window.indexedDB.open(IDB_CONFIG.name, IDB_CONFIG.version);
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(IDB_CONFIG.store)) {
+                        db.createObjectStore(IDB_CONFIG.store, { keyPath: 'key' });
+                    }
+                };
+                request.onsuccess = (e) => resolve(e.target.result);
+                request.onerror = () => resolve(null);
+            });
+        }
+
+        async function getFromIDB(key) {
+            try {
+                const db = await openCacheDB();
+                if (!db) return null;
+                return new Promise((resolve) => {
+                    const tx = db.transaction(IDB_CONFIG.store, 'readonly');
+                    const store = tx.objectStore(IDB_CONFIG.store);
+                    const req = store.get(key);
+                    req.onsuccess = () => {
+                        const res = req.result;
+                        if (!res) { resolve(null); return; }
+                        if (res.timestamp && (Date.now() - res.timestamp > CACHE_TTL)) {
+                            resolve(null);
+                        } else {
+                            resolve(res.data);
+                        }
+                    };
+                    req.onerror = () => resolve(null);
+                });
+            } catch(e) {
+                return null;
+            }
+        }
+
+        async function saveToIDB(key, data) {
+            try {
+                const db = await openCacheDB();
+                if (!db) return;
+                return new Promise((resolve) => {
+                    const tx = db.transaction(IDB_CONFIG.store, 'readwrite');
+                    const store = tx.objectStore(IDB_CONFIG.store);
+                    store.put({ key: key, data: data, timestamp: Date.now() });
+                    tx.oncomplete = () => resolve(true);
+                    tx.onerror = () => resolve(false);
+                });
+            } catch(e) {}
+        }
+
+        async function clearAllIDB() {
+            try {
+                const db = await openCacheDB();
+                if (db) {
+                    const tx = db.transaction(IDB_CONFIG.store, 'readwrite');
+                    tx.objectStore(IDB_CONFIG.store).clear();
+                }
+            } catch(e) {}
+            memoryCache.employees = null;
+            memoryCache.courses = null;
+            memoryCache.months.offjob.clear();
+            memoryCache.months.onjob.clear();
+        }
+
+        function normalizeItem(obj) {
+            if (!obj) return {};
+            const normalized = { ...obj };
+            const lowerKeys = {};
+            for (let k in obj) {
+                if (obj.hasOwnProperty(k)) {
+                    lowerKeys[k.toLowerCase().replace(/[\s_]/g, '')] = obj[k];
+                }
+            }
+            normalized.course_code = normalized.course_code || lowerKeys['coursecode'];
+            normalized.course_name = normalized.course_name || lowerKeys['coursename'];
+            normalized.session_code = normalized.session_code || lowerKeys['sessioncode'] || lowerKeys['sessionid'] || lowerKeys['code'];
+            normalized.session_date = normalized.session_date || lowerKeys['sessiondate'] || lowerKeys['date'];
+            normalized.start_time = normalized.start_time || lowerKeys['starttime'];
+            normalized.end_time = normalized.end_time || lowerKeys['endtime'];
+            normalized.employee_id = normalized.employee_id || lowerKeys['employeeid'] || lowerKeys['empid'];
+            normalized.enrollment_status = normalized.enrollment_status || lowerKeys['enrollmentstatus'] || lowerKeys['status'];
+            return normalized;
+        }
+
+        function parseExcelDate(val) {
+            if (!val) return null;
+            if (typeof val === 'number') {
+                try {
+                    const d = XLSX.SSF.parse_date_code(val);
+                    return new Date(d.y, d.m - 1, d.d);
+                } catch(e) { return new Date(val); }
+            }
+            return new Date(val);
+        }
+
+        // ================= تحميل الموظفين والكورسات =================
+        async function loadEmployeesAndCourses(forceRefresh = false) {
+            if (!forceRefresh && memoryCache.employees) {
+                allEmployees = memoryCache.employees;
+            } else {
+                const cachedEmp = !forceRefresh ? await getFromIDB('employees') : null;
+                if (cachedEmp && cachedEmp.length > 0) {
+                    allEmployees = cachedEmp;
+                    memoryCache.employees = cachedEmp;
+                } else {
+                    allEmployees = await DB.getAll('employees') || [];
+                    await saveToIDB('employees', allEmployees);
+                    memoryCache.employees = allEmployees;
+                }
+            }
+            activeEmployees = allEmployees.filter(emp => emp.status !== 'Left');
+
+            // ⭐ تغيير: تحميل الكورسات لكل نوع بشكل منفصل
+            if (!forceRefresh && memoryCache.courses) {
+                trainingData.offjob.courses = memoryCache.courses.offCourses || [];
+                trainingData.onjob.courses = memoryCache.courses.onCourses || [];
+            } else {
+                const cachedCourses = !forceRefresh ? await getFromIDB('courses') : null;
+                if (cachedCourses) {
+                    trainingData.offjob.courses = cachedCourses.offCourses || [];
+                    trainingData.onjob.courses = cachedCourses.onCourses || [];
+                    memoryCache.courses = cachedCourses;
+                } else {
+                    const [offC, onC] = await Promise.all([
+                        DB.getAll('offjob_courses'),
+                        DB.getAll('onjob_courses')
+                    ]);
+                    const offNorm = (offC || []).map(normalizeItem);
+                    const onNorm = (onC || []).map(normalizeItem);
+                    trainingData.offjob.courses = offNorm;
+                    trainingData.onjob.courses = onNorm;
+                    const cData = { offCourses: offNorm, onCourses: onNorm };
+                    await saveToIDB('courses', cData);
+                    memoryCache.courses = cData;
+                }
+            }
+        }
+
+        // ================= استعلام الجلسات لشهر محدد =================
+        async function fetchSessionsDirectFromFirestore(collectionName, year, month) {
+            try {
+                const colRef = collection(firestoreDb, collectionName);
+                const snap = await getDocs(colRef);
+
+                console.log(`📦 [${collectionName}] Total Documents: ${snap.size}`);
+
+                const results = [];
+
+                snap.forEach(docSnap => {
+                    const data = docSnap.data();
+
+                    const rawDate = data.session_date;
+
+                    let sessionDate = null;
+
+                    if (typeof rawDate === 'number') {
+                        sessionDate = new Date(
+                            Date.UTC(1899, 11, 30) + rawDate * 86400000
+                        );
+                    }
+                    else if (rawDate && typeof rawDate.toDate === 'function') {
+                        sessionDate = rawDate.toDate();
+                    }
+                    else if (rawDate instanceof Date) {
+                        sessionDate = rawDate;
+                    }
+                    else if (typeof rawDate === 'string') {
+                        const parsed = new Date(rawDate);
+                        if (!isNaN(parsed.getTime())) {
+                            sessionDate = parsed;
+                        }
+                    }
+
+                    if (!sessionDate || isNaN(sessionDate.getTime())) {
+                        console.warn(
+                            `⚠️ [${collectionName}] Invalid session_date:`,
+                            rawDate,
+                            data
+                        );
+                        return;
+                    }
+
+                    const sessionYear = sessionDate.getUTCFullYear();
+                    const sessionMonth = sessionDate.getUTCMonth();
+
+                    if (
+                        sessionYear === year &&
+                        sessionMonth === month
+                    ) {
+                        results.push({
+                            id: docSnap.id,
+                            ...data,
+                            session_date_parsed: sessionDate
+                        });
+                    }
+                });
+
+                console.log(
+                    `✅ [${collectionName}] Loaded ${results.length} sessions for ${month + 1}/${year}`
+                );
+
+                return results.map(normalizeItem);
+
+            } catch (error) {
+                console.error(
+                    `❌ [${collectionName}] Failed to load sessions:`,
+                    error
+                );
+
+                return [];
+            }
+        }
+
+        // ================= استعلام التسجيلات الخاصة بجلسات الشهر فقط =================
+        async function fetchEnrollmentsDirectFromFirestore(collectionName, sessions, year, month) {
+            if (!sessions || sessions.length === 0) return [];
+
+            const colRef = collection(firestoreDb, collectionName);
+            const results = [];
+
+            const codesSet = new Set();
+            sessions.forEach(s => {
+                const code = s.session_code;
+                if (code !== undefined && code !== null && code !== '') {
+                    codesSet.add(code.toString().trim());
+                    const num = Number(code);
+                    if (!isNaN(num)) codesSet.add(num);
+                }
+            });
+            const allCodes = Array.from(codesSet);
+            if (allCodes.length === 0) return [];
+
+            console.log(`🔍 [Firestore Query] جلب تسجيلات ${collectionName} لـ ${sessions.length} جلسة...`);
+
+            const fieldVariations = [
+                'session_code', 'Session_Code', 'Session Code', 
+                'sessionCode', 'SessionCode', 'session_id', 
+                'Session_ID', 'Session ID', 'code', 'Code'
+            ];
+
+            let workingField = null;
+            const testSample = allCodes.slice(0, 10);
+
+            for (const field of fieldVariations) {
+                try {
+                    const testQ = query(colRef, where(field, 'in', testSample));
+                    const testSnap = await getDocs(testQ);
+                    if (!testSnap.empty) {
+                        workingField = field;
+                        console.log(`🎯 [${collectionName}] الحقل المستخدم للربط في فايربيز: "${workingField}"`);
+                        testSnap.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+                        break;
+                    }
+                } catch (e) {}
+            }
+
+            if (workingField) {
+                const remainingCodes = allCodes.slice(10);
+                const chunkSize = 30;
+                const promises = [];
+
+                for (let i = 0; i < remainingCodes.length; i += chunkSize) {
+                    const chunk = remainingCodes.slice(i, i + chunkSize);
+                    const q = query(colRef, where(workingField, 'in', chunk));
+                    promises.push(getDocs(q));
+                }
+
+                if (promises.length > 0) {
+                    const snaps = await Promise.all(promises);
+                    snaps.forEach(snap => {
+                        snap.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+                    });
+                }
+
+                const uniqueMap = new Map();
+                results.forEach(r => uniqueMap.set(r.id, r));
+                const finalResults = Array.from(uniqueMap.values()).map(normalizeItem);
+                console.log(`✅ [${collectionName}] تم قراءة ${finalResults.length} تسجيل بنجاح!`);
+                return finalResults;
+            }
+
+            const mNum = month + 1;
+            const mPad = String(mNum).padStart(2, '0');
+            const lastDay = new Date(year, mNum, 0).getDate();
+            const startStr = `${year}-${mPad}-01`;
+            const endStr = `${year}-${mPad}-${String(lastDay).padStart(2, '0')}`;
+
+            for (const dateField of ['session_date', 'date', 'Date', 'Session_Date', 'Session Date']) {
+                try {
+                    const dateQ = query(colRef, where(dateField, '>=', startStr), where(dateField, '<=', endStr));
+                    const dateSnap = await getDocs(dateQ);
+                    if (!dateSnap.empty) {
+                        dateSnap.forEach(doc => results.push({ id: doc.id, ...doc.data() }));
+                        const finalRes = results.map(normalizeItem);
+                        console.log(`✅ [${collectionName}] تم قراءة ${finalRes.length} تسجيل بحقل التاريخ!`);
+                        return finalRes;
+                    }
+                } catch(e) {}
+            }
+
+            console.warn(`⚠️ [${collectionName}] لم يتم العثور على تسجيلات مطابقة.`);
+            return [];
+        }
+
+        // ⭐ تغيير: جلب شهر واحد لنوع تدريب محدد
+        async function fetchSingleMonthForType(type, year, month) {
+            const isOffjob = type === 'offjob';
+            const sessionCollection = isOffjob ? 'offjob_sessions' : 'onjob_sessions';
+            const enrollmentCollection = isOffjob ? 'offjob_enrollments' : 'onjob_enrollments';
+
+            const sessions = await fetchSessionsDirectFromFirestore(sessionCollection, year, month);
+            const enrollments = await fetchEnrollmentsDirectFromFirestore(enrollmentCollection, sessions, year, month);
+
+            const monthData = {
+                sessions: sessions,
+                enrollments: enrollments
+            };
+
+            const key = `${type}_${year}_${month}`;
+            await saveToIDB(`month_${key}`, monthData);
+            memoryCache.months[type].set(`${year}_${month}`, monthData);
+
+            return monthData;
+        }
+
+        // ⭐ تغيير: تحميل شهر واحد مع دعم النوع
+        async function ensureMonthLoadedForType(type, year, month, forceRefresh = false) {
+            const key = `${year}_${month}`;
+            
+            if (!forceRefresh && memoryCache.months[type].has(key)) {
+                lastLoadSource = "memory";
+                return memoryCache.months[type].get(key);
+            }
+
+            if (!forceRefresh) {
+                const cachedMonth = await getFromIDB(`month_${type}_${key}`);
+                if (cachedMonth) {
+                    memoryCache.months[type].set(key, cachedMonth);
+                    lastLoadSource = "cache";
+                    return cachedMonth;
+                }
+            }
+
+            lastLoadSource = "firebase";
+            return await fetchSingleMonthForType(type, year, month);
+        }
+
+        // ⭐ تغيير: مزامنة البيانات بناءً على النوع المطلوب
+        function syncTrainingDataForType(type) {
+            const data = trainingData[type];
+            data.sessions = [];
+            data.enrollments = [];
+
+            memoryCache.months[type].forEach((mObj) => {
+                data.sessions.push(...(mObj.sessions || []));
+                data.enrollments.push(...(mObj.enrollments || []));
+            });
+        }
+
+        // ⭐ تغيير: تحميل البيانات للنوع المطلوب فقط
+        async function loadDataForCurrentSelection(forceRefresh = false) {
+            showLoading(true, '⏳ جاري تحميل البيانات من السيرفر...');
+            
+            try {
+                await loadEmployeesAndCourses(forceRefresh);
+
+                // تحديد الأنواع المطلوبة
+                const typesToLoad = currentType === 'all' ? ['offjob', 'onjob'] : [currentType];
+
+                for (const type of typesToLoad) {
+                    if (currentMonth !== -1) {
+                        await ensureMonthLoadedForType(type, currentYear, currentMonth, forceRefresh);
+                    } else if (currentQuarter !== -1) {
+                        const qMonths = quarterMonths[currentQuarter];
+                        for (let m of qMonths) {
+                            await ensureMonthLoadedForType(type, currentYear, m, forceRefresh);
+                        }
+                    } else {
+                        for (let m = 0; m < 12; m++) {
+                            await ensureMonthLoadedForType(type, currentYear, m, forceRefresh);
+                        }
+                    }
+                    
+                    // مزامنة البيانات لهذا النوع
+                    syncTrainingDataForType(type);
+                }
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function showLoading(show = true, text = '⏳ جاري تحميل البيانات من السيرفر...') {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                if (show) {
+                    overlay.querySelector('.loading-text').textContent = text;
+                    overlay.classList.add('show');
+                } else {
+                    overlay.classList.remove('show');
+                }
+            }
+        }
+
+        function findEmployee(empId, activeOnly = false) {
+            if (!empId) return null;
+            const idStr = empId.toString().trim();
+            const searchIn = activeOnly ? activeEmployees : allEmployees;
+            return searchIn.find(e => e.id?.toString().trim() === idStr) || null;
+        }
+
+        // ⭐ تغيير: فلترة حسب التاريخ مع دعم النوع
+        function filterByDate(items, dateField) {
+            return items.filter(item => {
+                const d = parseExcelDate(item[dateField]);
+                if (!d || isNaN(d.getTime())) return false;
+                if (d.getFullYear() !== currentYear) return false;
+                if (currentMonth !== -1 && d.getMonth() !== currentMonth) return false;
+                if (currentQuarter !== -1 && !quarterMonths[currentQuarter].includes(d.getMonth())) return false;
+                return true;
+            });
+        }
+
+        // ⭐ تغيير: الحصول على البيانات النشطة حسب النوع المحدد
+        function getActiveDataWithTypes() {
+            let result = { courses: [], sessions: [], enrollments: [] };
+            
+            if (currentType === 'offjob') {
+                result.courses = trainingData.offjob.courses.map(c => ({ ...c, trainingType: 'offjob' }));
+                result.sessions = trainingData.offjob.sessions.map(s => ({ ...s, trainingType: 'offjob' }));
+                result.enrollments = trainingData.offjob.enrollments.map(e => ({ ...e, trainingType: 'offjob' }));
+            } else if (currentType === 'onjob') {
+                result.courses = trainingData.onjob.courses.map(c => ({ ...c, trainingType: 'onjob' }));
+                result.sessions = trainingData.onjob.sessions.map(s => ({ ...s, trainingType: 'onjob' }));
+                result.enrollments = trainingData.onjob.enrollments.map(e => ({ ...e, trainingType: 'onjob' }));
+            } else {
+                // All types
+                result.courses = [
+                    ...trainingData.offjob.courses.map(c => ({ ...c, trainingType: 'offjob' })),
+                    ...trainingData.onjob.courses.map(c => ({ ...c, trainingType: 'onjob' }))
+                ];
+                result.sessions = [
+                    ...trainingData.offjob.sessions.map(s => ({ ...s, trainingType: 'offjob' })),
+                    ...trainingData.onjob.sessions.map(s => ({ ...s, trainingType: 'onjob' }))
+                ];
+                result.enrollments = [
+                    ...trainingData.offjob.enrollments.map(e => ({ ...e, trainingType: 'offjob' })),
+                    ...trainingData.onjob.enrollments.map(e => ({ ...e, trainingType: 'onjob' }))
+                ];
+            }
+            return result;
+        }
+
+        function getSessionHours(session) {
+            let start = session.start_time;
+            let end = session.end_time;
+            if (start == null || end == null) return 0;
+            if (typeof start === "number" && typeof end === "number") {
+                let hours = (end - start) * 24;
+                if (hours < 0) hours += 24;
+                return Number(hours.toFixed(2));
+            }
+            return calculateHoursFromTime(start.toString(), end.toString());
+        }
+
+        function calculateHoursFromTime(startTime, endTime) {
+            if (!startTime || !endTime) return 0;
+            const startParts = startTime.toString().split(':');
+            const endParts = endTime.toString().split(':');
+            let startHour = parseInt(startParts[0], 10);
+            let startMinute = parseInt(startParts[1], 10) || 0;
+            let endHour = parseInt(endParts[0], 10);
+            let endMinute = parseInt(endParts[1], 10) || 0;
+            let diffHours = endHour - startHour;
+            let diffMinutes = endMinute - startMinute;
+            if (diffHours < 0) diffHours = 24 + diffHours;
+            let hours = diffHours + (diffMinutes / 60);
+            return parseFloat(hours.toFixed(2));
+        }
+
+        function excludeSpecialEmployees(empIds) {
+            const excludedLevels = ['HODs', 'GM', 'Director'];
+            const excludedPositions = ['General Manager', 'Hotel Manager', 'Department Head'];
+            return empIds.filter(id => {
+                const emp = findEmployee(id, true);
+                if (!emp) return false;
+                if (excludedLevels.includes(emp.level)) return false;
+                if (excludedPositions.some(p => emp.position?.includes(p))) return false;
+                return true;
+            });
+        }
+
+        // ⭐ تغيير: التحقق من وجود بيانات
+        function hasDataForCurrentSelection() {
+            const data = getActiveDataWithTypes();
+            return data.sessions.length > 0 || data.enrollments.length > 0 || data.courses.length > 0;
+        }
+
+        function calculateMonthlyStats() {
+            const data = getActiveDataWithTypes();
+            const monthlyStats = new Map();
+            for (let i = 0; i < 12; i++) monthlyStats.set(i, { offJob: { employees: new Set(), sessions: 0, hours: 0 }, onJob: { employees: new Set(), sessions: 0, hours: 0 } });
+            
+            const filteredSessions = filterByDate(data.sessions, 'session_date');
+            
+            filteredSessions.forEach(session => {
+                const d = parseExcelDate(session.session_date);
+                if (d && !isNaN(d.getTime()) && d.getFullYear() === currentYear) {
+                    const m = d.getMonth();
+                    const ms = monthlyStats.get(m);
+                    const type = session.trainingType || 'offjob';
+                    
+                    const attendees = data.enrollments.filter(e => 
+                        e.session_code?.toString().trim() === session.session_code?.toString().trim() && 
+                        e.enrollment_status?.toString().toLowerCase().includes('complete')
+                    );
+                    const hrs = getSessionHours(session);
+                    
+                    if (type === 'offjob') {
+                        ms.offJob.sessions++;
+                        attendees.forEach(a => { if (a.employee_id) ms.offJob.employees.add(a.employee_id.toString()); });
+                        ms.offJob.hours += hrs * attendees.length;
+                    } else {
+                        ms.onJob.sessions++;
+                        attendees.forEach(a => { if (a.employee_id) ms.onJob.employees.add(a.employee_id.toString()); });
+                        ms.onJob.hours += hrs * attendees.length;
+                    }
+                }
+            });
+            
+            return Array.from(monthlyStats.keys()).map(m => ({
+                month: m, monthName: monthNames[m],
+                offJob: { uniqueEmployees: monthlyStats.get(m).offJob.employees.size, sessions: monthlyStats.get(m).offJob.sessions, hours: parseFloat(monthlyStats.get(m).offJob.hours.toFixed(1)) },
+                onJob: { uniqueEmployees: monthlyStats.get(m).onJob.employees.size, sessions: monthlyStats.get(m).onJob.sessions, hours: parseFloat(monthlyStats.get(m).onJob.hours.toFixed(1)) }
+            }));
+        }
+
+        function calculateQuarterlyStats() {
+            const data = getActiveDataWithTypes();
+            const filteredSessions = filterByDate(data.sessions, 'session_date');
+            
+            const quarters = [
+                { name: 'Q1 (Jan-Mar)', months: [0, 1, 2] },
+                { name: 'Q2 (Apr-Jun)', months: [3, 4, 5] },
+                { name: 'Q3 (Jul-Sep)', months: [6, 7, 8] },
+                { name: 'Q4 (Oct-Dec)', months: [9, 10, 11] }
+            ];
+            
+            return quarters.map(q => {
+                const offJob = { employees: new Set(), sessions: 0, hours: 0 };
+                const onJob = { employees: new Set(), sessions: 0, hours: 0 };
+                
+                filteredSessions.forEach(session => {
+                    const d = parseExcelDate(session.session_date);
+                    if (d && !isNaN(d.getTime()) && d.getFullYear() === currentYear && q.months.includes(d.getMonth())) {
+                        const type = session.trainingType || 'offjob';
+                        const attendees = data.enrollments.filter(e => e.session_code?.toString().trim() === session.session_code?.toString().trim() && e.enrollment_status?.toString().toLowerCase().includes('complete'));
+                        const hrs = getSessionHours(session);
+                        
+                        if (type === 'offjob') {
+                            offJob.sessions++;
+                            attendees.forEach(a => { if (a.employee_id) offJob.employees.add(a.employee_id.toString()); });
+                            offJob.hours += hrs * attendees.length;
+                        } else {
+                            onJob.sessions++;
+                            attendees.forEach(a => { if (a.employee_id) onJob.employees.add(a.employee_id.toString()); });
+                            onJob.hours += hrs * attendees.length;
+                        }
+                    }
+                });
+                return {
+                    quarter: q.name,
+                    offJob: { uniqueEmployees: offJob.employees.size, sessions: offJob.sessions, hours: parseFloat(offJob.hours.toFixed(1)) },
+                    onJob: { uniqueEmployees: onJob.employees.size, sessions: onJob.sessions, hours: parseFloat(onJob.hours.toFixed(1)) }
+                };
+            });
+        }
+
+        function calculateSemiAnnualStats() {
+            const data = getActiveDataWithTypes();
+            const filteredSessions = filterByDate(data.sessions, 'session_date');
+            const halves = [
+                { name: 'H1 (Jan-Jun)', months: [0, 1, 2, 3, 4, 5] },
+                { name: 'H2 (Jul-Dec)', months: [6, 7, 8, 9, 10, 11] }
+            ];
+            
+            return halves.map(h => {
+                const offJob = { employees: new Set(), sessions: 0, hours: 0 };
+                const onJob = { employees: new Set(), sessions: 0, hours: 0 };
+                
+                filteredSessions.forEach(session => {
+                    const d = parseExcelDate(session.session_date);
+                    if (d && !isNaN(d.getTime()) && d.getFullYear() === currentYear && h.months.includes(d.getMonth())) {
+                        const type = session.trainingType || 'offjob';
+                        const attendees = data.enrollments.filter(e => e.session_code?.toString().trim() === session.session_code?.toString().trim() && e.enrollment_status?.toString().toLowerCase().includes('complete'));
+                        const hrs = getSessionHours(session);
+                        
+                        if (type === 'offjob') {
+                            offJob.sessions++;
+                            attendees.forEach(a => { if (a.employee_id) offJob.employees.add(a.employee_id.toString()); });
+                            offJob.hours += hrs * attendees.length;
+                        } else {
+                            onJob.sessions++;
+                            attendees.forEach(a => { if (a.employee_id) onJob.employees.add(a.employee_id.toString()); });
+                            onJob.hours += hrs * attendees.length;
+                        }
+                    }
+                });
+                return {
+                    half: h.name,
+                    offJob: { uniqueEmployees: offJob.employees.size, sessions: offJob.sessions, hours: parseFloat(offJob.hours.toFixed(1)) },
+                    onJob: { uniqueEmployees: onJob.employees.size, sessions: onJob.sessions, hours: parseFloat(onJob.hours.toFixed(1)) }
+                };
+            });
+        }
+
+        function runDiagnostic() {
+            const allEnrollments = [...trainingData.offjob.enrollments, ...trainingData.onjob.enrollments];
+            const trainingIds = [...new Set(allEnrollments.map(e => e.employee_id?.toString().trim()))].filter(Boolean);
+            const leftIds = trainingIds.filter(id => { const emp = findEmployee(id, false); return emp && emp.status === 'Left'; });
+            const notFoundIds = trainingIds.filter(id => !findEmployee(id, false));
+            return { totalEmployees: allEmployees.length, activeEmployees: activeEmployees.length, leftEmployees: allEmployees.length - activeEmployees.length, totalTrainingIds: trainingIds.length, leftInTraining: leftIds.length, notFoundCount: notFoundIds.length, leftIds, notFoundIds };
+        }
+
+        function showDiagnostic() {
+            const result = runDiagnostic();
+            const box = document.getElementById('diagnosticBox');
+            if (box) {
+                box.classList.toggle('show');
+                if (box.classList.contains('show')) {
+                    document.getElementById('diagTotalEmp').textContent = result.totalEmployees;
+                    document.getElementById('diagActiveEmp').textContent = result.activeEmployees;
+                    document.getElementById('diagLeftEmp').textContent = result.leftEmployees;
+                    document.getElementById('diagTrainingIds').textContent = result.totalTrainingIds;
+                    document.getElementById('diagLeftInTraining').textContent = result.leftInTraining;
+                    document.getElementById('diagNotFound').textContent = result.notFoundCount;
+                    
+                    let html = '';
+                    if (result.leftInTraining > 0) {
+                        html += `<div style="color:#d97706; font-weight:bold;">🚪 Left Employees (Excluded from Top, Included in Depts):</div>`;
+                        html += result.leftIds.slice(0, 15).map(id => { const emp = findEmployee(id, false); return `<div style="color:#92400e;">🆔 ${id} - ${emp?.fullName || 'Unknown'} | 🏢 ${emp?.department || 'N/A'}</div>`; }).join('');
+                    }
+                    if (result.notFoundCount > 0) {
+                        html += `<div style="color:#991b1b; font-weight:bold; margin-top:0.5rem;">❌ Not Found:</div>`;
+                        html += result.notFoundIds.slice(0, 15).map(id => `<div>🆔 ${id}</div>`).join('');
+                    }
+                    if (result.leftInTraining === 0 && result.notFoundCount === 0) html = '<div style="color:#065f46;">✅ All training IDs match active employees!</div>';
+                    document.getElementById('diagMismatchList').innerHTML = html;
+                }
+            }
+        }
+
+        function renderDiagnosticHTML() {
+            return `
+                <div class="diagnostic-box" id="diagnosticBox">
+                    <h3>🔍 Data Diagnostic Tool</h3>
+                    <div class="stats-row">
+                        <div class="stat-item"><div class="stat-value" id="diagTotalEmp">-</div><div class="stat-label">Total Employees</div></div>
+                        <div class="stat-item"><div class="stat-value" id="diagActiveEmp">-</div><div class="stat-label">Active</div></div>
+                        <div class="stat-item"><div class="stat-value" id="diagLeftEmp">-</div><div class="stat-label">Left</div></div>
+                        <div class="stat-item"><div class="stat-value" id="diagTrainingIds">-</div><div class="stat-label">IDs in Training</div></div>
+                        <div class="stat-item"><div class="stat-value" id="diagLeftInTraining">-</div><div class="stat-label">Left in Training</div></div>
+                        <div class="stat-item"><div class="stat-value" id="diagNotFound">-</div><div class="stat-label">Not Found</div></div>
+                    </div>
+                    <div class="mismatch-list" id="diagMismatchList">Click "🔍 Diagnose" for details</div>
+                    <p style="margin-top:1rem; font-size:0.85rem; color:#718096;">📌 Left employees EXCLUDED from Top Rankings, INCLUDED in Depts/Charts</p>
+                </div>`;
+        }
+
+        // ================= إعدادات الشارت =================
+        function getChartSettings() {
+            const w = window.innerWidth;
+            if (w <= 576) {
+                return { titleFont: 1.1, axisFont: 10, dataFont: 9, legendFont: 11, barThickness: 12, borderRadius: 4, padding: { top: 20, bottom: 5, left: 0, right: 0 }, rotation: 60, displayDataLabels: true };
+            } else if (w <= 768) {
+                return { titleFont: 1.3, axisFont: 11, dataFont: 11, legendFont: 12, barThickness: 16, borderRadius: 6, padding: { top: 25, bottom: 10, left: 10, right: 10 }, rotation: 45, displayDataLabels: true };
+            } else {
+                return { titleFont: 1.5, axisFont: 13, dataFont: 13, legendFont: 14, barThickness: 30, borderRadius: 8, padding: { top: 30, bottom: 15, left: 15, right: 15 }, rotation: 0, displayDataLabels: true };
+            }
+        }
+
+        function getBaseChartOptions() {
+            const s = getChartSettings();
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                resizeDelay: 50,
+                layout: { padding: s.padding },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            font: { size: s.legendFont, family: "'Tajawal', sans-serif", weight: 'bold' },
+                            usePointStyle: true,
+                            pointStyle: 'rectRounded',
+                            padding: 15
+                        }
+                    },
+                    datalabels: {
+                        display: s.displayDataLabels,
+                        color: '#000',
+                        backgroundColor: 'rgba(255,255,255,0.85)',
+                        borderRadius: s.borderRadius,
+                        padding: { left: 6, right: 6, top: 4, bottom: 4 },
+                        anchor: 'end',
+                        align: 'end',
+                        offset: 4,
+                        font: { weight: 'bold', size: s.dataFont, family: "'Tajawal', sans-serif" },
+                        formatter: (v) => v > 0 ? (v % 1 === 0 ? v : v.toFixed(1)) : ''
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { font: { size: s.axisFont, family: "'Tajawal', sans-serif" } },
+                        grid: { display: false }
+                    },
+                    x: {
+                        ticks: {
+                            font: { size: s.axisFont, family: "'Tajawal', sans-serif", weight: 'bold' },
+                            maxRotation: s.rotation,
+                            minRotation: s.rotation,
+                            autoSkip: false
+                        },
+                        grid: { display: false }
+                    }
+                }
+            };
+        }
+
+        function getSplitChartOptions() {
+            const options = getBaseChartOptions();
+            options.plugins.legend.labels.generateLabels = () => [
+                { text: 'Off Job', fillStyle: '#078fff', strokeStyle: '#078fff', pointStyle: 'rectRounded' },
+                { text: 'On Job', fillStyle: '#ff7707', strokeStyle: '#ff7707', pointStyle: 'rectRounded' }
+            ];
+            return options;
+        }
+
+        function applyChartSettingsToDOM() {
+            const s = getChartSettings();
+            document.querySelectorAll('.chart-card h3').forEach(el => {
+                el.style.fontSize = s.titleFont + 'rem';
+            });
+        }
+
+        function createChart(ctx, config) {
+            if (!ctx) return null;
+            const chart = new Chart(ctx, config);
+            chartInstances.push(chart);
+            return chart;
+        }
+
+        function resizeCharts() {
+            applyChartSettingsToDOM();
+            const s = getChartSettings();
+
+            chartInstances.forEach(chart => {
+                if (chart && chart.options) {
+                    chart.options.layout.padding = s.padding;
+                    if (chart.options.scales.x.ticks) {
+                        chart.options.scales.x.ticks.font.size = s.axisFont;
+                        chart.options.scales.x.ticks.maxRotation = s.rotation;
+                        chart.options.scales.x.ticks.minRotation = s.rotation;
+                        chart.options.scales.x.ticks.autoSkip = false;
+                    }
+                    if (chart.options.scales.y.ticks) {
+                        chart.options.scales.y.ticks.font.size = s.axisFont;
+                    }
+                    if (chart.options.plugins.legend.labels) {
+                        chart.options.plugins.legend.labels.font.size = s.legendFont;
+                    }
+                    if (chart.options.plugins.datalabels) {
+                        chart.options.plugins.datalabels.font.size = s.dataFont;
+                        chart.options.plugins.datalabels.display = s.displayDataLabels;
+                        chart.options.plugins.datalabels.borderRadius = s.borderRadius;
+                    }
+                    chart.data.datasets.forEach(dataset => {
+                        dataset.barThickness = s.barThickness;
+                        dataset.borderRadius = s.borderRadius;
+                    });
+                    chart.update('none'); 
+                }
+            });
+        }
+
+        // ⭐ تغيير: عرض رسالة "لا توجد بيانات"
+        function renderNoDataMessage() {
+            return `
+                <div class="no-data-message">
+                    <h3>📭 لا توجد بيانات لعرضها</h3>
+                    <p>لم يتم العثور على جلسات تدريبية ${currentType === 'offjob' ? 'Off-Job' : currentType === 'onjob' ? 'On-Job' : ''} للفترة المحددة</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #94a3b8;">
+                        ${currentMonth !== -1 ? `📅 الشهر: ${monthNames[currentMonth]}` : ''}
+                        ${currentQuarter !== -1 ? `📊 الربع: ${quarterNames[currentQuarter]}` : ''}
+                        ${currentYear ? `🗓️ السنة: ${currentYear}` : ''}
+                    </p>
+                </div>
+            `;
+        }
+
+        function initMonthlyCharts(monthlyStats) {
+            // التحقق من وجود بيانات
+            const hasData = monthlyStats.some(m => m.offJob.uniqueEmployees > 0 || m.onJob.uniqueEmployees > 0);
+            if (!hasData) return;
+
+            Chart.register(ChartDataLabels);
+            const s = getChartSettings();
+            const isSplit = currentType === 'all';
+            const months = monthlyStats.map(m => m.monthName);
+            
+            if (!isSplit) {
+                const key = currentType === 'offjob' ? 'offJob' : 'onJob';
+                [['monthlyEmployeesChart', 'uniqueEmployees', '#078fff', '👥 Employees'], ['monthlySessionsChart', 'sessions', '#ff7707', '🎯 Sessions'], ['monthlyHoursChart', 'hours', '#158040', '⏰ Hours']].forEach(([id, keyProp, color, label]) => {
+                    const ctx = document.getElementById(id)?.getContext('2d');
+                    if (ctx) {
+                        createChart(ctx, { 
+                            type: 'bar', 
+                            data: { labels: months, datasets: [{ label, data: monthlyStats.map(m => m[key][keyProp]), backgroundColor: color, borderRadius: s.borderRadius, barThickness: s.barThickness }] }, 
+                            options: getBaseChartOptions() 
+                        });
+                    }
+                });
+            } else {
+                [['monthlyEmployeesChart', 'uniqueEmployees', ['#078fff', '#ff7707'], ['👥 Off Job', '👥 On Job']], ['monthlySessionsChart', 'sessions', ['#078fff', '#ff7707'], ['🎯 Off Job', '🎯 On Job']], ['monthlyHoursChart', 'hours', ['#078fff', '#ff7707'], ['⏰ Off Job', '⏰ On Job']]].forEach(([id, keyProp, colors, labels]) => {
+                    const ctx = document.getElementById(id)?.getContext('2d');
+                    if (ctx) {
+                        createChart(ctx, { 
+                            type: 'bar', 
+                            data: { labels: months, datasets: [{ label: labels[0], data: monthlyStats.map(m => m.offJob[keyProp]), backgroundColor: colors[0], borderRadius: s.borderRadius, barThickness: s.barThickness }, { label: labels[1], data: monthlyStats.map(m => m.onJob[keyProp]), backgroundColor: colors[1], borderRadius: s.borderRadius, barThickness: s.barThickness }] }, 
+                            options: getSplitChartOptions() 
+                        });
+                    }
+                });
+            }
+        }
+
+        function initQuarterlyCharts(quarterlyStats) {
+            const hasData = quarterlyStats.some(q => q.offJob.uniqueEmployees > 0 || q.onJob.uniqueEmployees > 0);
+            if (!hasData) return;
+
+            Chart.register(ChartDataLabels);
+            const s = getChartSettings();
+            const isSplit = currentType === 'all';
+            const quarters = quarterlyStats.map(q => q.quarter);
+            
+            if (!isSplit) {
+                const key = currentType === 'offjob' ? 'offJob' : 'onJob';
+                [['quarterlyEmployeesChart', 'uniqueEmployees', '#078fff', '👥 Employees'], ['quarterlySessionsChart', 'sessions', '#ff7707', '🎯 Sessions'], ['quarterlyHoursChart', 'hours', '#158040', '⏰ Hours']].forEach(([id, keyProp, color, label]) => {
+                    const ctx = document.getElementById(id)?.getContext('2d');
+                    if (ctx) {
+                        createChart(ctx, { 
+                            type: 'bar', 
+                            data: { labels: quarters, datasets: [{ label, data: quarterlyStats.map(q => q[key][keyProp]), backgroundColor: color, borderRadius: s.borderRadius, barThickness: s.barThickness }] }, 
+                            options: getBaseChartOptions() 
+                        });
+                    }
+                });
+            } else {
+                [['quarterlyEmployeesChart', 'uniqueEmployees', ['#078fff', '#ff7707'], ['👥 Off Job', '👥 On Job']], ['quarterlySessionsChart', 'sessions', ['#078fff', '#ff7707'], ['🎯 Off Job', '🎯 On Job']], ['quarterlyHoursChart', 'hours', ['#078fff', '#ff7707'], ['⏰ Off Job', '⏰ On Job']]].forEach(([id, keyProp, colors, labels]) => {
+                    const ctx = document.getElementById(id)?.getContext('2d');
+                    if (ctx) {
+                        createChart(ctx, { 
+                            type: 'bar', 
+                            data: { labels: quarters, datasets: [{ label: labels[0], data: quarterlyStats.map(q => q.offJob[keyProp]), backgroundColor: colors[0], borderRadius: s.borderRadius, barThickness: s.barThickness }, { label: labels[1], data: quarterlyStats.map(q => q.onJob[keyProp]), backgroundColor: colors[1], borderRadius: s.borderRadius, barThickness: s.barThickness }] }, 
+                            options: getSplitChartOptions() 
+                        });
+                    }
+                });
+            }
+        }
+
+        function initSemiAnnualCharts(semiAnnualStats) {
+            const hasData = semiAnnualStats.some(h => h.offJob.uniqueEmployees > 0 || h.onJob.uniqueEmployees > 0);
+            if (!hasData) return;
+
+            Chart.register(ChartDataLabels);
+            const s = getChartSettings();
+            const isSplit = currentType === 'all';
+            const halves = semiAnnualStats.map(h => h.half);
+            
+            if (!isSplit) {
+                const key = currentType === 'offjob' ? 'offJob' : 'onJob';
+                [['semiAnnualEmployeesChart', 'uniqueEmployees', '#078fff', '👥 Employees'], ['semiAnnualSessionsChart', 'sessions', '#ff7707', '🎯 Sessions'], ['semiAnnualHoursChart', 'hours', '#158040', '⏰ Hours']].forEach(([id, keyProp, color, label]) => {
+                    const ctx = document.getElementById(id)?.getContext('2d');
+                    if (ctx) {
+                        createChart(ctx, { 
+                            type: 'bar', 
+                            data: { labels: halves, datasets: [{ label, data: semiAnnualStats.map(h => h[key][keyProp]), backgroundColor: color, borderRadius: s.borderRadius, barThickness: s.barThickness }] }, 
+                            options: getBaseChartOptions() 
+                        });
+                    }
+                });
+            } else {
+                [['semiAnnualEmployeesChart', 'uniqueEmployees', ['#078fff', '#ff7707'], ['👥 Off Job', '👥 On Job']], ['semiAnnualSessionsChart', 'sessions', ['#078fff', '#ff7707'], ['🎯 Off Job', '🎯 On Job']], ['semiAnnualHoursChart', 'hours', ['#078fff', '#ff7707'], ['⏰ Off Job', '⏰ On Job']]].forEach(([id, keyProp, colors, labels]) => {
+                    const ctx = document.getElementById(id)?.getContext('2d');
+                    if (ctx) {
+                        createChart(ctx, { 
+                            type: 'bar', 
+                            data: { labels: halves, datasets: [{ label: labels[0], data: semiAnnualStats.map(h => h.offJob[keyProp]), backgroundColor: colors[0], borderRadius: s.borderRadius, barThickness: s.barThickness }, { label: labels[1], data: semiAnnualStats.map(h => h.onJob[keyProp]), backgroundColor: colors[1], borderRadius: s.borderRadius, barThickness: s.barThickness }] }, 
+                            options: getSplitChartOptions() 
+                        });
+                    }
+                });
+            }
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-msg';
+            if (isError) toast.classList.add('error');
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3500);
+        }
+
+        // ================= تحديث وإعادة تحميل البيانات =================
+        async function refreshData() {
+            if (isRefreshing) return;
+            isRefreshing = true;
+            
+            showToast('🔄 جاري تحديث بيانات الشهر الحالي من السيرفر...', false);
+            
+            try {
+                await clearAllIDB();
+                await loadDataForCurrentSelection(true);
+                await loadPage();
+                showToast('✅ تم تحديث بيانات الشهر بنجاح');
+            } catch (error) {
+                console.error('❌ فشل تحديث البيانات:', error);
+                showToast('❌ فشل تحديث البيانات من السيرفر', true);
+            } finally {
+                isRefreshing = false;
+            }
+        }
+
+        async function changeYear() { 
+            currentYear = parseInt(document.getElementById('yearSelect').value, 10); 
+            await loadDataForCurrentSelection(false);
+            await loadPage(); 
+        }
+
+        async function changeMonth() { 
+            currentMonth = parseInt(document.getElementById('monthSelect').value, 10);
+            if (currentMonth !== -1) { 
+                document.getElementById('quarterSelect').value = '-1'; 
+                currentQuarter = -1; 
+            }
+            await loadDataForCurrentSelection(false);
+            await loadPage(); 
+        }
+
+        async function changeQuarter() {
+            currentQuarter = parseInt(document.getElementById('quarterSelect').value, 10);
+            if (currentQuarter !== -1) { 
+                document.getElementById('monthSelect').value = '-1'; 
+                currentMonth = -1; 
+            }
+            await loadDataForCurrentSelection(false);
+            await loadPage();
+        }
+
+        async function changeType() { 
+            currentType = document.getElementById('typeSelect').value; 
+            // ⭐ تغيير: تحميل البيانات للنوع الجديد فقط
+            await loadDataForCurrentSelection(false);
+            await loadPage(); 
+        }
+
+        // ================= بناء واجهة الصفحة والشارتات =================
+        async function loadPage() {
+            chartInstances.forEach(c => c.destroy());
+            chartInstances = [];
+            
+            // التحقق من وجود بيانات
+            const hasData = hasDataForCurrentSelection();
+            
+            const monthlyStats = hasData ? calculateMonthlyStats() : [];
+            const quarterlyStats = hasData ? calculateQuarterlyStats() : [];
+            const semiAnnualStats = hasData ? calculateSemiAnnualStats() : [];
+            
+            const monthName = currentMonth === -1 ? "All Months" : monthNames[currentMonth];
+            const quarterName = currentQuarter === -1 ? "All Quarters" : quarterNames[currentQuarter];
+            const typeName = currentType === 'offjob' ? 'Off Job' : (currentType === 'onjob' ? 'On Job' : 'All Trainings (Split View)');
+            
+            availableYears = [];
+            for (let y = START_YEAR; y <= END_YEAR; y++) {
+                availableYears.push(y);
+            }
+            
+            const yearOptions = availableYears.map(y => `<option value="${y}" ${currentYear === y ? 'selected' : ''}>${y}</option>`).join('');
+            const quarterOptions = [`<option value="-1" ${currentQuarter === -1 ? 'selected' : ''}>All Quarters</option>`].concat(quarterNames.map((q, i) => `<option value="${i}" ${currentQuarter === i ? 'selected' : ''}>${q}</option>`)).join('');
+
+            // رسالة الحالة
+            const typeLabel = currentType === 'offjob' ? 'Off-Job' : currentType === 'onjob' ? 'On-Job' : 'All';
+            let sourceBadge = '';
+            if (lastLoadSource === 'firebase') {
+                sourceBadge = `<span class="cache-badge firebase">🔥 تم جلب "${typeLabel}" من السيرفر</span>`;
+            } else if (lastLoadSource === 'cache') {
+                sourceBadge = `<span class="cache-badge cache">⚡ تم التحميل من IndexedDB </span>`;
+            } else {
+                sourceBadge = `<span class="cache-badge cache">⚡ تم التحميل الفوري من IndexedDB </span>`;
+            }
+
+            // ⭐ تغيير: عرض رسالة "لا توجد بيانات" إذا لم توجد بيانات
+            const chartsHTML = hasData ? `
+                <div class="section-title">📅 Monthly Analysis (${currentYear}) ${currentType === 'all' ? '(Split)' : ''}</div>
+                <div class="charts-container">
+                    <div class="chart-card"><h3>👥 Employees per Month ${currentType === 'all' ? '(Split)' : ''}</h3><div class="chart-wrapper"><canvas id="monthlyEmployeesChart"></canvas></div></div>
+                    <div class="chart-card"><h3>🎯 Sessions per Month ${currentType === 'all' ? '(Split)' : ''}</h3><div class="chart-wrapper"><canvas id="monthlySessionsChart"></canvas></div></div>
+                    <div class="chart-card"><h3>⏰ Hours per Month ${currentType === 'all' ? '(Split)' : ''}</h3><div class="chart-wrapper"><canvas id="monthlyHoursChart"></canvas></div></div>
+                </div>
+
+                <div class="section-title">📊 Quarterly Analysis (${currentYear}) ${currentType === 'all' ? '(Split)' : ''}</div>
+                <div class="charts-row">
+                    <div class="chart-card medium"><h3>👥 Employees per Quarter ${currentType === 'all' ? '(Split)' : ''}</h3><div class="chart-wrapper medium"><canvas id="quarterlyEmployeesChart" class="medium-canvas"></canvas></div></div>
+                    <div class="chart-card medium"><h3>🎯 Sessions per Quarter ${currentType === 'all' ? '(Split)' : ''}</h3><div class="chart-wrapper medium"><canvas id="quarterlySessionsChart" class="medium-canvas"></canvas></div></div>
+                    <div class="chart-card medium"><h3>⏰ Hours per Quarter ${currentType === 'all' ? '(Split)' : ''}</h3><div class="chart-wrapper medium"><canvas id="quarterlyHoursChart" class="medium-canvas"></canvas></div></div>
+                </div>
+
+                <div class="section-title">📈 Semi-Annual Analysis (${currentYear}) ${currentType === 'all' ? '(Split)' : ''}</div>
+                <div class="charts-row">
+                    <div class="chart-card medium"><h3>👥 Employees per Half-Year ${currentType === 'all' ? '(Split)' : ''}</h3><div class="chart-wrapper medium"><canvas id="semiAnnualEmployeesChart" class="medium-canvas"></canvas></div></div>
+                    <div class="chart-card medium"><h3>🎯 Sessions per Half-Year ${currentType === 'all' ? '(Split)' : ''}</h3><div class="chart-wrapper medium"><canvas id="semiAnnualSessionsChart" class="medium-canvas"></canvas></div></div>
+                    <div class="chart-card medium"><h3>⏰ Hours per Half-Year ${currentType === 'all' ? '(Split)' : ''}</h3><div class="chart-wrapper medium"><canvas id="semiAnnualHoursChart" class="medium-canvas"></canvas></div></div>
+                </div>
+            ` : renderNoDataMessage();
+
+            document.getElementById('app').innerHTML = `
+                <div class="navbar">
+                    <div class="logo"><h2>🎓 Learning & Development <span>System</span></h2></div>
+                    <div class="nav-links">
+                        <a href="index.html" class="home">🏠 Home</a>
+                        <button onclick="showDiagnostic()" class="diagnose">🔍 Diagnose</button>
+                        <button onclick="refreshData()" class="refresh">🔄 Refresh Data</button>
+                        <a href="#" onclick="logout()" class="logout">🚪 Logout</a>
+                    </div>
+                </div>
+
+                <div class="container">
+                    <div class="page-header">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                            <h1>🏆 Performance Analysis</h1>
+                            ${sourceBadge}
+                        </div>
+                        <p>Analysis of department and employee participation in training</p>
+                    </div>
+
+                    <div class="filter-bar">
+                        <div class="filter-group"><label>📅 Year:</label><select id="yearSelect" class="filter-select" onchange="changeYear()">${yearOptions}</select></div>
+                        <div class="filter-group"><label>📅 Month:</label><select id="monthSelect" class="filter-select" onchange="changeMonth()"><option value="-1" ${currentMonth===-1?'selected':''}>All Months</option>${monthNames.map((m,i)=>`<option value="${i}" ${currentMonth===i?'selected':''}>${m}</option>`).join('')}</select></div>
+                        <div class="filter-group"><label>📊 Quarter:</label><select id="quarterSelect" class="filter-select" onchange="changeQuarter()">${quarterOptions}</select></div>
+                        <div class="filter-group"><label>📚 Type:</label><select id="typeSelect" class="filter-select" onchange="changeType()"><option value="all" ${currentType==='all'?'selected':''}>All (Split View)</option><option value="offjob" ${currentType==='offjob'?'selected':''}>Off Job</option><option value="onjob" ${currentType==='onjob'?'selected':''}>On Job</option></select></div>
+                        <div class="filter-group"><span style="color:#1e3a5f; font-weight:700;">📊 ${monthName} | ${quarterName} | ${currentYear} - ${typeName}</span></div>
+                    </div>
+
+                    ${renderDiagnosticHTML()}
+
+                    ${chartsHTML}
+
+                    <div class="footer"><p>© 2026 Learning & Development System</p></div>
+                </div>
+            `;
+            
+            applyChartSettingsToDOM();
+            
+            if (hasData) {
+                setTimeout(() => { 
+                    initMonthlyCharts(monthlyStats); 
+                    initQuarterlyCharts(quarterlyStats); 
+                    initSemiAnnualCharts(semiAnnualStats); 
+                }, 100);
+            }
+        }
+
+        async function logout() {
+            try { await signOut(auth); window.location.href = 'login.html'; } catch(e) { console.error(e); }
+        }
+
+        window.changeYear = changeYear; 
+        window.changeMonth = changeMonth;
+        window.changeQuarter = changeQuarter; 
+        window.changeType = changeType;
+        window.showDiagnostic = showDiagnostic; 
+        window.logout = logout;
+        window.refreshData = refreshData;
+
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                resizeCharts();
+            }, 250);
+        });
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    await loadDataForCurrentSelection(false);
+                    await loadPage();
+                } catch (error) {
+                    console.error("Error loading page data:", error);
+                    document.getElementById('app').innerHTML = '<div style="text-align:center; padding:50px; font-size:1.2rem; color:#e53e3e;">❌ حدث خطأ أثناء تحميل البيانات من السيرفر. يرجى مراجعة الصلاحيات والاتصال.</div>';
+                    showLoading(false);
+                }
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+</html>

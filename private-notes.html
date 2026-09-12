@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مفكرتي - Notes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <script type="module" src="auth-guard.js"></script>
+    <script type="module" src="database.js"></script>
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48x48.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0B3B82">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+        body { 
+            background: linear-gradient(135deg, #f0f4f8 0%, #e8eef5 100%);
+            min-height: 100vh; overflow-x: hidden;
+        }
+
+        /* ===== Navbar ===== */
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 1rem;
+            position: sticky; top: 0; z-index: 100;
+            border-bottom: 1px solid rgba(0,0,0,0.04);
+        }
+        .logo h2 { color: #1e3a5f; font-size: clamp(1.2rem, 3vw, 1.6rem); font-weight: 800; }
+        .logo span { 
+            background: linear-gradient(135deg, #8b5cf6, #ec4899);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .nav-links { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .nav-links a, .nav-links button {
+            text-decoration: none; padding: 0.55rem 1.2rem; border-radius: 2rem;
+            font-weight: 600; cursor: pointer; border: none; font-size: 0.9rem;
+            transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.4rem;
+        }
+        .nav-links a:hover, .nav-links button:hover { transform: translateY(-2px); }
+        .nav-links .home { 
+            background: linear-gradient(135deg, #3b82f6, #2563eb); color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        .nav-links .logout { 
+            background: linear-gradient(135deg, #ef4444, #dc2626); color: white;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        /* ===== Container ===== */
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1.5rem; display: none; }
+
+        /* ===== Page Header ===== */
+        .page-header {
+            margin-bottom: 2.5rem; text-align: center;
+        }
+        .page-header h1 { 
+            font-size: clamp(1.8rem, 4vw, 2.5rem); font-weight: 800;
+            background: linear-gradient(135deg, #1e3a5f, #8b5cf6);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .page-header p { color: #718096; font-size: 1rem; }
+
+        /* ===== Add Note Card ===== */
+        .add-note-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.08);
+            border: 1px solid rgba(139, 92, 246, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .add-note-card::before {
+            content: '';
+            position: absolute; top: 0; right: 0; left: 0; height: 4px;
+            background: linear-gradient(90deg, #8b5cf6, #ec4899, #f59e0b);
+        }
+        .add-note-card h3 { 
+            color: #1e3a5f; margin-bottom: 1.5rem;
+            display: flex; align-items: center; gap: 0.5rem;
+            font-size: 1.25rem; font-weight: 700;
+        }
+        
+        .form-group { margin-bottom: 1.2rem; }
+        .form-group label { 
+            display: block; font-weight: 600; color: #4a5568;
+            margin-bottom: 0.5rem; font-size: 0.9rem;
+        }
+        .form-control {
+            width: 100%; padding: 0.9rem 1.1rem;
+            border: 2px solid #e2e8f0; border-radius: 1rem;
+            font-size: 1rem; outline: none;
+            transition: all 0.3s ease; font-family: 'Tajawal', sans-serif;
+            background: #f8fafc;
+        }
+        .form-control:focus { 
+            border-color: #8b5cf6; background: white;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        }
+        textarea.form-control { resize: vertical; min-height: 130px; line-height: 1.6; }
+        
+        .btn-submit {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: white; border: none; padding: 0.9rem 2rem;
+            border-radius: 2rem; font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.3s ease;
+            width: 100%; max-width: 240px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+        }
+        .btn-submit:hover:not(:disabled) { 
+            transform: translateY(-3px);
+            box-shadow: 0 12px 25px rgba(139, 92, 246, 0.4);
+        }
+        .btn-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+
+        /* ===== Notes Grid ===== */
+        .notes-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;
+        }
+        .notes-header h3 {
+            color: #1e3a5f; font-size: 1.3rem; font-weight: 700;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .notes-count {
+            background: linear-gradient(135deg, #8b5cf6, #6366f1);
+            color: white; padding: 0.3rem 0.9rem; border-radius: 2rem;
+            font-size: 0.85rem; font-weight: 700;
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            padding-bottom: 2rem;
+        }
+        .note-card {
+            background: white;
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.04);
+            transition: all 0.3s ease;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+        .note-card::before {
+            content: '';
+            position: absolute; top: 0; right: 0; bottom: 0; width: 4px;
+            background: linear-gradient(180deg, #8b5cf6, #ec4899);
+        }
+        .note-card:hover { 
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(139, 92, 246, 0.15);
+        }
+        .note-date { 
+            font-size: 0.75rem; color: #a0aec0; margin-bottom: 0.6rem;
+            display: flex; align-items: center; gap: 0.3rem; font-weight: 500;
+        }
+        .note-title { 
+            font-size: 1.1rem; font-weight: 700; color: #1e3a5f;
+            margin-bottom: 0.8rem; line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .note-content { 
+            font-size: 0.92rem; color: #4a5568; line-height: 1.7;
+            white-space: pre-wrap; flex-grow: 1; word-wrap: break-word;
+            margin-bottom: 1rem;
+        }
+        .note-content a { 
+            color: #6366f1; text-decoration: none;
+            font-weight: 600; word-break: break-all;
+            background: rgba(99, 102, 241, 0.08);
+            padding: 0.1rem 0.4rem; border-radius: 0.3rem;
+            transition: all 0.2s;
+        }
+        .note-content a:hover { 
+            background: rgba(99, 102, 241, 0.15);
+            text-decoration: underline;
+        }
+        
+        .note-footer {
+            display: flex; justify-content: flex-end;
+            margin-top: auto; padding-top: 1rem;
+            border-top: 1px solid #f1f5f9;
+        }
+        .btn-delete {
+            background: #fef2f2; color: #dc2626;
+            border: 1px solid #fecaca;
+            padding: 0.45rem 1rem; border-radius: 1rem;
+            cursor: pointer; font-size: 0.8rem; font-weight: 700;
+            transition: all 0.3s ease;
+            display: inline-flex; align-items: center; gap: 0.3rem;
+        }
+        .btn-delete:hover { 
+            background: #dc2626; color: white;
+            transform: scale(1.05);
+        }
+
+        /* ===== Empty State ===== */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center; padding: 4rem 2rem;
+            background: white; border-radius: 1.5rem;
+            border: 2px dashed #cbd5e1;
+        }
+        .empty-state .icon { font-size: 4rem; margin-bottom: 1rem; opacity: 0.5; }
+        .empty-state h3 { color: #475569; font-size: 1.2rem; margin-bottom: 0.5rem; }
+        .empty-state p { color: #94a3b8; font-size: 0.95rem; }
+
+        /* ===== Loading & Access Denied ===== */
+        #loadingScreen { 
+            text-align: center; padding: 150px 20px;
+            font-size: 1.3rem; color: #1e3a5f; font-weight: 700;
+        }
+        #loadingScreen .spinner {
+            width: 50px; height: 50px; margin: 0 auto 1.5rem;
+            border: 5px solid #e2e8f0;
+            border-top: 5px solid #8b5cf6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* ===== Toast ===== */
+        .toast-msg { 
+            position: fixed; bottom: 2rem; right: 2rem;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white; padding: 0.9rem 1.6rem;
+            border-radius: 2rem; z-index: 1000;
+            font-weight: 600; font-size: 0.95rem;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+            animation: slideIn 0.3s ease;
+            display: flex; align-items: center; gap: 0.5rem;
+        }
+        .toast-msg.error {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            box-shadow: 0 10px 25px rgba(239, 68, 68, 0.3);
+        }
+        @keyframes slideIn { 
+            from { transform: translateX(120%); opacity: 0; } 
+            to { transform: translateX(0); opacity: 1; } 
+        }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .navbar { padding: 1rem; flex-direction: column; }
+            .nav-links { width: 100%; justify-content: center; }
+            .btn-submit { width: 100%; max-width: 100%; }
+            .notes-grid { grid-template-columns: 1fr; }
+            .add-note-card { padding: 1.5rem; }
+            .toast-msg { right: 1rem; left: 1rem; bottom: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    
+    <div id="loadingScreen">
+        <div class="spinner"></div>
+        ⏳ جاري التحقق من الصلاحيات...
+    </div>
+
+    <div id="app" class="container">
+        <div class="navbar">
+            <div class="logo"><h2>📝 <span>مفكرتي</span></h2></div>
+            <div class="nav-links">
+                <a href="index.html" class="home">🏠 العودة للنظام</a>
+                <button onclick="logout()" class="logout">🚪 تسجيل خروج</button>
+            </div>
+        </div>
+
+        <div class="page-header">
+            <h1>📝 مفكرتي الخاصة</h1>
+            <p>مساحة آمنة لحفظ الروابط والملاحظات السريعة والبيانات الهامة</p>
+        </div>
+
+        <!-- فورم إضافة ملاحظة جديدة -->
+        <div class="add-note-card">
+            <h3>➕ إضافة ملاحظة / رابط جديد</h3>
+            <div class="form-group">
+                <label>عنوان الملاحظة:</label>
+                <input type="text" id="noteTitle" class="form-control" placeholder="مثال: روابط هامة للكورسات، أو بيانات الدخول..." maxlength="100">
+            </div>
+            <div class="form-group">
+                <label>التفاصيل أو الروابط:</label>
+                <textarea id="noteContent" class="form-control" placeholder="اكتب ملاحظاتك هنا... يمكنك لصق أي روابط وسيتم تفعيلها تلقائياً"></textarea>
+            </div>
+            <button class="btn-submit" onclick="saveNote()" id="saveBtn">💾 حفظ الملاحظة</button>
+        </div>
+
+        <!-- مكان عرض الملاحظات -->
+        <div class="notes-header">
+            <h3>📂 السجلات المحفوظة</h3>
+            <span class="notes-count" id="notesCount">0 ملاحظة</span>
+        </div>
+        <div id="notesContainer" class="notes-grid">
+            <!-- سيتم إضافة الملاحظات هنا بواسطة الجافاسكريبت -->
+        </div>
+        
+    </div>
+
+    <script type="module">
+        import { auth } from './database.js';
+        import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+
+        const db = getFirestore();
+        const notesCollectionRef = collection(db, 'shared_notes');
+        let currentNotes = [];
+        let currentUser = null;
+
+        // ===== Toast =====
+        function showToast(message, isError = false) {
+            const toast = document.createElement('div');
+            toast.className = 'toast-msg' + (isError ? ' error' : '');
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // ===== Linkify & Escape =====
+        function linkify(text) {
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            return text.replace(urlRegex, function(url) {
+                return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + '</a>';
+            });
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+            }[tag]));
+        }
+
+        // ===== Fetch Notes =====
+        async function fetchNotes() {
+            try {
+                const q = query(notesCollectionRef, orderBy('createdAt', 'desc'));
+                const querySnapshot = await getDocs(q);
+                currentNotes = [];
+                querySnapshot.forEach((doc) => {
+                    currentNotes.push({ id: doc.id, ...doc.data() });
+                });
+                renderNotes();
+            } catch (error) {
+                console.error("Error fetching notes: ", error);
+                showToast('❌ حدث خطأ في تحميل الملاحظات', true);
+            }
+        }
+
+        // ===== Render Notes =====
+        function renderNotes() {
+            const container = document.getElementById('notesContainer');
+            const countEl = document.getElementById('notesCount');
+            
+            if (countEl) {
+                countEl.textContent = currentNotes.length === 0 ? '0 ملاحظة' : 
+                    currentNotes.length === 1 ? 'ملاحظة واحدة' : 
+                    currentNotes.length === 2 ? 'ملاحظتان' : 
+                    `${currentNotes.length} ملاحظات`;
+            }
+
+            if (currentNotes.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <h3>لا توجد ملاحظات محفوظة حالياً</h3>
+                        <p>ابدأ بإضافة أول ملاحظة من النموذج أعلاه</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = currentNotes.map(note => {
+                let dateStr = '';
+                if (note.createdAt && note.createdAt.toDate) {
+                    const d = note.createdAt.toDate();
+                    dateStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} - ${d.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'})}`;
+                }
+
+                const safeTitle = escapeHTML(note.title || 'بدون عنوان');
+                const safeContent = linkify(escapeHTML(note.content || ''));
+                const isOwner = currentUser && note.userId === currentUser.uid;
+
+                return `
+                    <div class="note-card" id="note-${note.id}">
+                        <div class="note-date">🕒 ${dateStr}</div>
+                        <div class="note-title">${safeTitle}</div>
+                        <div class="note-content">${safeContent}</div>
+                        ${isOwner ? `<div class="note-footer"><button class="btn-delete" onclick="deleteNote('${note.id}')">🗑️ حذف</button></div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ===== Save Note =====
+        window.saveNote = async () => {
+            const titleInput = document.getElementById('noteTitle');
+            const contentInput = document.getElementById('noteContent');
+            const btn = document.getElementById('saveBtn');
+
+            const title = titleInput.value.trim();
+            const content = contentInput.value.trim();
+
+            if (!title || !content) {
+                showToast('⚠️ يرجى كتابة عنوان وتفاصيل الملاحظة', true);
+                return;
+            }
+
+            if (!currentUser) {
+                showToast('❌ يجب تسجيل الدخول أولاً', true);
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '⏳ جاري الحفظ...';
+
+            try {
+                await addDoc(notesCollectionRef, {
+                    title: title,
+                    content: content,
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email || '',
+                    createdAt: serverTimestamp()
+                });
+                
+                titleInput.value = '';
+                contentInput.value = '';
+                showToast('✅ تم حفظ الملاحظة بنجاح');
+                await fetchNotes();
+            } catch (error) {
+                console.error("Error adding document: ", error);
+                showToast('❌ حدث خطأ أثناء الحفظ', true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '💾 حفظ الملاحظة';
+            }
+        };
+
+        // ===== Delete Note =====
+        window.deleteNote = async (noteId) => {
+            const note = currentNotes.find(n => n.id === noteId);
+            if (!note) return;
+            
+            if (!currentUser || note.userId !== currentUser.uid) {
+                showToast('⛔ لا يمكنك حذف ملاحظات الآخرين', true);
+                return;
+            }
+
+            if (!confirm('⚠️ هل أنت متأكد من حذف هذه الملاحظة نهائياً؟')) return;
+            
+            try {
+                await deleteDoc(doc(db, 'shared_notes', noteId));
+                const el = document.getElementById(`note-${noteId}`);
+                if (el) el.style.opacity = '0.4';
+                showToast('🗑️ تم الحذف');
+                await fetchNotes();
+            } catch (error) {
+                console.error("Error deleting document: ", error);
+                showToast('❌ حدث خطأ أثناء الحذف', true);
+            }
+        };
+
+        window.logout = async () => {
+            await signOut(auth);
+            window.location.href = 'login.html';
+        };
+
+        // ===== Auth Guard =====
+        onAuthStateChanged(auth, async (user) => {
+            document.getElementById('loadingScreen').style.display = 'none';
+            
+            if (user) {
+                currentUser = user;
+                document.getElementById('app').style.display = 'block';
+                await fetchNotes();
+            } else {
+                window.location.href = 'login.html';
+            }
+        });
+    </script>
+</body>
+</html>
