@@ -9,14 +9,19 @@
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="48x48" href="favicon-48x48.png">
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-    <meta name="theme-color" content="#0B3B82">
     <link rel="manifest" href="manifest.webmanifest">
-
-    <!-- FFmpeg Libraries: 0.12.10 UMD + Util -->
-    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.10/dist/umd/util.js"></script>
-<style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; }
+    <meta name="theme-color" content="#0B3B82">
+    
+    <!-- FFmpeg Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/ffmpeg.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
 
         :root {
             --primary: #0B3B82;
@@ -48,24 +53,46 @@
             align-items: center;
         }
 
-        .container { max-width: 1100px; width: 100%; margin: 0 auto; }
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            margin: 0 auto;
+        }
 
-        .header { text-align: center; margin-bottom: 30px; }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
 
         .header .icon {
             font-size: 3rem;
             color: var(--primary);
             background: var(--gray-light);
-            width: 80px; height: 80px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             margin: 0 auto 15px;
             box-shadow: var(--shadow);
         }
 
-        .header h1 { font-size: 2rem; font-weight: 900; color: var(--dark); }
-        .header h1 span { color: var(--primary); }
-        .header p { color: var(--gray); font-size: 1rem; margin-top: 5px; }
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--dark);
+        }
+
+        .header h1 span {
+            color: var(--primary);
+        }
+
+        .header p {
+            color: var(--gray);
+            font-size: 1rem;
+            margin-top: 5px;
+        }
 
         .card {
             background: var(--white);
@@ -76,16 +103,25 @@
             margin-bottom: 25px;
             transition: var(--transition);
         }
-        .card:hover { box-shadow: var(--shadow-hover); }
+
+        .card:hover {
+            box-shadow: var(--shadow-hover);
+        }
 
         .card-title {
             font-size: 1.2rem;
             font-weight: 800;
             color: var(--dark);
             margin-bottom: 20px;
-            display: flex; align-items: center; gap: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .card-title i { color: var(--primary); }
+
+        .card-title i {
+            color: var(--primary);
+        }
+
         .card-title .badge {
             background: var(--primary-gradient);
             color: white;
@@ -105,17 +141,43 @@
             background: #FAFAFA;
             position: relative;
         }
-        .upload-area:hover { border-color: var(--primary); background: #F8FAFF; }
-        .upload-area.dragover { border-color: var(--primary); background: #EBF5FB; transform: scale(1.02); }
 
-        .upload-area .upload-icon { font-size: 3.5rem; color: var(--gray); margin-bottom: 12px; }
-        .upload-area h3 { font-size: 1.1rem; color: var(--dark); margin-bottom: 5px; }
-        .upload-area p { color: var(--gray); font-size: 0.85rem; }
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: #F8FAFF;
+        }
+
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: #EBF5FB;
+            transform: scale(1.02);
+        }
+
+        .upload-area .upload-icon {
+            font-size: 3.5rem;
+            color: var(--gray);
+            margin-bottom: 12px;
+        }
+
+        .upload-area h3 {
+            font-size: 1.1rem;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+
+        .upload-area p {
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
 
         .upload-area .file-types {
             margin-top: 10px;
-            display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
+
         .upload-area .file-types span {
             background: var(--gray-light);
             padding: 4px 14px;
@@ -132,10 +194,23 @@
             cursor: pointer;
         }
 
-        .file-list { margin-top: 15px; max-height: 200px; overflow-y: auto; }
-        .file-list::-webkit-scrollbar { width: 4px; }
-        .file-list::-webkit-scrollbar-track { background: var(--gray-light); border-radius: 10px; }
-        .file-list::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+        .file-list {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .file-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .file-list::-webkit-scrollbar-track {
+            background: var(--gray-light);
+            border-radius: 10px;
+        }
+        .file-list::-webkit-scrollbar-thumb {
+            background: var(--primary);
+            border-radius: 10px;
+        }
 
         .file-item {
             display: flex;
@@ -147,24 +222,48 @@
             margin-bottom: 5px;
             font-size: 0.85rem;
         }
-        .file-item .file-name { display: flex; align-items: center; gap: 8px; }
-        .file-item .file-name i { color: var(--primary); }
-        .file-item .file-size { color: var(--gray); font-size: 0.75rem; }
+
+        .file-item .file-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-item .file-name i {
+            color: var(--primary);
+        }
+
+        .file-item .file-size {
+            color: var(--gray);
+            font-size: 0.75rem;
+        }
+
         .file-item .file-remove {
             background: var(--danger);
             color: white;
             border: none;
             border-radius: 50%;
-            width: 24px; height: 24px;
+            width: 24px;
+            height: 24px;
             cursor: pointer;
             font-size: 0.7rem;
             transition: var(--transition);
         }
-        .file-item .file-remove:hover { transform: scale(1.1); }
 
-        .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .file-item .file-remove:hover {
+            transform: scale(1.1);
+        }
 
-        .form-group { margin-bottom: 15px; }
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
         .form-group label {
             display: block;
             font-weight: 700;
@@ -172,11 +271,12 @@
             color: var(--gray);
             margin-bottom: 5px;
         }
+
         .form-group input,
         .form-group select {
             width: 100%;
             padding: 10px 14px;
-            border: 2px solid var(--gray-light);
+            border: 2px solid var(--light-gray);
             border-radius: 10px;
             font-size: 0.9rem;
             transition: var(--transition);
@@ -184,16 +284,28 @@
             font-family: inherit;
             color: var(--dark);
         }
+
         .form-group input:focus,
         .form-group select:focus {
             border-color: var(--primary);
             background: white;
             outline: none;
         }
-        .form-group .hint { font-size: 0.7rem; color: var(--gray); margin-top: 4px; }
 
-        .progress-container { margin-top: 20px; display: none; }
-        .progress-container.show { display: block; }
+        .form-group .hint {
+            font-size: 0.7rem;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+
+        .progress-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .progress-container.show {
+            display: block;
+        }
 
         .progress-bar-bg {
             background: var(--gray-light);
@@ -202,6 +314,7 @@
             overflow: hidden;
             margin-top: 10px;
         }
+
         .progress-bar-fill {
             height: 100%;
             background: var(--primary-gradient);
@@ -209,6 +322,7 @@
             width: 0%;
             transition: width 0.5s ease;
         }
+
         .progress-info {
             display: flex;
             justify-content: space-between;
@@ -216,6 +330,7 @@
             color: var(--gray);
             margin-top: 5px;
         }
+
         .progress-status {
             text-align: center;
             padding: 15px;
@@ -236,21 +351,48 @@
             font-size: 0.95rem;
             justify-content: center;
         }
-        .btn:hover { transform: translateY(-2px); }
 
-        .btn-primary { background: var(--primary-gradient); color: white; }
-        .btn-primary:hover { box-shadow: 0 4px 25px rgba(11, 59, 130, 0.35); }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
 
-        .btn-success { background: var(--success); color: white; }
-        .btn-success:hover { box-shadow: 0 4px 25px rgba(16, 185, 129, 0.35); }
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 4px 25px rgba(11, 59, 130, 0.35);
+        }
 
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-danger:hover { box-shadow: 0 4px 25px rgba(239, 68, 68, 0.35); }
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        .btn-success:hover {
+            box-shadow: 0 4px 25px rgba(16, 185, 129, 0.35);
+        }
 
-        .btn-secondary { background: var(--gray-light); color: var(--dark); }
-        .btn-secondary:hover { background: #E2E8F0; }
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        .btn-danger:hover {
+            box-shadow: 0 4px 25px rgba(239, 68, 68, 0.35);
+        }
 
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+        .btn-secondary {
+            background: var(--gray-light);
+            color: var(--dark);
+        }
+        .btn-secondary:hover {
+            background: #E2E8F0;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
 
         .btn-group {
             display: flex;
@@ -258,7 +400,11 @@
             flex-wrap: wrap;
             margin-top: 20px;
         }
-        .btn-group .btn { flex: 1; min-width: 140px; }
+
+        .btn-group .btn {
+            flex: 1;
+            min-width: 140px;
+        }
 
         .videos-grid {
             display: grid;
@@ -266,23 +412,40 @@
             gap: 15px;
             margin-top: 15px;
         }
+
         .video-item {
             background: var(--gray-light);
             border-radius: var(--radius);
             padding: 15px;
             text-align: center;
-            border: 1px solid var(--gray-light);
+            border: 1px solid var(--light-gray);
             transition: var(--transition);
         }
-        .video-item:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
-        .video-item .video-icon { font-size: 3rem; color: var(--primary); margin-bottom: 8px; }
+
+        .video-item:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow);
+        }
+
+        .video-item .video-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
         .video-item .video-name {
             font-weight: 600;
             font-size: 0.85rem;
             color: var(--dark);
             word-break: break-all;
         }
-        .video-item .video-size { font-size: 0.7rem; color: var(--gray); margin-top: 4px; }
+
+        .video-item .video-size {
+            font-size: 0.7rem;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+
         .video-item .btn-download {
             margin-top: 10px;
             padding: 6px 16px;
@@ -298,7 +461,10 @@
             align-items: center;
             gap: 6px;
         }
-        .video-item .btn-download:hover { transform: scale(1.05); }
+
+        .video-item .btn-download:hover {
+            transform: scale(1.05);
+        }
 
         .toast {
             position: fixed;
@@ -314,32 +480,87 @@
             text-align: center;
             animation: toastIn .3s ease;
         }
-        .toast.success { background: var(--success); color: white; }
-        .toast.error { background: var(--danger); color: white; }
-        .toast.info { background: var(--primary); color: white; }
-        .toast.warning { background: var(--warning); color: var(--dark); }
+
+        .toast.success {
+            background: var(--success);
+            color: white;
+        }
+        .toast.error {
+            background: var(--danger);
+            color: white;
+        }
+        .toast.info {
+            background: var(--primary);
+            color: white;
+        }
+        .toast.warning {
+            background: var(--warning);
+            color: var(--dark);
+        }
 
         @keyframes toastIn {
-            from { opacity: 0; transform: translate(-50%, 20px); }
-            to   { opacity: 1; transform: translate(-50%, 0); }
+            from {
+                opacity: 0;
+                transform: translate(-50%, 20px);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, 0);
+            }
         }
 
         @media (max-width: 768px) {
-            body { padding: 15px; }
-            .card { padding: 20px; }
-            .settings-grid { grid-template-columns: 1fr; }
-            .header h1 { font-size: 1.5rem; }
-            .header .icon { width: 60px; height: 60px; font-size: 2rem; }
-            .upload-area { padding: 30px 20px; }
-            .upload-area .upload-icon { font-size: 2.5rem; }
-            .btn-group .btn { flex: 1 1 100%; }
-            .videos-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+            body {
+                padding: 15px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .header .icon {
+                width: 60px;
+                height: 60px;
+                font-size: 2rem;
+            }
+
+            .upload-area {
+                padding: 30px 20px;
+            }
+
+            .upload-area .upload-icon {
+                font-size: 2.5rem;
+            }
+
+            .btn-group .btn {
+                flex: 1 1 100%;
+            }
+
+            .videos-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
         }
 
         @media (max-width: 480px) {
-            .header h1 { font-size: 1.2rem; }
-            .upload-area h3 { font-size: 1rem; }
-            .videos-grid { grid-template-columns: 1fr; }
+            .header h1 {
+                font-size: 1.2rem;
+            }
+
+            .upload-area h3 {
+                font-size: 1rem;
+            }
+
+            .videos-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -461,7 +682,6 @@
         let isProcessing = false;
         let ffmpeg = null;
         let isFFmpegLoaded = false;
-        let isFFmpegLoading = false;
 
         // ============================================================
         // DOM REFS
@@ -488,20 +708,6 @@
         const outputCard = document.getElementById('outputCard');
         const videosGrid = document.getElementById('videosGrid');
         const videoCount = document.getElementById('videoCount');
-
-        // ============================================================
-        // ENVIRONMENT CHECK
-        // ============================================================
-        function checkEnvironment() {
-            const issues = [];
-            if (typeof SharedArrayBuffer === 'undefined') {
-                issues.push('SharedArrayBuffer غير معرّف في هذا المتصفح.');
-            }
-            if (!window.crossOriginIsolated) {
-                issues.push('الصفحة ليست في بيئة Cross-Origin Isolated. تأكد من أن vercel.json يضبط ترويسات COOP/COEP بشكل صحيح.');
-            }
-            return issues;
-        }
 
         // ============================================================
         // HELPERS
@@ -608,87 +814,32 @@
         // FFMPEG INITIALIZATION
         // ============================================================
         async function initFFmpeg() {
-            if (isFFmpegLoaded && ffmpeg) return true;
-            if (isFFmpegLoading) {
-                while (isFFmpegLoading) {
-                    await new Promise(r => setTimeout(r, 100));
-                }
-                return isFFmpegLoaded;
-            }
-
-            isFFmpegLoading = true;
+            if (isFFmpegLoaded) return;
 
             try {
-                progressStatus.textContent = '⏳ التحقق من بيئة التشغيل...';
+                progressStatus.textContent = '⏳ جاري تحميل FFmpeg...';
                 progressContainer.classList.add('show');
 
-                const envIssues = checkEnvironment();
-                if (envIssues.length > 0) {
-                    const msg = '❌ المتصفح لم يسمح بتشغيل FFmpeg.wasm.\n' + envIssues.join('\n');
-                    console.error(msg);
-                    throw new Error(msg);
-                }
-
-                if (typeof window.FFmpeg === 'undefined' || typeof window.FFmpeg.FFmpeg === 'undefined') {
-                    throw new Error('مكتبة FFmpeg (ffmpeg.js) لم يتم تحميلها. تحقق من اتصال الإنترنت.');
-                }
-                if (typeof window.FFmpegUtil === 'undefined' || typeof window.FFmpegUtil.toBlobURL === 'undefined') {
-                    throw new Error('مكتبة FFmpeg Util (util.js) لم يتم تحميلها. تحقق من اتصال الإنترنت.');
-                }
-
-                const { FFmpeg } = window.FFmpeg;
-                const { toBlobURL } = window.FFmpegUtil;
-
-                ffmpeg = new FFmpeg();
-
-                ffmpeg.on('log', ({ message }) => {
-                    console.log('[FFmpeg]', message);
+                const { createFFmpeg, fetchFile } = FFmpeg;
+                ffmpeg = createFFmpeg({
+                    log: false,
+                    corePath: 'https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js'
                 });
 
-                ffmpeg.on('progress', ({ progress }) => {
-                    const percent = Math.max(0, Math.min(100, Math.round(progress * 100)));
-                    progressFill.style.width = percent + '%';
-                    progressText.textContent = percent + '%';
-                });
-
-                const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd';
-
-                progressStatus.textContent = '⏳ جاري تحميل ffmpeg-core.js...';
-                const coreURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript');
-
-                progressStatus.textContent = '⏳ جاري تحميل ffmpeg-core.wasm...';
-                const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm');
-
-                progressStatus.textContent = '⏳ جاري تحميل ffmpeg-core.worker.js...';
-                const workerURL = await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript');
-
-                progressStatus.textContent = '⏳ جاري تهيئة FFmpeg...';
-
-                await ffmpeg.load({
-                    coreURL,
-                    wasmURL,
-                    workerURL
-                });
-
+                await ffmpeg.load();
                 isFFmpegLoaded = true;
                 console.log('✅ FFmpeg loaded successfully');
                 progressStatus.textContent = '✅ FFmpeg جاهز';
-
+                
                 setTimeout(() => {
-                    if (!isProcessing) {
-                        progressContainer.classList.remove('show');
-                    }
+                    progressContainer.classList.remove('show');
                 }, 1500);
 
                 return true;
-
             } catch (error) {
                 console.error('❌ Failed to load FFmpeg:', error);
-                progressStatus.textContent = '❌ فشل تحميل FFmpeg';
-                showToast(`❌ فشل تحميل FFmpeg: ${error.message}`, 'error');
+                showToast('❌ فشل تحميل FFmpeg. تأكد من اتصال الإنترنت', 'error');
                 return false;
-            } finally {
-                isFFmpegLoading = false;
             }
         }
 
@@ -708,10 +859,9 @@
 
             progressContainer.classList.add('show');
             outputCard.style.display = 'none';
-
-            processedVideos.forEach(v => URL.revokeObjectURL(v.url));
             processedVideos = [];
 
+            // تهيئة FFmpeg
             const ffmpegReady = await initFFmpeg();
             if (!ffmpegReady) {
                 isProcessing = false;
@@ -726,45 +876,34 @@
 
             processBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري المعالجة...';
 
-            const batchId = Date.now().toString(36);
-
             try {
+                // قراءة الملفات إلى ذاكرة FFmpeg
                 const imageNames = [];
                 for (let i = 0; i < images.length; i++) {
                     const img = images[i];
                     const ext = getFileExtension(img.name);
-                    const name = `img_${batchId}_${String(i + 1).padStart(3, '0')}.${ext}`;
-
+                    const name = `img_${String(i + 1).padStart(3, '0')}.${ext}`;
+                    
                     const data = await img.arrayBuffer();
-                    await ffmpeg.writeFile(name, new Uint8Array(data));
+                    ffmpeg.FS('writeFile', name, new Uint8Array(data));
                     imageNames.push(name);
                 }
 
-                let audioName = null;
-                if (audioFile) {
-                    const audioExt = getFileExtension(audioFile.name);
-                    audioName = `audio_${batchId}.${audioExt}`;
-                    const audioData = await audioFile.arrayBuffer();
-                    await ffmpeg.writeFile(audioName, new Uint8Array(audioData));
-                }
-
+                // معالجة كل صورة على حدة
                 for (let i = 0; i < imageNames.length; i++) {
                     const imgName = imageNames[i];
-                    const outputName = `video_${batchId}_${String(i + 1).padStart(3, '0')}.mp4`;
-
+                    const outputName = `video_${String(i + 1).padStart(3, '0')}.mp4`;
+                    
                     const progress = Math.round(((i + 1) / imageNames.length) * 100);
                     progressFill.style.width = progress + '%';
                     progressText.textContent = progress + '%';
                     progressCount.textContent = `${i + 1} / ${imageNames.length}`;
                     progressStatus.textContent = `⏳ معالجة: ${images[i].name} (${i + 1}/${imageNames.length})`;
 
-                    let cmd = ['-loop', '1', '-i', imgName];
-
-                    if (audioName) {
-                        cmd.push('-i', audioName);
-                    }
-
-                    cmd.push(
+                    // بناء أمر FFmpeg
+                    let cmd = [
+                        '-loop', '1',
+                        '-i', imgName,
                         '-c:v', 'libx264',
                         '-t', String(duration),
                         '-s', resolution,
@@ -772,22 +911,44 @@
                         '-vf', `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2`,
                         '-r', '24',
                         '-preset', 'fast'
-                    );
+                    ];
 
-                    if (audioName) {
-                        cmd.push('-c:a', 'aac', '-shortest');
+                    // إضافة الصوت إذا وجد
+                    if (audioFile) {
+                        const audioExt = getFileExtension(audioFile.name);
+                        const audioName = `audio.${audioExt}`;
+                        const audioData = await audioFile.arrayBuffer();
+                        ffmpeg.FS('writeFile', audioName, new Uint8Array(audioData));
+                        
+                        // حساب طول الصوت المناسب
+                        cmd = [
+                            '-loop', '1',
+                            '-i', imgName,
+                            '-i', audioName,
+                            '-c:v', 'libx264',
+                            '-c:a', 'aac',
+                            '-t', String(duration),
+                            '-s', resolution,
+                            '-pix_fmt', 'yuv420p',
+                            '-vf', `scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2`,
+                            '-r', '24',
+                            '-preset', 'fast',
+                            '-shortest'
+                        ];
                     }
 
                     cmd.push(outputName);
 
-                    await ffmpeg.exec(cmd);
+                    // تنفيذ الأمر
+                    await ffmpeg.run(...cmd);
 
-                    const data = await ffmpeg.readFile(outputName);
+                    // قراءة الملف الناتج
+                    const data = ffmpeg.FS('readFile', outputName);
                     const blob = new Blob([data.buffer], { type: 'video/mp4' });
                     const url = URL.createObjectURL(blob);
 
                     const nameWithoutExt = images[i].name.replace(/\.[^.]+$/, '');
-
+                    
                     processedVideos.push({
                         name: `${nameWithoutExt}.mp4`,
                         blob: blob,
@@ -796,15 +957,17 @@
                         index: i
                     });
 
-                    try { await ffmpeg.deleteFile(outputName); } catch (e) {}
+                    // تنظيف الملفات المؤقتة
+                    ffmpeg.FS('unlink', outputName);
+                    if (audioFile) {
+                        ffmpeg.FS('unlink', audioName);
+                    }
                 }
 
-                for (const name of imageNames) {
-                    try { await ffmpeg.deleteFile(name); } catch (e) {}
-                }
-                if (audioName) {
-                    try { await ffmpeg.deleteFile(audioName); } catch (e) {}
-                }
+                // تنظيف ملفات الصور المؤقتة
+                imageNames.forEach(name => {
+                    try { ffmpeg.FS('unlink', name); } catch(e) {}
+                });
 
                 progressStatus.textContent = '✅ تمت المعالجة بنجاح!';
                 progressFill.style.width = '100%';
@@ -859,7 +1022,7 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-
+            
             showToast(`✅ جاري تحميل ${video.name}`, 'success');
         };
 
@@ -867,27 +1030,27 @@
         // CLEAR ALL
         // ============================================================
         function clearAll() {
-            processedVideos.forEach(v => URL.revokeObjectURL(v.url));
-            processedVideos = [];
-
             images = [];
             audioFile = null;
-
+            processedVideos = [];
+            
             imageInput.value = '';
             audioInput.value = '';
-
+            
             renderImages();
             renderAudio();
-
+            
             progressContainer.classList.remove('show');
             progressFill.style.width = '0%';
             progressText.textContent = '0%';
             progressCount.textContent = '0 / 0';
-
+            
             outputCard.style.display = 'none';
             videosGrid.innerHTML = '';
             videoCount.textContent = '0';
-
+            
+            processedVideos.forEach(v => URL.revokeObjectURL(v.url));
+            
             showToast('🗑️ تم مسح جميع البيانات', 'info');
         }
 
@@ -915,9 +1078,9 @@
         imageUploadArea.addEventListener('drop', function(e) {
             e.preventDefault();
             this.classList.remove('dragover');
-
+            
             if (e.dataTransfer.files) {
-                const newFiles = Array.from(e.dataTransfer.files).filter(f =>
+                const newFiles = Array.from(e.dataTransfer.files).filter(f => 
                     f.type.startsWith('image/')
                 );
                 images = images.concat(newFiles);
@@ -951,7 +1114,7 @@
         audioUploadArea.addEventListener('drop', function(e) {
             e.preventDefault();
             this.classList.remove('dragover');
-
+            
             if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
                 const file = e.dataTransfer.files[0];
                 if (file.type.startsWith('audio/')) {
@@ -975,15 +1138,11 @@
         // ============================================================
         renderImages();
         renderAudio();
-
+        
         console.log('🎬 Video Processor ready!');
-        console.log('📦 FFmpeg.wasm 0.12.10 (UMD) + @ffmpeg/util 0.12.10');
-        console.log('🔒 crossOriginIsolated:', window.crossOriginIsolated);
-        console.log('🔒 SharedArrayBuffer:', typeof SharedArrayBuffer);
-
-        if (typeof SharedArrayBuffer === 'undefined' || !window.crossOriginIsolated) {
-            console.warn('⚠️ البيئة الحالية غير مهيأة لـ FFmpeg.wasm. سيظهر خطأ عند محاولة التحميل.');
-        }
+        console.log(`📸 تم رفع ${images.length} صور`);
+        console.log(`🎵 ملف صوتي: ${audioFile ? audioFile.name : 'غير مرفوع'}`);
+        console.log('📦 سيتم استخدام FFmpeg.wasm لإنشاء الفيديوهات');
     </script>
 
 </body>
