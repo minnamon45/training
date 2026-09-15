@@ -1,0 +1,28 @@
+{
+  "name": "محول الصور إلى فيديوهات",
+  "short_name": "Video Processor",
+  "description": "تحويل الصور إلى فيديوهات MP4 داخل المتصفح باستخدام FFmpeg.wasm",
+  "start_url": "/Creating_Task_Video.html",
+  "display": "standalone",
+  "background_color": "#F0F4F8",
+  "theme_color": "#0B3B82",
+  "dir": "rtl",
+  "lang": "ar",
+  "icons": [
+    {
+      "src": "favicon-32x32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "favicon-48x48.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
