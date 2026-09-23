@@ -30,7 +30,7 @@
             --text-light: #64748b;
             --shadow: 0 10px 40px rgba(0, 59, 122, 0.08);
             --shadow-hover: 0 20px 60px rgba(0, 59, 122, 0.18);
-            --transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --transition: all 0.15s ease;
             --radius: 1.5rem;
         }
         body { background: var(--bg); color: var(--text); transition: var(--transition); }
@@ -290,7 +290,8 @@
             box-shadow: var(--shadow); transition: var(--transition); 
             position: relative; overflow: hidden; 
             border: 2px solid transparent; 
-            opacity: 0; transform: translateY(40px); 
+            opacity: 0; transform: translateY(10px); 
+                transition: opacity 0.25s ease, transform 0.25s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
         .section-card.visible { opacity: 1; transform: translateY(0); }
         .section-card::before { 
@@ -301,10 +302,10 @@
             transition: var(--transition); 
         }
         .section-card:hover::before { transform: scaleX(1); }
-        .section-card:hover { 
-            transform: translateY(-10px) scale(1.01); 
-            box-shadow: var(--shadow-hover); 
-            border-color: var(--lb-orange); 
+        .section-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--secondary);
         }
         .section-card .section-header { 
             display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; 
@@ -334,10 +335,10 @@
             text-decoration: none; color: var(--text); 
             border-right: 3px solid transparent;
         }
-        .section-card .link-item:hover { 
-            background: linear-gradient(135deg, var(--lb-navy), var(--lb-navy-dark)); 
-            color: white; transform: translateX(-5px); 
-            border-right-color: var(--lb-orange);
+        .section-card .link-item:hover {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            transform: translateX(-2px);
         }
         .section-card .link-item .link-title { 
             font-weight: 500; font-size: 0.9rem; 
@@ -575,8 +576,7 @@
 
             container.innerHTML = sectionsWithLinks.map((section, index) => {
                 const sortedLinks = [...section.links].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
-                const delay = index * 0.1;
-
+                const delay = 0;
                 return `
                     <div class="section-card" style="transition-delay: ${delay}s;" id="section-${section.id}">
                         <div class="section-header">
