@@ -11,12 +11,13 @@ import { cacheSet, cacheGet, cacheGetMeta, cacheRemove, cacheClear } from './cac
 
 // ==================== إعدادات فيربيز ====================
 const firebaseConfig = {
-  apiKey: "AIzaSyA_P5crHXs4XvZVl73n6ikNodLTpsw25mk",
-  authDomain: "training-2a75b.firebaseapp.com",
-  projectId: "training-2a75b",
-  storageBucket: "training-2a75b.firebasestorage.app",
-  messagingSenderId: "849904887764",
-  appId: "1:849904887764:web:b012d60c77b1851c169841"
+    apiKey: "AIzaSyDOFd1M8IIxG7UyLdGHpu24TzC77kBa740",
+    authDomain: "training-lb-1945b.firebaseapp.com",
+    projectId: "training-lb-1945b",
+    storageBucket: "training-lb-1945b.firebasestorage.app",
+    messagingSenderId: "202134601199",
+    appId: "1:202134601199:web:86d145ef5fe762f247ca1a",
+    measurementId: "G-9KMSG3M4P1"
 };
 
 // ==================== تهيئة Firebase ====================
