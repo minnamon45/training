@@ -74,6 +74,27 @@ body{background:#f0f4f8;padding-bottom:80px}
 .emp-meta{font-size:.75rem;color:#718096;margin-top:2px}
 .emp-id{background:#edf2f7;color:#4a5568;padding:.15rem .5rem;border-radius:.4rem;font-size:.72rem;font-weight:700;flex-shrink:0}
 
+/* Small photo button in employee list */
+.btn-photo-sm {
+  background: #805ad5;
+  color: #fff;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: .85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: .15s;
+  margin-left: .3rem;
+}
+.btn-photo-sm:hover {
+  background: #6b46c1;
+  transform: scale(1.1);
+}
 /* Match Highlight */
 .match-highlight{background:#fefcbf;color:#744210;font-weight:900;padding:0 2px;border-radius:3px;letter-spacing:.5px;border-bottom:2px solid #d69e2e}
 
@@ -93,6 +114,7 @@ body{background:#f0f4f8;padding-bottom:80px}
 .action-bar{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.8rem}
 .btn{padding:.6rem 1rem;border:none;border-radius:2rem;font-weight:700;cursor:pointer;font-size:.82rem;transition:.2s;display:inline-flex;align-items:center;gap:.35rem}
 .btn:hover{transform:translateY(-1px)}
+.btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
 .btn-know-all{background:#c6f6d5;color:#22543d}
 .btn-know-all:hover{background:#9ae6b4}
 .btn-save{background:#2b7a4b;color:#fff}
@@ -226,6 +248,109 @@ tr.row-dont:hover{background:#fed7d7}
 .toast.info{background:#4299e1}
 @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
 
+/* ===== Employee Photo Modal ===== */
+.photo-modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 5000;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  animation: fadeIn .2s ease;
+}
+.photo-modal-overlay.active {
+  display: flex;
+}
+.photo-modal {
+  background: #fff;
+  border-radius: 1.2rem;
+  padding: 1.2rem;
+  max-width: 420px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  animation: popIn .25s ease;
+  position: relative;
+}
+.photo-modal img {
+  width: 100%;
+  max-height: 420px;
+  object-fit: fill;
+  border-radius: 1rem;
+  border: 3px solid #e2e8f0;
+  background: #f7fafc;
+}
+.photo-modal .emp-photo-name {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #1e3a5f;
+  margin-top: .8rem;
+}
+.photo-modal .emp-photo-meta {
+  font-size: .82rem;
+  color: #718096;
+  margin-top: .25rem;
+}
+.photo-modal .close-btn {
+  position: absolute;
+  top: .6rem;
+  right: .6rem;
+  background: #e53e3e;
+  color: #fff;
+  border: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 900;
+  cursor: pointer;
+  transition: .15s;
+}
+.photo-modal .close-btn:hover {
+  background: #c53030;
+  transform: scale(1.05);
+}
+.photo-modal .no-photo {
+  padding: 3rem 1rem;
+  color: #a0aec0;
+  font-size: .9rem;
+  font-weight: 700;
+  background: #f7fafc;
+  border-radius: 1rem;
+  border: 3px dashed #e2e8f0;
+}
+.photo-modal .loading-photo {
+  padding: 3rem 1rem;
+  color: #4299e1;
+  font-size: .9rem;
+  font-weight: 700;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* Photo button in result row */
+.btn-photo {
+  background: #805ad5;
+  color: #fff;
+  border: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: .95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: .15s;
+}
+.btn-photo:hover {
+  background: #6b46c1;
+  transform: scale(1.1);
+}
+
 /* Mobile */
 @media(max-width:768px){
   .container{padding:0 .7rem}
@@ -339,7 +464,6 @@ tr.row-dont:hover{background:#fed7d7}
     <div class="section" id="chartSection" style="display:none">
       <div class="section-title">
         <span>📈 Overall Performance</span>
-        <span class="badge" id="chartDate"></span>
       </div>
       <div class="chart-container">
         <canvas id="totalChart"></canvas>
@@ -399,7 +523,7 @@ tr.row-dont:hover{background:#fed7d7}
             <th data-ae-sort="name" style="text-align:left">Employee Name <span class="ae-sort-icon">↕</span></th>
             <th data-ae-sort="position" style="text-align:left">Position <span class="ae-sort-icon">↕</span></th>
             <th data-ae-sort="result">Result <span class="ae-sort-icon">↕</span></th>
-            <th style="width:200px">Actions</th>
+            <th style="width:230px">Actions</th>
           </tr>
         </thead>
         <tbody id="allEmpBody">
@@ -444,6 +568,16 @@ tr.row-dont:hover{background:#fed7d7}
 
 </div>
 
+<!-- Employee Photo Modal -->
+<div class="photo-modal-overlay" id="photoModal" onclick="closePhotoModal(event)">
+  <div class="photo-modal" onclick="event.stopPropagation()">
+    <button class="close-btn" onclick="closePhotoModal()">✕</button>
+    <div id="photoModalContent"></div>
+    <div class="emp-photo-name" id="photoModalName"></div>
+    <div class="emp-photo-meta" id="photoModalMeta"></div>
+  </div>
+</div>
+
 <script type="module">
 import { auth, DB } from './database.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
@@ -467,6 +601,11 @@ let filterDay = '';
 let savedSpotChecks = [];
 let savedResults = [];
 
+// ✅ Sets و Map للبحث السريع ومنع التكرار
+let selectedEmployeeIds = new Set();
+let savedEmployeeIds = new Set();
+let savedResultsMap = new Map();
+
 // Exclude levels
 let excludedLevels = new Set();
 const DEFAULT_EXCLUDED = [
@@ -485,7 +624,7 @@ let dkSortDir = 'asc';
 // Sort + Filter (All Employees Table)
 let aeSortKey = 'department';
 let aeSortDir = 'asc';
-let aeFilter = 'all';   // 'all' | 'KNOW' | 'DONT_KNOW'
+let aeFilter = 'all';
 
 // Chart
 let totalChartInstance = null;
@@ -624,11 +763,12 @@ async function loadAll() {
       .filter(e => (e.status || 'Active') === 'Active')
       .map(e => ({
         id: String(e.id),
-        name: e.fullName || '',
+        name: e.fullName || e.name || '',
         department: (e.department || '').trim(),
         position: (e.position || '').trim(),
         level: (e.level || '').trim(),
-        status: e.status || 'Active'
+        status: e.status || 'Active',
+        photoURL: e.photoURL || e.photoUrl || e.image || e.photo || e.avatar || e.picture || ''
       }));
 
     const set = new Set();
@@ -638,6 +778,9 @@ async function loadAll() {
     allTasks = await DB.getAll('tasks') || [];
     savedSpotChecks = await DB.getAll('spot_checks') || [];
     savedResults   = await DB.getAll('spot_check_results') || [];
+
+    savedResultsMap = new Map();
+    savedResults.forEach(r => savedResultsMap.set(String(r.id), r));
 
     initExcludedLevelChips();
     renderTaskSelectForDate(spotDate);
@@ -755,11 +898,11 @@ document.getElementById('taskSelect').addEventListener('change', async (e) => {
 document.getElementById('deptSelect').addEventListener('change', async (e) => {
   currentDept = e.target.value;
   selectedEmployees = [];
+  selectedEmployeeIds = new Set();
   await loadSavedForDept();
   renderEmployeeList();
   renderResults();
   updateVisibility();
-  // Focus on search
   setTimeout(() => {
     const s = document.getElementById('empSearch');
     if (s) s.focus();
@@ -770,28 +913,43 @@ document.getElementById('deptSelect').addEventListener('change', async (e) => {
 function resetSession() {
   currentDept = '';
   selectedEmployees = [];
+  selectedEmployeeIds = new Set();
+  savedEmployeeIds = new Set();
   document.getElementById('deptSelect').value = '';
   renderResults();
   updateVisibility();
 }
 
+/* ===================== refreshSavedForDate ===================== */
 async function refreshSavedForDate() {
   savedSpotChecks = await DB.getAll('spot_checks') || [];
   savedResults   = await DB.getAll('spot_check_results') || [];
+
+  savedResultsMap = new Map();
+  savedResults.forEach(r => savedResultsMap.set(String(r.id), r));
+
   renderDeptSummary();
   renderOverallSummary();
   renderAllEmpTable();
   renderDontKnowTable();
 }
 
+/* ===================== loadSavedForDept ===================== */
 async function loadSavedForDept() {
   if (!spotDate || !currentTask || !currentDept) {
     selectedEmployees = [];
+    selectedEmployeeIds = new Set();
+    savedEmployeeIds = new Set();
     return;
   }
   const sc = savedSpotChecks.find(s =>
     s.date === spotDate && String(s.task_id) === String(currentTask.id));
-  if (!sc) { selectedEmployees = []; return; }
+  if (!sc) {
+    selectedEmployees = [];
+    selectedEmployeeIds = new Set();
+    savedEmployeeIds = new Set();
+    return;
+  }
 
   const res = savedResults.filter(r =>
     String(r.spot_check_id) === String(sc.id) && r.department === currentDept);
@@ -809,12 +967,15 @@ async function loadSavedForDept() {
       fromDb: true
     };
   });
+
+  selectedEmployeeIds = new Set(selectedEmployees.map(s => String(s.employee_id)));
+  savedEmployeeIds = new Set(selectedEmployees.map(s => String(s.employee_id)));
 }
 
-/* ===================== ✅ Render Employee List (Direct Search) ===================== */
+/* ===================== ✅ Render Employee List (Smart Search) ===================== */
 function renderEmployeeList() {
   const input = document.getElementById('empSearch');
-  const q = (input?.value || '').trim().toLowerCase();
+  const rawQuery = (input?.value || '').trim().toLowerCase();
   const list = document.getElementById('empList');
   const searchCountEl = document.getElementById('searchCount');
 
@@ -824,33 +985,53 @@ function renderEmployeeList() {
     return;
   }
 
-  const selectedIds = new Set(selectedEmployees.map(s => String(s.employee_id)));
+  const queryParts = rawQuery.split(/\s+/).filter(Boolean);
+  const selectedIds = selectedEmployeeIds;
 
   let filtered = employees.filter(e =>
     e.department === currentDept && !isLevelExcluded(e.level));
 
-  if (q) {
+  if (queryParts.length > 0) {
     filtered = filtered.filter(e => {
-      const firstName = extractFirstName(e.name).toLowerCase();
-      return firstName.startsWith(q);
+      const fullName = (e.name || '').toLowerCase();
+      return queryParts.every(part => fullName.includes(part));
+    });
+
+    filtered.sort((a, b) => {
+      const aScore = getMatchScore(a.name, queryParts);
+      const bScore = getMatchScore(b.name, queryParts);
+      if (aScore !== bScore) return bScore - aScore;
+      return a.name.localeCompare(b.name, 'en');
+    });
+  } else {
+    filtered.sort((a,b) => {
+      const aS = selectedIds.has(String(a.id)) ? 1 : 0;
+      const bS = selectedIds.has(String(b.id)) ? 1 : 0;
+      if (aS !== bS) return aS - bS;
+      return a.name.localeCompare(b.name, 'en');
     });
   }
 
-  filtered.sort((a,b) => {
-    const aS = selectedIds.has(String(a.id)) ? 1 : 0;
-    const bS = selectedIds.has(String(b.id)) ? 1 : 0;
-    if (aS !== bS) return aS - bS;
-    return a.name.localeCompare(b.name, 'en');
-  });
+  if (queryParts.length > 0) {
+    filtered.sort((a, b) => {
+      const aS = selectedIds.has(String(a.id)) ? 1 : 0;
+      const bS = selectedIds.has(String(b.id)) ? 1 : 0;
+      if (aS !== bS) return aS - bS;
+      const aScore = getMatchScore(a.name, queryParts);
+      const bScore = getMatchScore(b.name, queryParts);
+      if (aScore !== bScore) return bScore - aScore;
+      return a.name.localeCompare(b.name, 'en');
+    });
+  }
 
   const totalInDept = employees.filter(e =>
     e.department === currentDept && !isLevelExcluded(e.level)).length;
 
   document.getElementById('deptCount').textContent =
-    q ? `${filtered.length} match / ${totalInDept} total` : `${totalInDept} employees (excl. filtered levels)`;
+    queryParts.length ? `${filtered.length} match / ${totalInDept} total` : `${totalInDept} employees (excl. filtered levels)`;
 
   if (searchCountEl) {
-    if (q) {
+    if (queryParts.length) {
       searchCountEl.textContent = `${filtered.length} found`;
       searchCountEl.style.display = 'inline-block';
     } else {
@@ -859,57 +1040,164 @@ function renderEmployeeList() {
   }
 
   if (filtered.length === 0) {
-    list.innerHTML = q
-      ? `<div class="empty">No employees starting with "<strong>${escapeHtml(q)}</strong>"</div>`
+    list.innerHTML = queryParts.length
+      ? `<div class="empty">No employees match "<strong>${escapeHtml(rawQuery)}</strong>"</div>`
       : '<div class="empty">No employees in this department</div>';
     return;
   }
 
   list.innerHTML = filtered.slice(0, 300).map(e => {
     const isSel = selectedIds.has(String(e.id));
-    const firstName = extractFirstName(e.name);
-    const restName = e.name.substring(firstName.length).trim();
-
-    let nameHTML;
-    if (q && firstName.toLowerCase().startsWith(q)) {
-      const matched = firstName.substring(0, q.length);
-      const remaining = firstName.substring(q.length);
-      nameHTML = `<span class="match-highlight">${escapeHtml(matched)}</span>${escapeHtml(remaining)}${restName ? ' ' + escapeHtml(restName) : ''}`;
-    } else {
-      nameHTML = escapeHtml(e.name);
-    }
+    const nameHTML = highlightMatches(e.name, queryParts);
 
     return `
-      <label class="emp-item ${isSel?'selected':''}">
+      <div class="emp-item ${isSel?'selected':''}">
         <input type="checkbox" ${isSel?'checked':''} onchange="toggleEmployee('${e.id}')">
         <div class="emp-info">
           <div class="emp-name">${nameHTML}</div>
           <div class="emp-meta">${escapeHtml(e.position || '—')}${e.level?' • '+escapeHtml(e.level):''}</div>
         </div>
         <span class="emp-id">#${e.id}</span>
-      </label>
+        <button class="btn-photo-sm" onclick="event.preventDefault(); event.stopPropagation(); showEmployeePhoto('${e.id}')" title="View Photo">📷</button>
+      </div>
     `;
   }).join('');
 }
 
+/* ===================== ✅ حساب جودة المطابقة ===================== */
+function getMatchScore(fullName, queryParts) {
+  if (!fullName || !queryParts.length) return 0;
+
+  const name = fullName.toLowerCase();
+  const nameWords = name.split(/\s+/).filter(Boolean);
+
+  let score = 0;
+
+  queryParts.forEach((part, idx) => {
+    if (nameWords[0]?.startsWith(part)) {
+      score += 1000 - idx * 10;
+      return;
+    }
+
+    const wordStarts = nameWords.findIndex(w => w.startsWith(part));
+    if (wordStarts !== -1) {
+      score += 500 - wordStarts * 5 - idx * 10;
+      return;
+    }
+
+    if (name.includes(part)) {
+      score += 100 - idx * 5;
+    }
+  });
+
+  if (name.startsWith(queryParts.join(' '))) {
+    score += 500;
+  }
+
+  return score;
+}
+
+/* ===================== ✅ إبراز الكلمات المطابقة ===================== */
+function highlightMatches(fullName, queryParts) {
+  if (!fullName) return '';
+  if (!queryParts || !queryParts.length) return escapeHtml(fullName);
+
+  const name = String(fullName);
+  const lowerName = name.toLowerCase();
+
+  const ranges = [];
+
+  queryParts.forEach(part => {
+    let startIdx = 0;
+    while (true) {
+      const idx = lowerName.indexOf(part, startIdx);
+      if (idx === -1) break;
+      ranges.push({ start: idx, end: idx + part.length });
+      startIdx = idx + part.length;
+    }
+  });
+
+  if (ranges.length === 0) return escapeHtml(fullName);
+
+  ranges.sort((a, b) => a.start - b.start);
+  const merged = [ranges[0]];
+  for (let i = 1; i < ranges.length; i++) {
+    const last = merged[merged.length - 1];
+    if (ranges[i].start <= last.end) {
+      last.end = Math.max(last.end, ranges[i].end);
+    } else {
+      merged.push(ranges[i]);
+    }
+  }
+
+  let result = '';
+  let cursor = 0;
+  merged.forEach(r => {
+    if (cursor < r.start) {
+      result += escapeHtml(name.substring(cursor, r.start));
+    }
+    result += `<span class="match-highlight">${escapeHtml(name.substring(r.start, r.end))}</span>`;
+    cursor = r.end;
+  });
+  if (cursor < name.length) {
+    result += escapeHtml(name.substring(cursor));
+  }
+
+  return result;
+}
+
+/* ===================== ✅ toggleEmployee (منع التكرار) ===================== */
 window.toggleEmployee = function(empId) {
   empId = String(empId);
-  const idx = selectedEmployees.findIndex(s => String(s.employee_id) === empId);
-  if (idx >= 0) {
-    selectedEmployees.splice(idx, 1);
-  } else {
-    const emp = employees.find(e => String(e.id) === empId);
-    if (!emp) return;
-    selectedEmployees.push({
-      employee_id: empId,
-      name: emp.name,
-      position: emp.position,
-      level: emp.level,
-      department: emp.department,
-      result: 'KNOW',
-      fromDb: false
-    });
+
+  if (selectedEmployeeIds.has(empId)) {
+    selectedEmployeeIds.delete(empId);
+    const idx = selectedEmployees.findIndex(s => String(s.employee_id) === empId);
+    if (idx >= 0) selectedEmployees.splice(idx, 1);
+    renderEmployeeList();
+    renderResults();
+    return;
   }
+
+  const emp = employees.find(e => String(e.id) === empId);
+  if (!emp) return;
+
+  if (savedEmployeeIds.has(empId)) {
+    const dbResult = savedResults.find(r =>
+      String(r.employee_id) === empId &&
+      String(r.spot_check_id) === String(
+        savedSpotChecks.find(s => s.date === spotDate && String(s.task_id) === String(currentTask?.id))?.id
+      )
+    );
+    if (dbResult) {
+      selectedEmployees.push({
+        employee_id: empId,
+        name: emp.name,
+        position: emp.position,
+        level: emp.level,
+        department: emp.department,
+        result: dbResult.result,
+        resultId: dbResult.id,
+        fromDb: true
+      });
+      selectedEmployeeIds.add(empId);
+      renderEmployeeList();
+      renderResults();
+      return;
+    }
+  }
+
+  selectedEmployees.push({
+    employee_id: empId,
+    name: emp.name,
+    position: emp.position,
+    level: emp.level,
+    department: emp.department,
+    result: 'KNOW',
+    fromDb: false
+  });
+  selectedEmployeeIds.add(empId);
+
   renderEmployeeList();
   renderResults();
 };
@@ -950,21 +1238,31 @@ window.setResult = function(idx, result) {
     renderResults();
   }
 };
+
 window.removeEmployee = function(idx) {
+  if (!selectedEmployees[idx]) return;
+  const empId = String(selectedEmployees[idx].employee_id);
   selectedEmployees.splice(idx, 1);
+  selectedEmployeeIds.delete(empId);
   renderEmployeeList();
   renderResults();
 };
+
 window.setAllKnow = function() {
   selectedEmployees.forEach(s => s.result = 'KNOW');
   renderResults();
   toast('✓ All marked as "Know"');
 };
+
 window.clearSelected = function() {
-  if (!confirm('Clear all recorded employees for this department?')) return;
-  selectedEmployees = [];
+  if (!confirm('Clear unsaved employees? (Saved ones stay)')) return;
+
+  selectedEmployees = selectedEmployees.filter(s => s.fromDb);
+  selectedEmployeeIds = new Set(selectedEmployees.map(s => String(s.employee_id)));
+
   renderEmployeeList();
   renderResults();
+  toast('✓ Cleared unsaved employees');
 };
 
 /* ===================== Live Summary ===================== */
@@ -990,7 +1288,7 @@ function updateVisibility() {
   document.getElementById('saveBar').style.display       = ready ? 'flex'  : 'none';
 }
 
-/* ===================== Save ===================== */
+/* ===================== ✅ Save (Low Reads + No Duplicates) ===================== */
 window.saveDeptResults = async function() {
   if (!spotDate || !currentTask || !currentDept) {
     toast('Select date, task and department', 'error'); return;
@@ -999,12 +1297,34 @@ window.saveDeptResults = async function() {
     toast('No employees to save', 'warn'); return;
   }
 
+  const saveBtn = document.querySelector('.btn-save');
+  const originalText = saveBtn?.textContent;
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '💾 Saving...'; }
+
   try {
+    try {
+      await Promise.all([
+        DB.refresh('spot_checks'),
+        DB.refresh('spot_check_results')
+      ]);
+      savedSpotChecks = await DB.getAll('spot_checks') || [];
+      savedResults    = await DB.getAll('spot_check_results') || [];
+      savedResultsMap = new Map();
+      savedResults.forEach(r => savedResultsMap.set(String(r.id), r));
+    } catch (e) {
+      console.warn('Refresh before save failed, using cache:', e);
+    }
+
+    const scId = `${spotDate}_${String(currentTask.id)}`;
+
     let sc = savedSpotChecks.find(s =>
-      s.date === spotDate && String(s.task_id) === String(currentTask.id));
+      String(s.id) === scId ||
+      (s.date === spotDate && String(s.task_id) === String(currentTask.id))
+    );
 
     if (!sc) {
-      const created = await DB.insert('spot_checks', {
+      await DB.insert('spot_checks', {
+        id: scId,
         date: spotDate,
         task_id: String(currentTask.id),
         task_name: currentTask.name,
@@ -1013,26 +1333,38 @@ window.saveDeptResults = async function() {
         updated_at: Date.now()
       });
 
-      if (!created) throw new Error('فشل إنشاء الـ Spot Check');
-
       sc = {
-        id: String(created),
+        id: scId,
         date: spotDate,
         task_id: String(currentTask.id),
         task_name: currentTask.name,
         created_by: currentUser?.uid || 'unknown'
       };
       savedSpotChecks.push(sc);
-
-      try { savedSpotChecks = await DB.getAll('spot_checks') || []; }
-      catch (e) { console.warn('Could not refresh spot_checks:', e); }
     }
 
-    let added = 0, updated = 0;
+    const existingMap = new Map();
+    savedResults
+      .filter(r => String(r.spot_check_id) === String(sc.id))
+      .forEach(r => {
+        const key = String(r.employee_id);
+        if (!existingMap.has(key)) existingMap.set(key, r);
+      });
+
+    const uniqueEmployees = [];
+    const seenIds = new Set();
     for (const s of selectedEmployees) {
-      const existing = savedResults.find(r =>
-        String(r.spot_check_id) === String(sc.id) &&
-        String(r.employee_id) === String(s.employee_id));
+      const empId = String(s.employee_id);
+      if (seenIds.has(empId)) continue;
+      seenIds.add(empId);
+      uniqueEmployees.push(s);
+    }
+
+    let added = 0, updated = 0, skipped = 0;
+
+    for (const s of uniqueEmployees) {
+      const empId = String(s.employee_id);
+      const existing = existingMap.get(empId);
 
       if (existing) {
         if (existing.result !== s.result) {
@@ -1040,43 +1372,47 @@ window.saveDeptResults = async function() {
           existing.updated_at = Date.now();
           await DB.update('spot_check_results', existing);
           updated++;
+        } else {
+          skipped++;
         }
       } else {
-        const created = await DB.insert('spot_check_results', {
+        const resultId = `${sc.id}_${empId}`;
+        await DB.insert('spot_check_results', {
+          id: resultId,
           spot_check_id: String(sc.id),
-          employee_id: String(s.employee_id),
+          employee_id: empId,
           department: String(currentDept),
           result: s.result,
+          created_by: currentUser?.uid || 'unknown',
           created_at: Date.now(),
           updated_at: Date.now()
         });
-
-        if (created) {
-          savedResults.push({
-            id: String(created),
-            spot_check_id: String(sc.id),
-            employee_id: String(s.employee_id),
-            department: String(currentDept),
-            result: s.result
-          });
-          added++;
-        }
+        added++;
       }
     }
 
     try {
       savedSpotChecks = await DB.getAll('spot_checks') || [];
       savedResults    = await DB.getAll('spot_check_results') || [];
+      savedResultsMap = new Map();
+      savedResults.forEach(r => savedResultsMap.set(String(r.id), r));
     } catch (e) { console.warn('Reload failed:', e); }
 
+    await loadSavedForDept();
+    renderEmployeeList();
+    renderResults();
     renderDeptSummary();
     renderOverallSummary();
     renderAllEmpTable();
     renderDontKnowTable();
-    toast(`✅ Saved — Added: ${added}, Updated: ${updated}`);
+
+    const msg = `✅ Saved — Added: ${added}, Updated: ${updated}${skipped ? `, Skipped: ${skipped}` : ''}`;
+    toast(msg);
   } catch (err) {
     console.error('❌ Save failed:', err);
     toast('Save failed: ' + (err.message || ''), 'error');
+  } finally {
+    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = originalText || '💾 Save Department Results'; }
   }
 };
 
@@ -1089,6 +1425,7 @@ window.goNextDept = async function() {
   document.getElementById('deptSelect').value = next;
   currentDept = next;
   selectedEmployees = [];
+  selectedEmployeeIds = new Set();
   await loadSavedForDept();
   renderEmployeeList();
   renderResults();
@@ -1193,7 +1530,7 @@ document.querySelectorAll('th[data-sort]').forEach(th => {
   });
 });
 
-/* ===================== ✅ All Employees Table (Know + Don't Know) ===================== */
+/* ===================== ✅ All Employees Table ===================== */
 function getAllEmployeesData() {
   if (!spotDate || !currentTask) return [];
   const sc = savedSpotChecks.find(s =>
@@ -1219,7 +1556,6 @@ function getAllEmployeesData() {
 
 window.setAllEmpFilter = function(filter) {
   aeFilter = filter;
-  // Update UI
   document.getElementById('filterAll').style.opacity = filter === 'all' ? '1' : '.5';
   document.getElementById('filterKnow').style.opacity = filter === 'KNOW' ? '1' : '.5';
   document.getElementById('filterDont').style.opacity = filter === 'DONT_KNOW' ? '1' : '.5';
@@ -1240,13 +1576,11 @@ function renderAllEmpTable() {
 
   section.style.display = 'block';
 
-  // Apply filter
   if (aeFilter === 'KNOW') list = list.filter(x => x.result === 'KNOW');
   else if (aeFilter === 'DONT_KNOW') list = list.filter(x => x.result === 'DONT_KNOW');
 
   badge.textContent = `${list.length} / ${getAllEmployeesData().length} employees`;
 
-  // Sort
   const sorted = [...list].sort((a, b) => {
     let va = a[aeSortKey], vb = b[aeSortKey];
     if (typeof va === 'string') va = va.toLowerCase();
@@ -1281,6 +1615,7 @@ function renderAllEmpTable() {
             ? `<button class="btn-action toggle-d" onclick="changeResult('${item.resultId}', 'DONT_KNOW')" title="Mark as Don't Know">🔴</button>`
             : `<button class="btn-action toggle-k" onclick="changeResult('${item.resultId}', 'KNOW')" title="Mark as Know">🟢</button>`
           }
+          <button class="btn-action edit" onclick="showEmployeePhoto('${item.employee_id}')" title="View Photo">📷</button>
           <button class="btn-action edit" onclick="editResultRow('${item.resultId}')" title="Edit">✏️</button>
           <button class="btn-action delete" onclick="deleteResultRow('${item.resultId}', '${empEscaped}')" title="Delete">🗑️</button>
         </div>
@@ -1289,20 +1624,18 @@ function renderAllEmpTable() {
   }).join('');
 }
 
-/* ===================== Change Result (Direct from table) ===================== */
+/* ===================== Change Result ===================== */
 window.changeResult = async function(resultId, newResult) {
   try {
-    const result = savedResults.find(r => String(r.id) === String(resultId));
-    if (!result) {
-      toast('Result not found', 'error'); return;
-    }
+    const result = savedResultsMap.get(String(resultId));
+    if (!result) { toast('Result not found', 'error'); return; }
     if (result.result === newResult) return;
 
     result.result = newResult;
     result.updated_at = Date.now();
     await DB.update('spot_check_results', result);
 
-    // تحديث محلي
+    savedResultsMap.set(String(resultId), result);
     const idx = savedResults.findIndex(r => String(r.id) === String(resultId));
     if (idx >= 0) savedResults[idx].result = newResult;
 
@@ -1318,9 +1651,8 @@ window.changeResult = async function(resultId, newResult) {
   }
 };
 
-/* ===================== Edit Result (Choose via prompt) ===================== */
 window.editResultRow = async function(resultId) {
-  const result = savedResults.find(r => String(r.id) === String(resultId));
+  const result = savedResultsMap.get(String(resultId));
   if (!result) { toast('Result not found', 'error'); return; }
 
   const currentLabel = result.result === 'KNOW' ? 'Know' : "Don't Know";
@@ -1337,17 +1669,20 @@ window.deleteResultRow = async function(resultId, empName) {
   try {
     await DB.delete('spot_check_results', resultId);
 
-    // تحديث محلي
+    savedResultsMap.delete(String(resultId));
     const idx = savedResults.findIndex(r => String(r.id) === String(resultId));
-    if (idx >= 0) savedResults.splice(idx, 1);
+    if (idx >= 0) {
+      const removed = savedResults.splice(idx, 1)[0];
+      if (removed) {
+        const empId = String(removed.employee_id);
+        savedEmployeeIds.delete(empId);
+        selectedEmployeeIds.delete(empId);
+      }
+    }
 
-    // إذا كان الموظف في selectedEmployees (نفس القسم) → أزله
-    const removed = employees.find(e => String(e.id) === String(savedResults?.[0]?.employee_id));
-    // reload selected for current dept
     await loadSavedForDept();
     renderEmployeeList();
     renderResults();
-
     renderDeptSummary();
     renderOverallSummary();
     renderAllEmpTable();
@@ -1514,7 +1849,6 @@ function renderTotalChart() {
   }
 
   section.style.display = 'block';
-  document.getElementById('chartDate').textContent = spotDate ? fmtDate(spotDate) : '';
 
   const totalEmployees = stats.reduce((a,b) => a + b.total, 0);
   const totalKnow      = stats.reduce((a,b) => a + b.know, 0);
@@ -1564,7 +1898,7 @@ function renderTotalChart() {
         { label: 'Number of employees', data: [totalEmployees], backgroundColor: '#4299e1', borderColor: '#3182ce', borderWidth: 2, order: 1, yAxisID: 'y1', barPercentage: 0.6, categoryPercentage: 0.7 },
         { label: 'Know', data: [totalKnow], backgroundColor: '#ed8936', borderColor: '#dd6b20', borderWidth: 2, order: 2, yAxisID: 'y1', barPercentage: 0.6, categoryPercentage: 0.7 },
         { label: "Don't Know", data: [totalDont], backgroundColor: '#a0aec0', borderColor: '#718096', borderWidth: 2, order: 3, yAxisID: 'y1', barPercentage: 0.6, categoryPercentage: 0.7 },
-        { label: 'Percentage %', data: [totalPct], type: 'line', borderColor: '#d69e2e', backgroundColor: '#fefcbf', borderWidth: 3, pointRadius: 10, pointBackgroundColor: '#fefcbf', pointBorderColor: '#d69e2e', pointBorderWidth: 3, pointHoverRadius: 12, tension: 0, order: 0, yAxisID: 'y2' }
+        { label: 'Percentage %', data: [totalPct], type: 'line', borderColor: '#d69e2e', backgroundColor: '#fefcbf', borderWidth: 3, pointRadius: 0, pointBackgroundColor: '#fefcbf', pointBorderColor: '#d69e2e', pointBorderWidth: 3, pointHoverRadius: 0, tension: 0, order: 0, yAxisID: 'y2' }
       ]
     },
     options: {
@@ -1602,6 +1936,96 @@ function renderTotalChart() {
     plugins: [valueLabelsPlugin]
   });
 }
+
+/* ===================== ✅ Employee Photo Modal (Cloudinary) ===================== */
+const CLOUDINARY_BASE = 'https://res.cloudinary.com/so9u5deh/image/upload/';
+const PHOTO_EXTS = ['webp', 'jpg', 'jpeg', 'png', 'JPG', 'PNG', 'JPEG'];
+
+/**
+ * يحاول تحميل صورة الموظف من Cloudinary باستخدام رقم الموظف
+ * (نفس المنطق المستخدم في صفحة أعياد الميلاد)
+ */
+function findEmployeePhotoUrl(empCode) {
+  return new Promise((resolve) => {
+    const code = String(empCode).trim();
+    if (!code) { resolve(null); return; }
+
+    let i = 0;
+    function tryNext() {
+      if (i >= PHOTO_EXTS.length) { resolve(null); return; }
+      const url = `${CLOUDINARY_BASE}${code}.${PHOTO_EXTS[i]}`;
+      const testImg = new Image();
+      testImg.onload = () => resolve(url);
+      testImg.onerror = () => { i++; tryNext(); };
+      testImg.src = url;
+    }
+    tryNext();
+  });
+}
+
+window.showEmployeePhoto = async function(empId) {
+  const emp = employees.find(e => String(e.id) === String(empId));
+  if (!emp) {
+    toast('Employee not found', 'error');
+    return;
+  }
+
+  const modal = document.getElementById('photoModal');
+  const content = document.getElementById('photoModalContent');
+  const nameEl = document.getElementById('photoModalName');
+  const metaEl = document.getElementById('photoModalMeta');
+
+  // إظهار المودال مع رسالة تحميل
+  content.innerHTML = `<div class="loading-photo">⏳ Loading photo...</div>`;
+  nameEl.textContent = emp.name || '—';
+  metaEl.textContent = `${emp.position || '—'} • ${emp.department || '—'} • #${emp.id}`;
+  modal.classList.add('active');
+
+  try {
+    // 1. لو فيه photoURL محفوظ في الداتا بيز، استخدمه
+    let photoUrl = emp.photoURL || '';
+
+    // 2. لو مفيش، ابحث في Cloudinary برقم الموظف
+    if (!photoUrl) {
+      photoUrl = await findEmployeePhotoUrl(emp.id);
+    }
+
+    if (photoUrl) {
+      const img = new Image();
+      img.onload = () => {
+        content.innerHTML = '';
+        const imgEl = document.createElement('img');
+        imgEl.src = photoUrl;
+        imgEl.alt = emp.name;
+        content.appendChild(imgEl);
+      };
+      img.onerror = () => {
+        content.innerHTML = `<div class="no-photo">📷 No photo available for this employee</div>`;
+      };
+      img.src = photoUrl;
+    } else {
+      content.innerHTML = `<div class="no-photo">📷 No photo available for this employee</div>`;
+    }
+  } catch (err) {
+    console.error('Photo load error:', err);
+    content.innerHTML = `<div class="no-photo">⚠️ Failed to load photo</div>`;
+  }
+};
+
+window.closePhotoModal = function(event) {
+  if (event && event.target !== event.currentTarget) return;
+  document.getElementById('photoModal').classList.remove('active');
+};
+
+// إغلاق بـ Escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('photoModal');
+    if (modal && modal.classList.contains('active')) {
+      modal.classList.remove('active');
+    }
+  }
+});
 
 /* ===================== Refresh ===================== */
 window.refreshData = async function() {
@@ -1681,14 +2105,10 @@ function initSearchInput() {
 
   console.log('✅ Search input initialized');
 
-  // بحث فوري مع كل حرف
   input.addEventListener('input', () => {
-    const q = input.value;
-    console.log('🔍 Search query:', q);
     renderEmployeeList();
   });
 
-  // Escape لمسح البحث
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       input.value = '';
@@ -1697,7 +2117,7 @@ function initSearchInput() {
   });
 }
 
-// ✅ صدّر الدوال على window أيضاً (للاحتياط)
+// ✅ صدّر الدوال على window
 window.renderEmployeeList = renderEmployeeList;
 window.toggleEmployee = toggleEmployee;
 window.setResult = setResult;
@@ -1714,7 +2134,7 @@ onAuthStateChanged(auth, async (user) => {
   currentUser = user;
 
   initDateFilters();
-  initSearchInput();   // ✅ جديد
+  initSearchInput();
 
   await loadAll();
   document.getElementById('deptSelect').innerHTML =
@@ -1728,7 +2148,7 @@ onAuthStateChanged(auth, async (user) => {
   initDontKnowSortHandlers();
   setAllEmpFilter('all');
 
-  console.log('✅ Spot Check ready');
+  console.log('✅ Spot Check ready (No duplicates + Low reads + Photo Modal)');
 });
 </script>
 </body>
